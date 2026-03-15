@@ -1,0 +1,38 @@
+{% extends "base/admin_base.html" %}
+{% block title %}Удалить студента{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'admin_students:detail' pk=student.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">Удалить студента</h4>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-body text-center py-4">
+                <div class="mb-3" style="font-size:48px; color:var(--danger);"><i class="bi bi-person-x-fill"></i></div>
+                <h5 class="fw-semibold mb-2">Вы уверены?</h5>
+                <p class="text-muted mb-1">Будет удалён студент:</p>
+                <p class="fw-bold fs-5 mb-1">{{ student.full_name }}</p>
+                <p class="text-muted small mb-4">{{ student.phone }}</p>
+                <div class="alert alert-warning text-start small mb-4">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Это действие <strong>необратимо</strong>. Будут удалены все данные студента, записи об оплатах и посещаемости.
+                </div>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'admin_students:detail' pk=student.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Отмена
+                    </a>
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Удалить навсегда
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

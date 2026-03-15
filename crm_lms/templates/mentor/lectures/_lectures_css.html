@@ -1,0 +1,42 @@
+<style>
+.lec-layout{min-height:calc(100vh - 200px)}
+.lec-left-col{background:#f8f8f8}
+.lec-right-col{border-left:1px solid #ebe9f1;background:#fff}
+.lec-content-area{padding:1.5rem}
+
+/* Sidebar */
+.lec-sidebar{}
+.lec-sidebar-hdr{border-bottom:1px solid #ebe9f1;background:#fafafc}
+.lec-sidebar-body{overflow-y:auto;max-height:calc(100vh - 280px)}
+
+.sb-section{border-bottom:1px solid #f3f2f7}
+.sb-sec-hdr{display:flex;align-items:center;padding:.55rem .75rem;cursor:pointer;user-select:none;transition:background .15s}
+.sb-sec-hdr:hover{background:#f5f3ff}
+.sb-sec-title{font-weight:600;font-size:.8rem;color:#5e5873}
+.sb-caret{font-size:.6rem;color:#b9b9c3;transition:transform .2s;margin-right:2px}
+.sb-sec-hdr.collapsed .sb-caret{transform:rotate(-90deg)}
+
+.sb-item{display:flex;align-items:center;padding:.4rem .75rem .4rem 2rem;text-decoration:none;color:#6e6b7b;font-size:.8rem;transition:all .15s;border-left:2px solid transparent;gap:6px}
+.sb-item:hover{background:#f5f3ff;color:#5e5873}
+.sb-item.active{background:#ece8ff;color:#7367f0;border-left-color:#7367f0;font-weight:600}
+.sb-item .sb-item-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sb-dot.mat{background:#7367f0}
+.sb-dot.task{background:#ff9f43}
+.sb-dot.quiz{background:#00cfe8}
+
+.sb-vis-btn{border:none;background:none;color:#b9b9c3;font-size:.7rem;padding:2px 4px;cursor:pointer;border-radius:4px;transition:all .15s;flex-shrink:0;opacity:0}
+.sb-item:hover .sb-vis-btn{opacity:1}
+.sb-vis-btn:hover{background:#ebe9f1;color:#7367f0}
+.sb-vis-btn.off{color:#ea5455}
+.sb-vis-btn.off i{color:#ea5455}
+
+.sb-empty{padding:.5rem 2rem;font-size:.75rem;color:#b9b9c3;font-style:italic}
+
+/* Right content card */
+.lec-detail-card{background:#fff;border-radius:.428rem;border:1px solid #ebe9f1;overflow:hidden}
+.lec-detail-hdr{padding:1rem 1.25rem;border-bottom:1px solid #ebe9f1;display:flex;align-items:center;justify-content:space-between}
+.lec-detail-hdr h5{margin:0;font-weight:600;color:#5e5873;font-size:1rem}
+.lec-detail-body{padding:1.25rem}
+</style>

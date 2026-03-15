@@ -1,0 +1,291 @@
+# Kyrgyz translation
+msgid ""
+msgstr ""
+"Language: ky\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: Auth
+msgid "Вход"
+msgstr "Кирүү"
+
+msgid "Добро пожаловать"
+msgstr "Кош келиңиз"
+
+msgid "Войдите в свой аккаунт"
+msgstr "Аккаунтуңузга кириңиз"
+
+msgid "Пароль"
+msgstr "Сыр сөз"
+
+msgid "Войти"
+msgstr "Кирүү"
+
+msgid "Управляй обучением"
+msgstr "Окутууну башкар"
+
+msgid "эффективно"
+msgstr "натыйжалуу"
+
+msgid "Полная платформа для управления учебным центром: студенты, менторы, курсы, финансы и аналитика в одном месте."
+msgstr "Окуу борборун башкаруу үчүн толук платформа: студенттер, менторлор, курстар, финансы жана аналитика бир жерде."
+
+msgid "CRM для управления лидами"
+msgstr "Лиддерди башкаруу үчүн CRM"
+
+msgid "LMS для ведения курсов"
+msgstr "Курстарды жүргүзүү үчүн LMS"
+
+msgid "Финансовая аналитика"
+msgstr "Финансылык аналитика"
+
+#: Navbar
+msgid "Расписание"
+msgstr "Расписание"
+
+msgid "Язык"
+msgstr "Тил"
+
+msgid "Тема"
+msgstr "Тема"
+
+msgid "Уведомления"
+msgstr "Билдирүүлөр"
+
+msgid "Прочитать все"
+msgstr "Баарын окуу"
+
+msgid "Нет новых уведомлений"
+msgstr "Жаңы билдирүүлөр жок"
+
+msgid "Все уведомления"
+msgstr "Бардык билдирүүлөр"
+
+msgid "Профиль"
+msgstr "Профиль"
+
+msgid "Выйти"
+msgstr "Чыгуу"
+
+#: Student portal
+msgid "Студент"
+msgstr "Студент"
+
+msgid "Мой кабинет"
+msgstr "Менин кабинетим"
+
+msgid "Материалы"
+msgstr "Материалдар"
+
+msgid "Посещаемость"
+msgstr "Катышуу"
+
+msgid "Оценки"
+msgstr "Баалар"
+
+msgid "Выход"
+msgstr "Чыгуу"
+
+msgid "Вот ваши курсы и последние активности"
+msgstr "Бул сиздин курстарыңыз жана акыркы аракеттериңиз"
+
+msgid "Активных курсов"
+msgstr "Активдүү курстар"
+
+msgid "Прогресс"
+msgstr "Прогресс"
+
+msgid "Тестов пройдено"
+msgstr "Тесттер өтүлдү"
+
+msgid "Мои курсы"
+msgstr "Менин курстарым"
+
+msgid "У вас пока нет активных курсов"
+msgstr "Сизде азырынча активдүү курстар жок"
+
+msgid "Активен"
+msgstr "Активдүү"
+
+msgid "Открыть курс"
+msgstr "Курсту ачуу"
+
+msgid "Последние тесты"
+msgstr "Акыркы тесттер"
+
+msgid "Тест"
+msgstr "Тест"
+
+msgid "Курс"
+msgstr "Курс"
+
+msgid "Результат"
+msgstr "Жыйынтык"
+
+msgid "Дата"
+msgstr "Күнү"
+
+#: Attendance
+msgid "Нет завершённых занятий"
+msgstr "Аяктаган сабактар жок"
+
+msgid "Нет студентов"
+msgstr "Студенттер жок"
+
+msgid "Сохранить"
+msgstr "Сактоо"
+
+msgid "Присутствовал"
+msgstr "Катышкан"
+
+msgid "Отсутствовал"
+msgstr "Катышпаган"
+
+msgid "Опоздал"
+msgstr "Кечиккен"
+
+msgid "Уважительная"
+msgstr "Себептүү"
+
+msgid "Тема урока"
+msgstr "Сабактын темасы"
+
+msgid "Статус"
+msgstr "Статус"
+
+msgid "Комментарий"
+msgstr "Комментарий"
+
+#: Grades
+msgid "Общий балл"
+msgstr "Жалпы балл"
+
+msgid "Место"
+msgstr "Орун"
+
+msgid "Нет заданий"
+msgstr "Тапшырмалар жок"
+
+msgid "Балл посещаемости"
+msgstr "Катышуу баллы"
+
+msgid "Балл заданий"
+msgstr "Тапшырма баллы"
+
+msgid "Задание"
+msgstr "Тапшырма"
+
+msgid "Макс. балл"
+msgstr "Макс. балл"
+
+msgid "Оценка"
+msgstr "Баа"
+
+msgid "Срок"
+msgstr "Мөөнөт"
+
+msgid "Проверено"
+msgstr "Текшерилди"
+
+msgid "Сдано"
+msgstr "Тапшырылды"
+
+msgid "На доработке"
+msgstr "Оңдоодо"
+
+msgid "Не сдано"
+msgstr "Тапшырылган жок"
+
+#: Sidebar - common
+msgid "Меню"
+msgstr "Меню"
+
+msgid "Главная"
+msgstr "Башкы бет"
+
+msgid "Мои курсы"
+msgstr "Менин курстарым"
+
+msgid "Аккаунт"
+msgstr "Аккаунт"
+
+#: Sidebar - admin
+msgid "Основное"
+msgstr "Негизги"
+
+msgid "Дашборд"
+msgstr "Башкы бет"
+
+msgid "Управление"
+msgstr "Башкаруу"
+
+msgid "Курсы"
+msgstr "Курстар"
+
+msgid "Менторы"
+msgstr "Менторлор"
+
+msgid "Лиды"
+msgstr "Лиддер"
+
+msgid "Финансы"
+msgstr "Финансы"
+
+msgid "Оплаты"
+msgstr "Төлөмдөр"
+
+msgid "Долги"
+msgstr "Карыздар"
+
+msgid "Зарплаты"
+msgstr "Айлыктар"
+
+msgid "Бухгалтерия"
+msgstr "Бухгалтерия"
+
+msgid "Другое"
+msgstr "Башка"
+
+msgid "Объявления"
+msgstr "Жарыялар"
+
+msgid "Отчёты"
+msgstr "Отчёттор"
+
+#: Sidebar - mentor
+msgid "Зарплата"
+msgstr "Айлык"
+
+#: Sidebar - course
+msgid "Лекции"
+msgstr "Лекциялар"
+
+msgid "Задания"
+msgstr "Тапшырмалар"
+
+msgid "Занятия"
+msgstr "Сабактар"
+
+msgid "Отзывы"
+msgstr "Пикирлер"
+
+msgid "Тесты"
+msgstr "Тесттер"
+
+msgid "Смарт-отчёт"
+msgstr "Смарт-отчёт"
+
+msgid "Студенты"
+msgstr "Студенттер"
+
+#: Misc
+msgid "Скачать"
+msgstr "Жүктөө"
+
+msgid "Назад"
+msgstr "Артка"
+
+msgid "Назад к курсу"
+msgstr "Курска кайтуу"

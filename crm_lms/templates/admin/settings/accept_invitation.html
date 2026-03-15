@@ -1,0 +1,43 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Принять приглашение{% endblock %}
+
+{% block extra_css %}
+<style>
+.invitation-card{max-width:500px;margin:2rem auto;border:1px solid #ebe9f1;border-radius:.428rem;background:#fff}
+.invitation-header{background:#7367f0;color:#fff;padding:2rem;text-align:center}
+.invitation-body{padding:2rem}
+.invitation-title{font-size:1.5rem;font-weight:600;margin-bottom:1rem}
+.invitation-subtitle{color:#6e6b7b;margin-bottom:2rem}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="invitation-card">
+        <div class="invitation-header">
+            <i class="bi bi-envelope-check" style="font-size:3rem"></i>
+            <h2 class="invitation-title">Приглашение в систему</h2>
+        </div>
+        <div class="invitation-body">
+            <p class="invitation-subtitle">
+                Вы были приглашены в систему как <strong>{{ invitation.get_role_display }}</strong>
+            </p>
+            
+            <div class="alert alert-info border-0" style="background:#e8e5fc">
+                <i class="bi bi-info-circle me-2"></i>
+                Email: {{ invitation.email }}
+            </div>
+            
+            <div class="text-center">
+                <p class="text-muted">
+                    Пожалуйста, свяжитесь с администратором для создания вашего аккаунта
+                </p>
+                <a href="{% url 'core:index' %}" class="btn btn-primary">
+                    Перейти на главную
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

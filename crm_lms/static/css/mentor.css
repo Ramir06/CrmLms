@@ -1,0 +1,77 @@
+/* ===== Mentor / Course specific styles ===== */
+
+/* ===== Course sidebar header ===== */
+.course-header-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-dot-lg {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ===== Lectures ===== */
+.section-card {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.section-header {
+  padding: 12px 16px;
+  background: #F3F2F7;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-body { padding: 4px 0; }
+
+.material-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background .1s;
+  cursor: pointer;
+}
+
+.material-row:hover { background: var(--bg-body); }
+.material-row:last-child { border-bottom: none; }
+.material-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; color: var(--text-muted); }
+.material-info { flex: 1; min-width: 0; overflow: hidden; }
+
+/* ===== Assignment matrix ===== */
+.assignment-matrix { font-size: 12.5px; }
+.assignment-matrix .student-col { min-width: 160px; position: sticky; left: 0; background: #fff; z-index: 5; box-shadow: 2px 0 4px rgba(34,41,47,.06); }
+.assignment-matrix th { vertical-align: bottom; font-size: 11px; }
+.assignment-matrix td { text-align: center; }
+
+/* ===== Lesson cards ===== */
+.lesson-card { transition: box-shadow .15s; border-radius: 6px; }
+.lesson-card:hover { box-shadow: 0 6px 20px rgba(34,41,47,.1); }
+
+/* ===== Attendance ===== */
+.btn-check + .btn { font-size: 11px; padding: 4px 8px; }
+
+/* ===== Rating table ===== */
+.progress { border-radius: 3px; height: 6px; }
+.progress-bar { background: var(--primary); }
+
+/* ===== Review stars ===== */
+.star-rating .bi-star-fill { color: var(--warning); }
+.star-rating .bi-star { color: var(--border-color); }
+
+/* ===== Mentor card ===== */
+.mentor-card { transition: box-shadow .15s; border-radius: 6px; }
+.mentor-card:hover { box-shadow: 0 6px 20px rgba(34,41,47,.1); }

@@ -1,0 +1,31 @@
+{% load static %}
+<div class="info-list">
+    <div class="info-row"><span class="info-label">Студент</span><span class="fw-semibold">{{ cs.student.full_name }}</span></div>
+    <div class="info-row"><span class="info-label">Телефон</span><span>{{ cs.student.phone }}</span></div>
+    <div class="info-row"><span class="info-label">Зачислен</span><span>{{ cs.joined_at|date:"d.m.Y"|default:"—" }}</span></div>
+    <div class="info-row"><span class="info-label">Статус</span>
+        <span class="badge {% if cs.status == 'active' %}bg-success{% elif cs.status == 'left' %}bg-danger{% elif cs.status == 'frozen' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+            {{ cs.get_status_display }}
+        </span>
+    </div>
+    <div class="info-row"><span class="info-label">Прогресс</span><span>{{ cs.progress_percent }}%</span></div>
+</div>
+
+<h6 class="fw-semibold mt-3 mb-2">Посещаемость (последние 10)</h6>
+{% if attendance_records %}
+<ul class="list-unstyled mb-0">
+    {% for rec in attendance_records %}
+    <li class="d-flex align-items-center gap-2 py-1 border-bottom">
+        <span class="badge
+            {% if rec.attendance_status == 'present' %}bg-success
+            {% elif rec.attendance_status == 'late' %}bg-warning text-dark
+            {% elif rec.attendance_status == 'excused' %}bg-info text-dark
+            {% else %}bg-danger{% endif %}" style="width:20px;height:20px;padding:0;"></span>
+        <span class="small">{{ rec.lesson.lesson_date|date:"d.m.Y" }}</span>
+        <span class="small text-muted ms-auto">{{ rec.get_attendance_status_display }}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="text-muted small">Нет записей о посещаемости.</p>
+{% endif %}

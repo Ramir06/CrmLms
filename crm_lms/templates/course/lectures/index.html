@@ -1,0 +1,82 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}Лекции — {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Лекции</h4>
+    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+        <i class="bi bi-plus-lg me-1"></i>Раздел
+    </button>
+</div>
+
+{% if not sections %}
+<div class="empty-state text-center py-5">
+    <i class="bi bi-journal-text fs-1 text-muted"></i>
+    <h6 class="mt-3 text-muted">Нет разделов</h6>
+    <p class="text-muted small">Создайте первый раздел и добавьте материалы</p>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSectionModal">Создать раздел</button>
+</div>
+{% endif %}
+
+{% for section in sections %}
+<div class="section-card mb-4">
+    <div class="section-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="collapse" data-bs-target="#section-{{ section.pk }}">
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <h6 class="mb-0 fw-semibold">{{ section.title }}</h6>
+            <span class="badge bg-light text-muted border">{{ section.materials.count }} материалов</span>
+        </div>
+        <div>
+            <a href="{% url 'lectures:material_create' course_id=course.pk section_id=section.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-plus-lg me-1"></i>Материал
+            </a>
+        </div>
+    </div>
+    <div class="collapse show" id="section-{{ section.pk }}">
+        <div class="section-body">
+            {% for material in section.materials.all %}
+            <a href="{% url 'lectures:material_detail' course_id=course.pk pk=material.pk %}" class="material-row text-decoration-none text-dark">
+                <div class="material-icon">
+                    {% if material.type == 'video' %}<i class="bi bi-play-circle text-danger"></i>
+                    {% elif material.type == 'file' %}<i class="bi bi-file-earmark text-primary"></i>
+                    {% elif material.type == 'link' %}<i class="bi bi-link-45deg text-success"></i>
+                    {% else %}<i class="bi bi-file-text text-secondary"></i>{% endif %}
+                </div>
+                <div class="material-info">
+                    <span class="fw-medium">{{ material.title }}</span>
+                    {% if material.description %}<span class="text-muted small ms-2">{{ material.description|truncatewords:8 }}</span>{% endif %}
+                </div>
+                <span class="badge bg-light text-muted border small">{{ material.get_type_display }}</span>
+            </a>
+            {% empty %}
+            <div class="text-muted small py-2 px-3">Нет материалов в этом разделе</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Add Section Modal -->
+<div class="modal fade" id="addSectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Добавить раздел</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form method="post" action="{% url 'lectures:section_create' course_id=course.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {% for field in section_form %}
+                    <div class="mb-3"><label class="form-label fw-medium">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}</div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

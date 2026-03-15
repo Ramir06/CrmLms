@@ -1,0 +1,83 @@
+<!-- Add Section Modal -->
+<div class="modal fade" id="addSectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Добавить главу</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form method="post" action="{% url 'lectures:section_create' course_id=course.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {% for field in section_form %}
+                    <div class="mb-3"><label class="form-label fw-medium">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}</div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Item Modal (material / assignment / quiz) -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="addItemTitle">Добавить</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="addItemSection">
+                <input type="hidden" id="addItemType">
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Название</label>
+                    <input type="text" id="addItemName" class="form-control" placeholder="Введите название">
+                </div>
+                <div class="mb-3" id="maxScoreGroup" style="display:none">
+                    <label class="form-label fw-medium">Макс. балл</label>
+                    <input type="number" id="addItemMaxScore" class="form-control" value="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="addItemSubmit">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Course Modal -->
+<div class="modal fade" id="copyCourseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Скопировать программу обучения</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="copyCourseForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Будут скопированы все разделы, материалы, задания и тесты без данных студентов (решений, оценок).
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Выберите курс для копирования</label>
+                        <select name="target_course_id" class="form-select" required>
+                            <option value="">Выберите курс...</option>
+                            {% for available_course in available_courses %}
+                                {% if available_course.pk != course.pk %}
+                                <option value="{{ available_course.pk }}">{{ available_course.title }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-copy me-1"></i>Скопировать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

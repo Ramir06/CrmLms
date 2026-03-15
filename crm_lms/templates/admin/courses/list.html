@@ -1,0 +1,132 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}Курсы{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Курсы</h4>
+    <div class="page-actions">
+        <a href="{% url 'courses:archive' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-archive me-1"></i>Архив
+        </a>
+        <a href="{% url 'courses:create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Создать курс
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar mb-4">
+    <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
+        <input type="text" name="q" value="{{ search }}" class="form-control form-control-sm" placeholder="Поиск..." style="width:200px">
+        <select name="status" class="form-select form-select-sm" style="width:160px">
+            <option value="">Все статусы</option>
+            <option value="planned" {% if status_filter == 'planned' %}selected{% endif %}>Запланирован</option>
+            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Активный</option>
+            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Завершён</option>
+            <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Отменён</option>
+        </select>
+        <select name="subject" class="form-select form-select-sm" style="width:180px">
+            <option value="">Все направления</option>
+            {% for subj in subjects %}
+            {% if subj %}<option value="{{ subj }}" {% if subject_filter == subj %}selected{% endif %}>{{ subj }}</option>{% endif %}
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Применить</button>
+        {% if search or status_filter or subject_filter %}
+        <a href="{% url 'courses:list' %}" class="btn btn-outline-secondary btn-sm">Сброс</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Course cards -->
+<div class="row g-3">
+    {% for course in courses %}
+    <div class="col-sm-6 col-xl-4">
+        <div class="card h-100" style="border-radius:12px;border:1px solid var(--border-color);overflow:hidden;transition:box-shadow .15s;">
+            <!-- Color accent top bar -->
+            <div style="height:4px;background:{{ course.color }};"></div>
+            <div class="card-body p-3">
+                <!-- Header: title + status -->
+                <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                    <div class="flex-grow-1 min-w-0">
+                        <a href="{% url 'courses:detail' pk=course.pk %}" class="fw-semibold text-dark text-decoration-none d-block text-truncate" style="font-size:14px;">
+                            {{ course.title }}
+                        </a>
+                        {% if course.subject %}
+                        <span class="text-muted" style="font-size:11px;"><i class="bi bi-bookmark me-1"></i>{{ course.subject }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="badge flex-shrink-0 {% if course.status == 'active' %}bg-success{% elif course.status == 'planned' %}bg-warning text-dark{% elif course.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}" style="font-size:10px;">
+                        {{ course.get_status_display }}
+                    </span>
+                </div>
+
+                <!-- Meta row -->
+                <div class="d-flex flex-wrap gap-2 mb-3" style="font-size:12px;color:var(--text-muted);">
+                    {% if course.mentor %}
+                    <span class="d-flex align-items-center gap-1">
+                        <i class="bi bi-person-badge"></i>{{ course.mentor.get_display_name }}
+                    </span>
+                    {% endif %}
+                    <span class="d-flex align-items-center gap-1">
+                        <i class="bi bi-calendar3"></i>
+                        {% if course.start_date %}{{ course.start_date|date:"d.m.Y" }}{% else %}—{% endif %}
+                    </span>
+                    <span class="d-flex align-items-center gap-1">
+                        <i class="bi bi-clock"></i>{{ course.get_days_display_short }}
+                    </span>
+                    {% if course.room %}
+                    <span class="d-flex align-items-center gap-1"><i class="bi bi-geo-alt"></i>{{ course.room }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Capacity progress -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1" style="font-size:11px;">
+                        <span class="text-muted">Заполненность</span>
+                        <span class="fw-semibold {% if course.current_students_count >= course.capacity %}text-danger{% else %}text-success{% endif %}">
+                            {{ course.current_students_count }}/{{ course.capacity }}
+                        </span>
+                    </div>
+                    <div class="progress" style="height:5px;border-radius:99px;">
+                        <div class="progress-bar {% if course.current_students_count >= course.capacity %}bg-danger{% else %}bg-success{% endif %}"
+                             style="width:{% widthratio course.current_students_count course.capacity 100 %}%;border-radius:99px;"></div>
+                    </div>
+                </div>
+
+                <!-- Student stats -->
+                <div class="d-flex gap-2" style="font-size:11px;">
+                    <div class="flex-fill text-center p-2 rounded" style="background:#e8f5e9;">
+                        <div class="fw-bold text-success">{{ course.active_count }}</div>
+                        <div class="text-muted">Активных</div>
+                    </div>
+                    <div class="flex-fill text-center p-2 rounded" style="background:#fce4ec;">
+                        <div class="fw-bold text-danger">{{ course.left_count }}</div>
+                        <div class="text-muted">Ушедших</div>
+                    </div>
+                    <div class="flex-fill text-center p-2 rounded" style="background:#e3f2fd;">
+                        <div class="fw-bold text-info">{{ course.frozen_count }}</div>
+                        <div class="text-muted">Заморож.</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="card-footer d-flex align-items-center justify-content-between py-2 px-3" style="background:var(--sidebar-bg);border-top:1px solid var(--border-color);">
+                <span class="fw-semibold text-success" style="font-size:12px;">{{ course.price|floatformat:0 }} сум/мес</span>
+                <a href="{% url 'courses:detail' pk=course.pk %}" class="btn btn-sm btn-primary" style="font-size:11px;padding:3px 10px;">Открыть</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="empty-state">
+            <i class="bi bi-book fs-1 text-muted"></i>
+            <p class="text-muted mt-2">Курсы не найдены</p>
+            <a href="{% url 'courses:create' %}" class="btn btn-primary btn-sm">Создать первый курс</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

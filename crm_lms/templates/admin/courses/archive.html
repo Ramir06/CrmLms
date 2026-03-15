@@ -1,0 +1,28 @@
+{% extends "base/admin_base.html" %}
+{% block title %}Архив курсов{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'courses:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">Архив курсов</h4>
+    </div>
+</div>
+<div class="row g-3">
+    {% for course in courses %}
+    <div class="col-sm-6 col-xl-4">
+        <div class="course-card opacity-75">
+            <div class="course-card-top">
+                <h6 class="mb-1">{{ course.title }}</h6>
+                <span class="badge bg-secondary">{{ course.get_status_display }}</span>
+            </div>
+            <div class="course-card-footer">
+                <span class="text-muted small">{{ course.start_date|date:"d.m.Y"|default:"—" }}</span>
+                <a href="{% url 'courses:detail' pk=course.pk %}" class="btn btn-sm btn-outline-secondary">Открыть</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted py-5">Архив пуст</div>
+    {% endfor %}
+</div>
+{% endblock %}

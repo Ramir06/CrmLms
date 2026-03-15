@@ -1,0 +1,126 @@
+{% extends "students/base.html" %}
+{% load i18n %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="st-breadcrumb">
+    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
+    <span class="sep">/</span>
+    <a href="{% url 'students:schedule' %}">{% trans "Расписание" %}</a>
+    <span class="sep">/</span>
+    <span class="current">{{ lesson.title|default:"Занятие"|truncatechars:30 }}</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="p-4">
+
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;overflow:hidden;">
+        <div style="height:4px;background:var(--bs-primary);"></div>
+        <div class="card-body p-4">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+                <div>
+                    <span class="badge bg-light text-dark border mb-2">{{ course.title }}</span>
+                    <h3 class="fw-bold mb-2">{{ lesson.title|default:"Занятие" }}</h3>
+                    <div class="d-flex flex-wrap gap-3 text-muted">
+                        <span><i class="bi bi-calendar-event me-1"></i>{{ lesson.lesson_date|date:"d.m.Y" }}</span>
+                        <span><i class="bi bi-clock me-1"></i>{{ lesson.start_time|time:"H:i" }} – {{ lesson.end_time|time:"H:i" }}</span>
+                        {% if lesson.room %}
+                        <span><i class="bi bi-geo-alt me-1"></i>{{ lesson.room }}</span>
+                        {% endif %}
+                        <span>
+                            {% if lesson.type == 'exam' %}
+                            <span class="badge bg-danger">{% trans "Экзамен" %}</span>
+                            {% elif lesson.type == 'practice' %}
+                            <span class="badge bg-info">{% trans "Практика" %}</span>
+                            {% elif lesson.type == 'makeup' %}
+                            <span class="badge bg-warning text-dark">{% trans "Отработка" %}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{% trans "Обычное" %}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="text-end">
+                    {% if lesson.status == 'completed' %}
+                    <span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i>{% trans "Проведено" %}</span>
+                    {% elif lesson.status == 'scheduled' %}
+                    <span class="badge bg-primary fs-6"><i class="bi bi-clock me-1"></i>{% trans "Запланировано" %}</span>
+                    {% elif lesson.status == 'cancelled' %}
+                    <span class="badge bg-danger fs-6">{% trans "Отменено" %}</span>
+                    {% elif lesson.status == 'postponed' %}
+                    <span class="badge bg-warning text-dark fs-6">{% trans "Перенесено" %}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main info -->
+        <div class="col-lg-8">
+            {% if lesson.description %}
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3"><i class="bi bi-text-left me-2"></i>{% trans "Описание" %}</h5>
+                    <div class="text-secondary" style="white-space:pre-line;">{{ lesson.description }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if lesson.meet_link %}
+            <div class="card border-0 shadow-sm" style="border-radius:12px;">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3"><i class="bi bi-camera-video me-2"></i>{% trans "Онлайн-занятие" %}</h5>
+                    <a href="{{ lesson.meet_link }}" target="_blank" class="btn btn-success">
+                        <i class="bi bi-camera-video me-2"></i>{% trans "Присоединиться" %}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar info -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm" style="border-radius:12px;">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-3"><i class="bi bi-person-check me-2"></i>{% trans "Посещение" %}</h6>
+                    {% if att_record %}
+                        {% if att_record.attendance_status == 'present' %}
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                                <i class="bi bi-check-lg text-white"></i>
+                            </span>
+                            <span class="fw-medium text-success">{% trans "Присутствовал" %}</span>
+                        </div>
+                        {% elif att_record.attendance_status == 'late' %}
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="rounded-circle bg-warning d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                                <i class="bi bi-clock text-white"></i>
+                            </span>
+                            <span class="fw-medium text-warning">{% trans "Опоздал" %}</span>
+                        </div>
+                        {% else %}
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="rounded-circle bg-danger d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                                <i class="bi bi-x-lg text-white"></i>
+                            </span>
+                            <span class="fw-medium text-danger">{% trans "Отсутствовал" %}</span>
+                        </div>
+                        {% endif %}
+                        {% if att_record.comment %}
+                        <div class="text-muted small mt-2">{{ att_record.comment }}</div>
+                        {% endif %}
+                    {% else %}
+                        {% if lesson.status == 'scheduled' %}
+                        <p class="text-muted mb-0">{% trans "Занятие ещё не проведено" %}</p>
+                        {% else %}
+                        <p class="text-muted mb-0">{% trans "Нет данных" %}</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

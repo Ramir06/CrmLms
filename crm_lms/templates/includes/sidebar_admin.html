@@ -1,0 +1,112 @@
+{% load static i18n %}
+{% url 'dashboard:index' as url_dashboard %}
+{% url 'news:admin_list' as url_news %}
+{% url 'courses:list' as url_courses %}
+{% url 'calendar_app:admin_calendar' as url_calendar %}
+{% url 'admin_students:list' as url_students %}
+{% url 'mentors:list' as url_mentors %}
+{% url 'payments:list' as url_payments %}
+{% url 'debts:list' as url_debts %}
+{% url 'salaries:list' as url_salaries %}
+{% url 'leads:kanban' as url_leads %}
+{% url 'finance:list' as url_finance %}
+{% url 'reports:admin_reports' as url_reports %}
+{% url 'settings:dashboard' as url_settings %}
+
+<div class="main-menu menu-fixed menu-light menu-accordion menu-shadow" id="appSidebar">
+    <div class="navbar-header">
+        <ul class="nav navbar-nav flex-row">
+            <li class="nav-item me-auto">
+                <a class="navbar-brand" href="{{ url_dashboard }}">
+                    <div class="brand-logo"><i class="bi bi-mortarboard-fill"></i></div>
+                    <h2 class="brand-text">IT Academy</h2>
+                </a>
+            </li>
+            <li class="nav-item nav-toggle">
+                <button class="modern-nav-toggle" id="sidebarCollapseBtn" type="button">
+                    <i class="bi bi-record-circle d-none d-xl-block"></i>
+                    <i class="bi bi-x-lg d-block d-xl-none"></i>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="shadow-bottom"></div>
+
+    <div class="main-menu-content">
+        <ul class="navigation navigation-main">
+            <li class="navigation-header"><span>{% trans "Основное" %}</span></li>
+            <li class="nav-item {% if request.resolver_match.namespace == 'dashboard' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_dashboard }}">
+                    <i class="bi bi-house-door"></i><span class="menu-title text-truncate">{% trans "Дашборд" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'calendar' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_calendar }}">
+                    <i class="bi bi-calendar3"></i><span class="menu-title text-truncate">{% trans "Расписание" %}</span>
+                </a>
+            </li>
+
+            <li class="navigation-header"><span>{% trans "Управление" %}</span></li>
+            <li class="nav-item {% if 'courses' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_courses }}">
+                    <i class="bi bi-book"></i><span class="menu-title text-truncate">{% trans "Курсы" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'students' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_students }}">
+                    <i class="bi bi-people"></i><span class="menu-title text-truncate">{% trans "Студенты" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'mentors' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_mentors }}">
+                    <i class="bi bi-person-badge"></i><span class="menu-title text-truncate">{% trans "Менторы" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'leads' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_leads }}">
+                    <i class="bi bi-funnel"></i><span class="menu-title text-truncate">{% trans "Лиды" %}</span>
+                </a>
+            </li>
+
+            <li class="navigation-header"><span>{% trans "Финансы" %}</span></li>
+            <li class="nav-item {% if 'payments' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_payments }}">
+                    <i class="bi bi-credit-card"></i><span class="menu-title text-truncate">{% trans "Оплаты" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'debts' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_debts }}">
+                    <i class="bi bi-exclamation-circle"></i><span class="menu-title text-truncate">{% trans "Долги" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'salaries' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_salaries }}">
+                    <i class="bi bi-wallet2"></i><span class="menu-title text-truncate">{% trans "Зарплаты" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'finance' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_finance }}">
+                    <i class="bi bi-bar-chart"></i><span class="menu-title text-truncate">{% trans "Бухгалтерия" %}</span>
+                </a>
+            </li>
+
+            <li class="navigation-header"><span>{% trans "Другое" %}</span></li>
+            <li class="nav-item {% if 'news' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_news }}">
+                    <i class="bi bi-megaphone"></i><span class="menu-title text-truncate">{% trans "Объявления" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'reports' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_reports }}">
+                    <i class="bi bi-graph-up"></i><span class="menu-title text-truncate">{% trans "Отчёты" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'settings' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_settings }}">
+                    <i class="bi bi-gear"></i><span class="menu-title text-truncate">{% trans "Настройки" %}</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,178 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}{{ student.full_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'admin_students:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ student.full_name }}</h4>
+        <span class="badge {% if student.status == 'active' %}bg-success{% else %}bg-secondary{% endif %}">{{ student.get_status_display }}</span>
+        {% if student.user_account %}
+            {% if student.user_account.is_active %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-unlock me-1"></i>Активен</span>
+            {% else %}
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-lock me-1"></i>Заблокирован</span>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'admin_students:edit' pk=student.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Изменить</a>
+        <a href="{% url 'admin_students:delete' pk=student.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Удалить</a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <!-- Account card -->
+        {% if student.user_account %}
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-key me-1"></i>Аккаунт</h6></div>
+            <div class="card-body">
+                <div class="info-list">
+                    <div class="info-row"><span class="info-label">Email</span><span>{{ student.user_account.email }}</span></div>
+                    <div class="info-row"><span class="info-label">Статус</span>
+                        {% if student.user_account.is_active %}
+                        <span class="badge bg-success">Активен</span>
+                        {% else %}
+                        <span class="badge bg-danger">Заблокирован</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <form method="post" action="{% url 'admin_students:block' pk=student.pk %}">
+                        {% csrf_token %}
+                        {% if student.user_account.is_active %}
+                        <button type="submit" class="btn btn-sm btn-outline-warning" onclick="return confirm('Заблокировать аккаунт?')">
+                            <i class="bi bi-lock me-1"></i>Заблокировать
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-unlock me-1"></i>Разблокировать
+                        </button>
+                        {% endif %}
+                    </form>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                        <i class="bi bi-arrow-repeat me-1"></i>Сброс пароля
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card mb-3 border-warning">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-exclamation-triangle text-warning fs-4 d-block mb-1"></i>
+                <span class="text-muted small">Аккаунт не привязан</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="card-title mb-0">Данные студента</h6></div>
+            <div class="card-body">
+                <div class="info-list">
+                    <div class="info-row"><span class="info-label">Телефон</span><span>{{ student.phone }}</span></div>
+                    {% if student.parent_name %}<div class="info-row"><span class="info-label">Родитель</span><span>{{ student.parent_name }}</span></div>{% endif %}
+                    {% if student.parent_phone %}<div class="info-row"><span class="info-label">Тел. родителя</span><span>{{ student.parent_phone }}</span></div>{% endif %}
+                    {% if student.birth_date %}<div class="info-row"><span class="info-label">Дата рожд.</span><span>{{ student.birth_date|date:"d.m.Y" }}</span></div>{% endif %}
+                    <div class="info-row"><span class="info-label">Источник</span><span>{{ student.get_source_display|default:"—" }}</span></div>
+                    <div class="info-row"><span class="info-label">Добавлен</span><span>{{ student.created_at|date:"d.m.Y" }}</span></div>
+                </div>
+                {% if student.note %}<div class="mt-3 p-2 bg-light rounded small text-muted">{{ student.note }}</div>{% endif %}
+            </div>
+        </div>
+        <!-- Active debts -->
+        {% if debts %}
+        <div class="card border-danger">
+            <div class="card-header bg-danger bg-opacity-10"><h6 class="card-title mb-0 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Долги</h6></div>
+            <div class="card-body p-0">
+                {% for d in debts %}
+                <div class="p-3 border-bottom">
+                    <div class="fw-medium">{{ d.course.title }}</div>
+                    <div class="text-danger fw-bold">{{ d.debt_amount|floatformat:0 }} сум</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="card-title mb-0">Курсы</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>Курс</th><th>Статус</th><th>Прогресс</th><th>Зачислен</th></tr></thead>
+                    <tbody>
+                        {% for enr in enrollments %}
+                        <tr>
+                            <td><a href="{% url 'courses:detail' pk=enr.course.pk %}" class="text-decoration-none">{{ enr.course.title }}</a></td>
+                            <td><span class="badge bg-{{ enr.status|yesno:'success,secondary,warning,info' }}">{{ enr.get_status_display }}</span></td>
+                            <td><div class="progress" style="height:5px;width:80px"><div class="progress-bar" style="width:{{ enr.progress_percent }}%"></div></div></td>
+                            <td class="text-muted small">{{ enr.joined_at|date:"d.m.Y"|default:"—" }}</td>
+                        </tr>
+                        {% empty %}<tr><td colspan="4" class="text-muted text-center py-3">Не записан ни на один курс</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">Оплаты</h6>
+                <a href="{% url 'payments:create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i></a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>Курс</th><th>Сумма</th><th>Способ</th><th>Дата</th></tr></thead>
+                    <tbody>
+                        {% for p in payments %}
+                        <tr>
+                            <td>{{ p.course.title }}</td>
+                            <td class="text-success fw-semibold">{{ p.amount|floatformat:0 }}</td>
+                            <td class="text-muted">{{ p.get_payment_method_display }}</td>
+                            <td class="text-muted small">{{ p.paid_at|date:"d.m.Y" }}</td>
+                        </tr>
+                        {% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Нет оплат</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if student.user_account %}
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <form method="post" action="{% url 'admin_students:reset_password' pk=student.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h6 class="modal-title">Сброс пароля</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-2">Новый пароль для <strong>{{ student.full_name }}</strong></p>
+                    <input type="password" name="new_password" class="form-control" placeholder="Новый пароль" required minlength="4">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

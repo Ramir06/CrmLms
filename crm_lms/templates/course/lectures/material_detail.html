@@ -1,0 +1,54 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}{{ material.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'lectures:index' course_id=course.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ material.title }}</h4>
+        <span class="badge bg-light text-dark border">{{ material.get_type_display }}</span>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                {% if material.type == 'video' and material.video_url %}
+                <div class="ratio ratio-16x9 mb-3">
+                    <iframe src="{{ material.video_url }}" allowfullscreen></iframe>
+                </div>
+                {% endif %}
+
+                {% if material.type == 'file' and material.file %}
+                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded mb-3">
+                    <i class="bi bi-file-earmark fs-2 text-primary"></i>
+                    <div>
+                        <div class="fw-medium">{{ material.file.name|cut:"lectures/"|cut:"materials/" }}</div>
+                        <a href="{{ material.file.url }}" target="_blank" class="btn btn-sm btn-primary mt-1">
+                            <i class="bi bi-download me-1"></i>Скачать
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if material.type == 'link' and material.link_url %}
+                <div class="mb-3">
+                    <a href="{{ material.link_url }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Открыть ссылку
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if material.description %}
+                <div class="text-muted">{{ material.description|linebreaks }}</div>
+                {% endif %}
+
+                {% if material.content %}
+                <div class="mt-3 p-3 bg-light rounded">{{ material.content|linebreaks }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% load static i18n %}
+<nav class="header-navbar navbar navbar-expand-lg align-items-center floating-nav navbar-light" id="appNavbar">
+    <div class="navbar-container d-flex content">
+        <div class="bookmark-wrapper d-flex align-items-center">
+            <!-- Mobile menu toggle -->
+            <ul class="nav navbar-nav d-xl-none">
+                <li class="nav-item">
+                    <button class="nav-link" id="sidebarToggle" style="background:none;border:none;">
+                        <i class="bi bi-list fs-4"></i>
+                    </button>
+                </li>
+            </ul>
+            <!-- Calendar shortcut -->
+            <ul class="nav navbar-nav bookmark-icons">
+                <li class="nav-item d-none d-lg-block">
+                    {% if request.user.is_admin or request.user.is_superadmin %}
+                    <a class="nav-link" href="{% url 'calendar_app:admin_calendar' %}" title="{% trans 'Расписание' %}">
+                    {% else %}
+                    <a class="nav-link" href="{% url 'calendar_app:mentor_calendar' %}" title="{% trans 'Расписание' %}">
+                    {% endif %}
+                        <i class="bi bi-calendar3"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <ul class="nav navbar-nav align-items-center ms-auto">
+            <!-- Language switcher -->
+            <li class="nav-item dropdown">
+                {% get_current_language as LANGUAGE_CODE %}
+                <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" title="{% trans 'Язык' %}">
+                    <i class="bi bi-globe2"></i>
+                    <span class="d-none d-lg-inline ms-1" style="font-size:12px;">
+                        {% if LANGUAGE_CODE == 'ru' %}RU{% elif LANGUAGE_CODE == 'en' %}EN{% elif LANGUAGE_CODE == 'ky' %}KY{% endif %}
+                    </span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" style="min-width:140px;">
+                    <form method="post" action="{% url 'set_language' %}" id="lang-form-nav">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button type="submit" name="language" value="ru" class="dropdown-item {% if LANGUAGE_CODE == 'ru' %}active{% endif %}">
+                            🇷🇺 Русский
+                        </button>
+                        <button type="submit" name="language" value="en" class="dropdown-item {% if LANGUAGE_CODE == 'en' %}active{% endif %}">
+                            🇬🇧 English
+                        </button>
+                        <button type="submit" name="language" value="ky" class="dropdown-item {% if LANGUAGE_CODE == 'ky' %}active{% endif %}">
+                            🇰🇬 Кыргызча
+                        </button>
+                    </form>
+                </div>
+            </li>
+
+            <!-- Theme -->
+            <li class="nav-item d-none d-lg-block">
+                <button class="nav-link" id="themeToggle" title="{% trans 'Тема' %}">
+                    <i class="bi bi-moon" id="themeIcon"></i>
+                </button>
+            </li>
+
+            <!-- Notifications -->
+            <li class="nav-item dropdown">
+                <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notifications_count %}
+                    <span class="notif-badge">{{ unread_notifications_count }}</span>
+                    {% endif %}
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" style="width:300px;">
+                    <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+                        <span class="fw-semibold small">{% trans "Уведомления" %}</span>
+                        <a href="{% url 'notifications:mark_all_read' %}" class="small text-primary">{% trans "Прочитать все" %}</a>
+                    </div>
+                    <div class="p-3 text-center text-muted small">
+                        <i class="bi bi-bell-slash d-block fs-3 mb-1 opacity-25"></i>
+                        {% trans "Нет новых уведомлений" %}
+                    </div>
+                    <div class="border-top">
+                        <a class="dropdown-item text-center py-2 small" href="{% url 'notifications:list' %}" style="color:var(--primary);">{% trans "Все уведомления" %}</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- User dropdown -->
+            <li class="nav-item dropdown dropdown-user">
+                <button class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                    <div class="user-nav d-sm-flex d-none">
+                        <span class="user-name">{{ request.user.get_display_name|truncatechars:16 }}</span>
+                        <span class="user-status">{{ request.user.get_role_display }}</span>
+                    </div>
+                    {% if request.user.avatar %}
+                        <img class="navbar-avatar" src="{{ request.user.avatar.url }}" alt="">
+                    {% else %}
+                        <div class="navbar-avatar-placeholder">{{ request.user.get_display_name|first|upper }}</div>
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width:200px;">
+                    <li>
+                        <div class="px-3 py-2 border-bottom">
+                            <div class="fw-semibold" style="font-size:13px;">{{ request.user.get_display_name }}</div>
+                            <div class="text-muted" style="font-size:11px;">{{ request.user.email }}</div>
+                        </div>
+                    </li>
+                    <li><a class="dropdown-item mt-1" href="{% url 'accounts:profile' %}">
+                        <i class="bi bi-person me-2 text-muted"></i>{% trans "Профиль" %}
+                    </a></li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <form action="{% url 'accounts:logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="bi bi-box-arrow-right me-2"></i>{% trans "Выйти" %}
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>

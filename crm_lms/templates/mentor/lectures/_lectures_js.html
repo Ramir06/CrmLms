@@ -1,0 +1,70 @@
+<script>
+const TOGGLE_URL = '{% url "lectures:toggle_visibility" course_id=course.pk %}';
+const TYPE_LABELS = {material:'Добавить материал', assignment:'Добавить задание', quiz:'Добавить тест'};
+const TYPE_URLS = {
+    material: '{% url "lectures:material_create_ajax" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/'),
+    assignment: '{% url "lectures:assignment_create_in_section" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/'),
+    quiz: '{% url "lectures:quiz_create_in_section" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/')
+};
+
+function toggleVis(type, id, btn) {
+    fetch(TOGGLE_URL, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'type=' + type + '&id=' + id
+    }).then(r => r.json()).then(data => {
+        if (data.ok) {
+            const icon = btn.querySelector('i');
+            if (data.visible) {
+                icon.className = 'bi bi-eye';
+                btn.classList.remove('off');
+            } else {
+                icon.className = 'bi bi-eye-slash';
+                btn.classList.add('off');
+            }
+        }
+    });
+}
+
+document.querySelectorAll('.add-item-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        const sec = btn.dataset.section;
+        const type = btn.dataset.type;
+        document.getElementById('addItemSection').value = sec;
+        document.getElementById('addItemType').value = type;
+        document.getElementById('addItemTitle').textContent = TYPE_LABELS[type];
+        document.getElementById('addItemName').value = '';
+        document.getElementById('maxScoreGroup').style.display = type === 'assignment' ? '' : 'none';
+        new bootstrap.Modal(document.getElementById('addItemModal')).show();
+    });
+});
+
+document.getElementById('addItemSubmit').addEventListener('click', () => {
+    const sec = document.getElementById('addItemSection').value;
+    const type = document.getElementById('addItemType').value;
+    const name = document.getElementById('addItemName').value.trim();
+    if (!name) return;
+    const url = TYPE_URLS[type].replace('{sid}', sec);
+    const body = new URLSearchParams({title: name});
+    if (type === 'assignment') body.append('max_score', document.getElementById('addItemMaxScore').value);
+    fetch(url, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        body: body
+    }).then(r => r.json()).then(data => {
+        if (data.ok) location.reload();
+    });
+});
+
+document.querySelectorAll('.sb-sec-hdr').forEach(hdr => {
+    const target = hdr.getAttribute('data-bs-target');
+    if (target) {
+        const el = document.querySelector(target);
+        if (el) {
+            el.addEventListener('hide.bs.collapse', () => hdr.classList.add('collapsed'));
+            el.addEventListener('show.bs.collapse', () => hdr.classList.remove('collapsed'));
+        }
+    }
+});
+</script>

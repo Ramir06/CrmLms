@@ -1,0 +1,66 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}Смарт-отчёт — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Смарт-отчёт</h4>
+    <span class="badge bg-light text-dark border">{{ course.title }}</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-people"></i></div><div class="stat-value">{{ total_students }}</div><div class="stat-label">Студентов</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-person-check"></i></div><div class="stat-value">{{ avg_attendance }}%</div><div class="stat-label">Посещаемость</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card stat-orange"><div class="stat-icon"><i class="bi bi-check2-square"></i></div><div class="stat-value">{{ checked_submissions }}</div><div class="stat-label">Заданий проверено</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card stat-purple"><div class="stat-icon"><i class="bi bi-star"></i></div><div class="stat-value">{{ avg_score }}</div><div class="stat-label">Средний балл</div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0 text-success"><i class="bi bi-trophy me-1"></i>Лучшие студенты</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>#</th><th>Студент</th><th class="text-center">Посещ.</th><th class="text-center">Балл</th></tr></thead>
+                    <tbody>
+                        {% for row in best_students %}
+                        <tr>
+                            <td class="text-muted fw-bold">{{ forloop.counter }}</td>
+                            <td class="fw-medium">{{ row.cs.student.full_name }}</td>
+                            <td class="text-center">
+                                <span class="badge {% if row.att_pct >= 80 %}bg-success{% elif row.att_pct >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ row.att_pct }}%</span>
+                            </td>
+                            <td class="text-center fw-bold">{{ row.avg_score }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted py-3">Нет данных</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Требуют внимания</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>Студент</th><th class="text-center">Посещ.</th><th class="text-center">Балл</th></tr></thead>
+                    <tbody>
+                        {% for row in weak_students %}
+                        <tr>
+                            <td class="fw-medium">{{ row.cs.student.full_name }}</td>
+                            <td class="text-center">
+                                <span class="badge {% if row.att_pct >= 80 %}bg-success{% elif row.att_pct >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ row.att_pct }}%</span>
+                            </td>
+                            <td class="text-center">{{ row.avg_score }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">Нет данных</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

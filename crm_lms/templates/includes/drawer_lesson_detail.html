@@ -1,0 +1,94 @@
+{% load static %}
+<div class="lesson-drawer-content">
+    <div class="lesson-color-bar" style="background: {{ lesson.course.color }};"></div>
+
+    <div class="p-3">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge bg-{% if lesson.status == 'completed' %}success{% elif lesson.status == 'cancelled' %}danger{% elif lesson.status == 'postponed' %}warning{% else %}primary{% endif %}">
+                {{ lesson.get_status_display }}
+            </span>
+            <span class="badge bg-light text-dark border">{{ lesson.get_type_display }}</span>
+        </div>
+
+        <h6 class="fw-bold">{{ lesson.course.title }}</h6>
+        {% if lesson.title %}<p class="text-muted mb-2">{{ lesson.title }}</p>{% endif %}
+
+        <div class="drawer-info-list">
+            <div class="drawer-info-row">
+                <i class="bi bi-calendar3 text-muted"></i>
+                <span>{{ lesson.lesson_date|date:"d E Y" }}</span>
+            </div>
+            <div class="drawer-info-row">
+                <i class="bi bi-clock text-muted"></i>
+                <span>{{ lesson.start_time|time:"H:i" }} — {{ lesson.end_time|time:"H:i" }}</span>
+            </div>
+            {% if lesson.room %}
+            <div class="drawer-info-row">
+                <i class="bi bi-geo-alt text-muted"></i>
+                <span>{{ lesson.room }}</span>
+            </div>
+            {% endif %}
+            {% if lesson.course.mentor %}
+            <div class="drawer-info-row">
+                <i class="bi bi-person-badge text-muted"></i>
+                <span>{{ lesson.course.mentor.get_display_name }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if lesson.meet_link %}
+        <a href="{{ lesson.meet_link }}" target="_blank" class="btn btn-primary btn-sm w-100 mt-2">
+            <i class="bi bi-camera-video me-2"></i>Подключиться к уроку
+        </a>
+        {% endif %}
+
+        {% if lesson.description %}
+        <p class="text-muted small mt-2">{{ lesson.description }}</p>
+        {% endif %}
+    </div>
+
+    <div class="drawer-divider"></div>
+
+    <div class="p-3">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="mb-0 fw-semibold">Студенты ({{ students_data|length }})</h6>
+        </div>
+
+        <form method="post" action="{% url 'calendar_app:save_attendance' pk=lesson.pk %}" id="attendanceForm">
+            {% csrf_token %}
+            {% if students_data %}
+            <div class="attendance-list">
+                {% for item in students_data %}
+                <div class="attendance-item">
+                    <div class="attendance-student">
+                        <div class="student-avatar-sm">
+                            {{ item.student.full_name|first|upper }}
+                        </div>
+                        <span class="attendance-name">{{ item.student.full_name }}</span>
+                    </div>
+                    <select name="student_{{ item.student.pk }}" class="form-select form-select-sm attendance-select"
+                            onchange="updateAttendanceColor(this)">
+                        <option value="present" {% if item.attendance and item.attendance.attendance_status == 'present' %}selected{% endif %}>✔ Присутствовал</option>
+                        <option value="absent" {% if not item.attendance or item.attendance.attendance_status == 'absent' %}selected{% endif %}>✖ Отсутствовал</option>
+                        <option value="late" {% if item.attendance and item.attendance.attendance_status == 'late' %}selected{% endif %}>⏰ Опоздал</option>
+                        <option value="excused" {% if item.attendance and item.attendance.attendance_status == 'excused' %}selected{% endif %}>📋 Уважит.</option>
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-success btn-sm w-100 mt-3">
+                <i class="bi bi-save me-1"></i>Сохранить посещаемость
+            </button>
+            {% else %}
+            <p class="text-muted text-center small py-3">Нет студентов в группе</p>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.attendance-select').forEach(sel => updateAttendanceColor(sel));
+function updateAttendanceColor(sel) {
+    sel.className = 'form-select form-select-sm attendance-select att-' + sel.value;
+}
+</script>

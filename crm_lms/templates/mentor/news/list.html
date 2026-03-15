@@ -1,0 +1,23 @@
+{% extends "base/mentor_base.html" %}
+{% block title %}Объявления{% endblock %}
+{% block content %}
+<div class="page-header"><h4 class="page-title">Объявления</h4></div>
+<div class="row g-3">
+    {% for n in news %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="badge bg-light text-muted border">{{ n.get_audience_display }}</span>
+                    <small class="text-muted">{{ n.created_at|date:"d.m.Y" }}</small>
+                </div>
+                <h6 class="fw-semibold">{{ n.title }}</h6>
+                <p class="text-muted small mb-0">{{ n.content|truncatewords:20 }}</p>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted py-5">Нет объявлений</div>
+    {% endfor %}
+</div>
+{% endblock %}

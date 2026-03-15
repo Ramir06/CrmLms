@@ -1,0 +1,60 @@
+# Russian translation
+msgid ""
+msgstr ""
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "My Dashboard"
+msgstr "Мой кабинет"
+
+msgid "Welcome"
+msgstr "Добро пожаловать"
+
+msgid "Active courses"
+msgstr "Активные курсы"
+
+msgid "Progress"
+msgstr "Прогресс"
+
+msgid "Tests completed"
+msgstr "Тестов пройдено"
+
+msgid "My courses"
+msgstr "Мои курсы"
+
+msgid "You have no active courses"
+msgstr "У вас пока нет активных курсов"
+
+msgid "Open course"
+msgstr "Открыть курс"
+
+msgid "Recent tests"
+msgstr "Последние тесты"
+
+msgid "Passed"
+msgstr "Сдан"
+
+msgid "Not passed"
+msgstr "Не сдан"
+
+msgid "Student"
+msgstr "Студент"
+
+msgid "Logout"
+msgstr "Выход"
+
+msgid "Materials"
+msgstr "Материалы"
+
+msgid "Download"
+msgstr "Скачать"
+
+msgid "Previous"
+msgstr "Предыдущий"
+
+msgid "Next"
+msgstr "Следующий"
+
+msgid "Back to course"
+msgstr "Назад к курсу"

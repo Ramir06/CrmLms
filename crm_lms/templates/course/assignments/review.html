@@ -1,0 +1,69 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}Проверка задания{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'assignments:matrix' course_id=course.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">Проверка: {{ submission.assignment.title }}</h4>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="card-title mb-0">Работа студента</h6></div>
+            <div class="card-body">
+                <div class="info-list mb-3">
+                    <div class="info-row"><span class="info-label">Студент</span><span class="fw-semibold">{{ submission.student.full_name }}</span></div>
+                    <div class="info-row"><span class="info-label">Сдано</span><span>{{ submission.submitted_at|date:"d.m.Y H:i" }}</span></div>
+                    <div class="info-row"><span class="info-label">Макс. балл</span><span>{{ submission.assignment.max_score }}</span></div>
+                </div>
+
+                {% if submission.file %}
+                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded mb-3">
+                    <i class="bi bi-file-earmark fs-2 text-primary"></i>
+                    <a href="{{ submission.file.url }}" target="_blank" class="btn btn-sm btn-primary">
+                        <i class="bi bi-download me-1"></i>Скачать файл
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if submission.text %}
+                <div class="p-3 bg-light rounded">
+                    <h6 class="small fw-semibold text-muted mb-2">Текст ответа</h6>
+                    <p class="mb-0">{{ submission.text }}</p>
+                </div>
+                {% endif %}
+
+                {% if submission.link %}
+                <div class="mt-2">
+                    <a href="{{ submission.link }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Открыть ссылку
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0">Оценка</h6></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-check-circle me-1"></i>Выставить оценку
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

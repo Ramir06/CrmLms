@@ -1,0 +1,83 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}Добавить вопрос{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'quizzes:detail' course_id=course.pk quiz_id=quiz.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">Новый вопрос — {{ quiz.title }}</h4>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post" id="questionForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Текст вопроса <span class="text-danger">*</span></label>
+                        <textarea name="text" class="form-control" rows="3" required placeholder="Введите текст вопроса..."></textarea>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Тип вопроса</label>
+                            <select name="question_type" class="form-select" id="questionType">
+                                <option value="single">Один правильный ответ</option>
+                                <option value="multiple">Несколько правильных ответов</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Баллы за вопрос</label>
+                            <input type="number" name="points" class="form-control" value="1" min="1" max="100">
+                        </div>
+                    </div>
+
+                    <h6 class="fw-semibold mb-3">Варианты ответов <small class="text-muted fw-normal">(отметьте правильные)</small></h6>
+                    <div id="choicesList">
+                        {% for i in "0123" %}
+                        <div class="choice-row d-flex align-items-center gap-2 mb-2">
+                            <input type="checkbox" name="choice_correct" value="{{ forloop.counter0 }}" class="form-check-input flex-shrink-0" style="width:18px;height:18px;" title="Правильный">
+                            <input type="text" name="choice_text" class="form-control form-control-sm" placeholder="Вариант ответа {{ forloop.counter }}">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-choice" style="flex-shrink:0;"><i class="bi bi-x"></i></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mb-4" id="addChoice">
+                        <i class="bi bi-plus-lg me-1"></i>Добавить вариант
+                    </button>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Сохранить вопрос</button>
+                        <a href="{% url 'quizzes:detail' course_id=course.pk quiz_id=quiz.pk %}" class="btn btn-outline-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+let choiceCount = 4;
+document.getElementById('addChoice').addEventListener('click', function() {
+    const list = document.getElementById('choicesList');
+    const row = document.createElement('div');
+    row.className = 'choice-row d-flex align-items-center gap-2 mb-2';
+    row.innerHTML = `<input type="checkbox" name="choice_correct" value="${choiceCount}" class="form-check-input flex-shrink-0" style="width:18px;height:18px;" title="Правильный">
+        <input type="text" name="choice_text" class="form-control form-control-sm" placeholder="Вариант ответа ${choiceCount + 1}">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-choice" style="flex-shrink:0;"><i class="bi bi-x"></i></button>`;
+    list.appendChild(row);
+    choiceCount++;
+    bindRemove();
+});
+function bindRemove() {
+    document.querySelectorAll('.remove-choice').forEach(btn => {
+        btn.onclick = function() {
+            const rows = document.querySelectorAll('.choice-row');
+            if (rows.length > 2) this.closest('.choice-row').remove();
+        };
+    });
+}
+bindRemove();
+</script>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% load ticket_filters %}
+<!-- Таблица талонов для бесконечного курса -->
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <h6 class="card-title mb-0">
+                <i class="bi bi-ticket-perforated me-2"></i>Талоны
+            </h6>
+            <span class="badge bg-info">{{ active_students|length }}</span>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="showTicketSummary()">
+                <i class="bi bi-bar-chart me-1"></i>Сводка
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" style="font-size:13px;">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:32px">#</th>
+                        <th>ФИО</th>
+                        <th>Талонов</th>
+                        <th>Использовано</th>
+                        <th>Посещено</th>
+                        <th>Статус</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cs in active_students %}
+                    {% with current_ticket_data=ticket_data|lookup_dict:cs.pk %}
+                    <tr class="{% if current_ticket_data and current_ticket_data.ticket_status == 'no_tickets' %}table-danger{% elif current_ticket_data and current_ticket_data.ticket_status == 'low_tickets' %}table-warning{% endif %}">
+                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{% url 'admin_students:detail' pk=cs.student.pk %}" class="text-decoration-none fw-medium d-flex align-items-center gap-2">
+                                <span class="avatar-xs rounded-circle {% if current_ticket_data and current_ticket_data.ticket_status == 'no_tickets' %}bg-danger{% elif current_ticket_data and current_ticket_data.ticket_status == 'low_tickets' %}bg-warning{% else %}bg-primary{% endif %} text-white d-inline-flex align-items-center justify-content-center" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
+                                    {{ cs.student.full_name|first }}
+                                </span>
+                                {{ cs.student.full_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="fw-medium">
+                                {% if current_ticket_data %}{{ current_ticket_data.balance.total_tickets }}{% else %}0{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-muted">
+                                {% if current_ticket_data %}{{ current_ticket_data.balance.used_tickets }}{% else %}0{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-muted">
+                                {% if current_ticket_data %}{{ current_ticket_data.balance.total_attended_lessons }}{% else %}0{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if current_ticket_data %}
+                                {% if current_ticket_data.ticket_status == 'no_tickets' %}
+                                    <span class="badge bg-danger">
+                                        {{ current_ticket_data.ticket_status_display }}
+                                    </span>
+                                {% elif current_ticket_data.ticket_status == 'low_tickets' %}
+                                    <span class="badge bg-warning text-dark">
+                                        {{ current_ticket_data.ticket_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        {{ current_ticket_data.ticket_status_display }}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Нет данных</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'courses:add_tickets' cs_pk=cs.pk %}" class="btn btn-outline-primary" title="Добавить талоны">
+                                    <i class="bi bi-plus-lg"></i>
+                                </a>
+                                <a href="{% url 'courses:mark_attendance' cs_pk=cs.pk %}" class="btn btn-outline-success" title="Отметить посещение">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                <a href="{% url 'courses:ticket_history' cs_pk=cs.pk %}" class="btn btn-outline-info" title="История">
+                                    <i class="bi bi-clock-history"></i>
+                                </a>
+                                <a href="{% url 'courses:adjust_tickets' cs_pk=cs.pk %}" class="btn btn-outline-warning" title="Корректировать">
+                                    <i class="bi bi-gear"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-ticket-perforated fs-2 d-block mb-2 opacity-50"></i>
+                            Нет студентов на бесконечном курсе
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно сводки -->
+<div class="modal fade" id="ticketSummaryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Сводка по талонам</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="fs-2 fw-bold text-primary">{{ active_students|length }}</div>
+                            <div class="text-muted small">Всего студентов</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-success-subtle rounded">
+                            <div class="fs-2 fw-bold text-success">—</div>
+                            <div class="text-muted small">С талонами</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-warning-subtle rounded">
+                            <div class="fs-2 fw-bold text-warning">—</div>
+                            <div class="text-muted small">Заканчиваются</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-danger-subtle rounded">
+                            <div class="fs-2 fw-bold text-danger">—</div>
+                            <div class="text-muted small">Без талонов</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h6>Финансовая сводка</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="fw-bold">— сум</div>
+                                <div class="text-muted small">Общая сумма пополнений</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="fw-bold">—</div>
+                                <div class="text-muted small">Всего талонов куплено</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Детальная статистика доступна в истории каждого студента
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTicketSummary() {
+    const modal = new bootstrap.Modal(document.getElementById('ticketSummaryModal'));
+    modal.show();
+}
+</script>

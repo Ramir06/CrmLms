@@ -1,0 +1,43 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}Объявления{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Объявления</h4>
+    <a href="{% url 'news:create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Создать</a>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Заголовок</th><th>Аудитория</th><th>Опубликовано</th><th>Автор</th><th>Дата</th><th></th></tr></thead>
+            <tbody>
+                {% for n in news %}
+                <tr>
+                    <td class="fw-medium">{{ n.title }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ n.get_audience_display }}</span></td>
+                    <td>
+                        <form action="{% url 'news:toggle' pk=n.pk %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm {% if n.is_published %}btn-success{% else %}btn-outline-secondary{% endif %}">
+                                {% if n.is_published %}<i class="bi bi-eye"></i> Опубликовано{% else %}<i class="bi bi-eye-slash"></i> Черновик{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                    <td class="text-muted small">{{ n.created_by.get_display_name|default:"—" }}</td>
+                    <td class="text-muted small">{{ n.created_at|date:"d.m.Y" }}</td>
+                    <td>
+                        <a href="{% url 'news:edit' pk=n.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                        <form action="{% url 'news:delete' pk=n.pk %}" method="post" class="d-inline" onsubmit="return confirm('Удалить?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">Нет объявлений</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

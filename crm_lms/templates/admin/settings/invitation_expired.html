@@ -1,0 +1,35 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Приглашение истекло{% endblock %}
+
+{% block extra_css %}
+<style>
+.expired-card{max-width:500px;margin:2rem auto;border:1px solid #ebe9f1;border-radius:.428rem;background:#fff}
+.expired-header{background:#ea5455;color:#fff;padding:2rem;text-align:center}
+.expired-body{padding:2rem}
+.expired-title{font-size:1.5rem;font-weight:600;margin-bottom:1rem}
+.expired-subtitle{color:#6e6b7b;margin-bottom:2rem}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="expired-card">
+        <div class="expired-header">
+            <i class="bi bi-clock-history" style="font-size:3rem"></i>
+            <h2 class="expired-title">Приглашение истекло</h2>
+        </div>
+        <div class="expired-body">
+            <p class="expired-subtitle">
+                Срок действия этого приглашения истек. Пожалуйста, запросите новое приглашение.
+            </p>
+            
+            <div class="text-center">
+                <a href="{% url 'core:index' %}" class="btn btn-primary">
+                    Перейти на главную
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

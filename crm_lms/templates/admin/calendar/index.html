@@ -1,0 +1,55 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}Календарь{% endblock %}
+
+{% block extra_css %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet'>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Календарь занятий</h4>
+    <div class="page-actions">
+        <select id="courseFilter" class="form-select form-select-sm" style="width:200px">
+            <option value="">Все курсы</option>
+            {% for c in courses %}
+            <option value="{{ c.pk }}" style="color:{{ c.color }}">{{ c.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <div id="adminCalendar"></div>
+    </div>
+</div>
+
+<!-- Right drawer for lesson details -->
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src="{% static 'js/calendar.js' %}"></script>
+<script>
+const LESSONS_API_URL = "{% url 'calendar_app:events_api' %}";
+const CALENDAR_MODE = 'admin';
+initAdminCalendar(LESSONS_API_URL);
+
+function loadLessonDrawer(eventId) {
+    const drawerTitle = document.getElementById('drawerTitle');
+    const drawerBody = document.getElementById('drawerBody');
+    const drawer = document.getElementById('drawerPanel');
+    const overlay = document.getElementById('drawerOverlay');
+    if (!drawer) return;
+    if (drawerTitle) drawerTitle.textContent = 'Детали урока';
+    if (drawerBody) drawerBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+    drawer.classList.add('open');
+    if (overlay) overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    fetch('/calendar/event/' + eventId + '/drawer/')
+        .then(r => r.text())
+        .then(html => { if (drawerBody) drawerBody.innerHTML = html; })
+        .catch(() => { if (drawerBody) drawerBody.innerHTML = '<p class="text-danger p-3">Ошибка загрузки</p>'; });
+}
+</script>
+{% endblock %}

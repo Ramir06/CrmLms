@@ -1,0 +1,194 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}Корректировать талоны - {{ cs.student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'courses:detail' pk=cs.course.pk %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Назад
+        </a>
+        <div>
+            <h4 class="page-title mb-0">{{ page_title }}</h4>
+            <div class="text-muted small">
+                Курс: {{ cs.course.title }} | Студент: {{ cs.student.full_name }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-gear me-2"></i>Корректировка количества талонов
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Текущий баланс -->
+                <div class="alert bg-light border-secondary mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-medium">Текущий баланс</div>
+                            <div class="text-muted small">{{ cs.student.full_name }}</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge bg-primary fs-6">
+                                {{ balance.total_tickets }} всего / 
+                                {{ balance.used_tickets }} использовано
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.new_total.id_for_label }}" class="form-label">
+                            {{ form.new_total.label }}
+                        </label>
+                        {{ form.new_total }}
+                        {% if form.new_total.errors %}
+                            <div class="invalid-feedback d-block">{{ form.new_total.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            Новое общее количество талонов (не может быть отрицательным)
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.comment.id_for_label }}" class="form-label">
+                            {{ form.comment.label }}
+                        </label>
+                        {{ form.comment }}
+                        {% if form.comment.errors %}
+                            <div class="invalid-feedback d-block">{{ form.comment.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Укажите причину корректировки</div>
+                    </div>
+                    
+                    <!-- Предпросчет изменений -->
+                    <div class="alert bg-light border-secondary mb-4" id="previewAlert" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-medium">Изменения</div>
+                                <div class="text-muted small">Что произойдет после корректировки</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="badge fs-6" id="changeBadge">
+                                    +0 талонов
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="small text-muted">
+                                <span>Баланс после корректировки: </span>
+                                <span class="fw-bold" id="newBalance">{{ balance.total_tickets }}</span>
+                                <span> талонов</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-gear me-1"></i>Корректировать
+                        </button>
+                        <a href="{% url 'courses:detail' pk=cs.course.pk %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- История корректировок -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">История операций</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Дата</th>
+                                <th>Операция</th>
+                                <th>Количество</th>
+                                <th>Автор</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in cs.ticket_transactions.all|slice:":5" %}
+                            <tr>
+                                <td class="text-muted small">{{ tx.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ tx.get_operation_type_display }}
+                                    </span>
+                                </td>
+                                <td class="fw-medium">{{ tx.quantity }}</td>
+                                <td class="text-muted small">
+                                    {% if tx.created_by %}
+                                        {{ tx.created_by.get_display_name }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    Нет операций
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const newTotalInput = document.getElementById('{{ form.new_total.id_for_label }}');
+    const currentTotal = {{ balance.total_tickets }};
+    const previewAlert = document.getElementById('previewAlert');
+    const changeBadge = document.getElementById('changeBadge');
+    const newBalance = document.getElementById('newBalance');
+    
+    function updatePreview() {
+        const newTotal = parseInt(newTotalInput.value) || 0;
+        const change = newTotal - currentTotal;
+        
+        if (newTotal !== currentTotal) {
+            previewAlert.style.display = 'block';
+            
+            // Обновить бейдж изменения
+            changeBadge.textContent = `${change > 0 ? '+' : ''}${change} талонов`;
+            changeBadge.className = 'badge fs-6';
+            if (change > 0) {
+                changeBadge.classList.add('bg-success');
+            } else if (change < 0) {
+                changeBadge.classList.add('bg-danger');
+            } else {
+                changeBadge.classList.add('bg-secondary');
+            }
+            
+            // Обновить баланс
+            newBalance.textContent = newTotal;
+        } else {
+            previewAlert.style.display = 'none';
+        }
+    }
+    
+    newTotalInput.addEventListener('input', updatePreview);
+});
+</script>
+{% endblock %}

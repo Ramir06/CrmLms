@@ -1,0 +1,140 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}Студенты{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Студенты</h4>
+    <div class="page-actions">
+        <a href="{% url 'admin_students:export' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Excel</a>
+        <a href="{% url 'admin_students:create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
+    </div>
+</div>
+<div class="filter-bar mb-3">
+    <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
+        <input type="text" name="q" value="{{ search }}" class="form-control form-control-sm" placeholder="Поиск по имени, телефону..." style="width:220px">
+        <select name="status" class="form-select form-select-sm" style="width:160px">
+            <option value="">Все статусы</option>
+            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Активные</option>
+            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Неактивные</option>
+            <option value="graduated" {% if status_filter == 'graduated' %}selected{% endif %}>Выпускники</option>
+            <option value="expelled" {% if status_filter == 'expelled' %}selected{% endif %}>Отчисленные</option>
+            <option value="left" {% if status_filter == 'left' %}selected{% endif %}>Ушедшие</option>
+        </select>
+        <select name="subject" class="form-select form-select-sm" style="width:180px">
+            <option value="">Все предметы</option>
+            {% for subj in subjects %}
+            <option value="{{ subj }}" {% if subject_filter == subj %}selected{% endif %}>{{ subj }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i>Применить</button>
+        {% if search or status_filter or subject_filter %}<a href="{% url 'admin_students:list' %}" class="btn btn-outline-secondary btn-sm">Сброс</a>{% endif %}
+    </form>
+</div>
+<!-- Active Students -->
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h6 class="mb-0">Текущие студенты</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>ФИО</th><th>Телефон</th><th>Курсы</th><th>Источник</th><th>Статус</th><th>Аккаунт</th><th>Добавлен</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for s in active_students %}
+                    <tr>
+                        <td><a href="{% url 'admin_students:detail' pk=s.pk %}" class="fw-medium text-decoration-none">{{ s.full_name }}</a></td>
+                        <td class="text-muted">{{ s.phone }}</td>
+                        <td>
+                            {% for enr in s.course_enrollments.all|slice:":2" %}
+                                {% if enr.status == 'active' %}
+                                <span class="badge bg-success-subtle text-success border">{{ enr.course.title }}</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark border">{{ enr.course.title }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td><span class="text-muted small">{{ s.get_source_display|default:"—" }}</span></td>
+                        <td>
+                            <span class="badge {% if s.status == 'active' %}bg-success{% elif s.status == 'graduated' %}bg-info{% else %}bg-secondary{% endif %}">
+                                {{ s.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if s.user_account %}
+                                {% if s.user_account.is_active %}
+                                <span class="badge bg-success-subtle text-success"><i class="bi bi-unlock-fill"></i></span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger"><i class="bi bi-lock-fill"></i></span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ s.created_at|date:"d.m.Y" }}</td>
+                        <td><a href="{% url 'admin_students:detail' pk=s.pk %}" class="btn btn-sm btn-outline-primary">Открыть</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted py-4">Студенты не найдены</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Students Who Left Courses -->
+{% if left_students %}
+<div class="card">
+    <div class="card-header bg-warning bg-opacity-10 border-warning">
+        <h6 class="mb-0 text-warning"><i class="bi bi-x-circle me-2"></i>Покинули курс</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>ФИО</th><th>Телефон</th><th>Курсы</th><th>Источник</th><th>Статус</th><th>Аккаунт</th><th>Добавлен</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for s in left_students %}
+                    <tr class="table-warning bg-opacity-5">
+                        <td><a href="{% url 'admin_students:detail' pk=s.pk %}" class="fw-medium text-decoration-none">{{ s.full_name }}</a></td>
+                        <td class="text-muted">{{ s.phone }}</td>
+                        <td>
+                            {% for enr in s.course_enrollments.all %}
+                                {% if enr.status == 'left' %}
+                                <span class="badge bg-warning text-dark border">{{ enr.course.title }}</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark border">{{ enr.course.title }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td><span class="text-muted small">{{ s.get_source_display|default:"—" }}</span></td>
+                        <td>
+                            <span class="badge {% if s.status == 'active' %}bg-success{% elif s.status == 'graduated' %}bg-info{% else %}bg-secondary{% endif %}">
+                                {{ s.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if s.user_account %}
+                                {% if s.user_account.is_active %}
+                                <span class="badge bg-success-subtle text-success"><i class="bi bi-unlock-fill"></i></span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger"><i class="bi bi-lock-fill"></i></span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ s.created_at|date:"d.m.Y" }}</td>
+                        <td><a href="{% url 'admin_students:detail' pk=s.pk %}" class="btn btn-sm btn-outline-primary">Открыть</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'courses:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ page_title }}</h4>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-medium">Название <span class="text-danger">*</span></label>
+                            {{ form.title }}
+                            {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Направление</label>
+                            {{ form.subject }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Статус</label>
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Формат</label>
+                            {{ form.format }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Цвет</label>
+                            {{ form.color }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Ментор</label>
+                            {{ form.mentor }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Помощник ментора</label>
+                            {{ form.assistant_mentor }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Дата начала</label>
+                            {{ form.start_date }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Дата окончания</label>
+                            {{ form.end_date }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Длительность (мес.)</label>
+                            {{ form.duration_months }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Дни занятий</label>
+                            {{ form.days_of_week }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Начало урока</label>
+                            {{ form.lesson_start_time }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Конец урока</label>
+                            {{ form.lesson_end_time }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Стоимость</label>
+                            {{ form.price }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Кабинет</label>
+                            {{ form.room }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Вместимость</label>
+                            {{ form.capacity }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch mb-3">
+                                {{ form.is_unlimited }}
+                                <label class="form-check-label fw-medium" for="{{ form.is_unlimited.id_for_label }}">
+                                    {{ form.is_unlimited.label }}
+                                </label>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Бесконечный курс</strong> - для таких курсов работает система талонов.
+                                Студенты могут посещать занятия по талонам без ограничения по времени.
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Описание</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Сохранить
+                        </button>
+                        <a href="{% url 'courses:list' %}" class="btn btn-outline-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

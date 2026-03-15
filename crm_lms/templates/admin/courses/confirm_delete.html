@@ -1,0 +1,38 @@
+{% extends "base/admin_base.html" %}
+{% block title %}Удалить курс{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'courses:detail' pk=course.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">Удалить курс</h4>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-body text-center py-4">
+                <div class="mb-3" style="font-size:48px; color:var(--danger);"><i class="bi bi-book-x"></i></div>
+                <h5 class="fw-semibold mb-2">Вы уверены?</h5>
+                <p class="text-muted mb-1">Будет удалён курс:</p>
+                <p class="fw-bold fs-5 mb-1">{{ course.title }}</p>
+                <p class="text-muted small mb-4">{{ course.get_status_display }} · {{ course.mentor.get_display_name|default:"Без ментора" }}</p>
+                <div class="alert alert-warning text-start small mb-4">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Это действие <strong>необратимо</strong>. Будут удалены все уроки, записи студентов, оплаты и посещаемость по этому курсу.
+                </div>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'courses:detail' pk=course.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Отмена
+                    </a>
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Удалить навсегда
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

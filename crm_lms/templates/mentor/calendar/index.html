@@ -1,0 +1,24 @@
+{% extends "base/mentor_base.html" %}
+{% load static %}
+{% block title %}Расписание{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Моё расписание</h4>
+</div>
+<div class="card">
+    <div class="card-body">
+        <div id="mentorCalendar"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src="{% static 'js/calendar.js' %}"></script>
+<script>
+const LESSONS_API_URL = "{% url 'calendar_app:events_api' %}";
+initMentorCalendar(LESSONS_API_URL);
+</script>
+{% endblock %}

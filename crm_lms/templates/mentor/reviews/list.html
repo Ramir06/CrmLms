@@ -1,0 +1,143 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}Отзывы — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Отзывы студентов</h4>
+</div>
+
+<!-- Aggregated Stats -->
+{% if total_responses > 0 %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-emoji-smile fs-3 d-block mb-1" style="color:#ff9f43"></i>
+                <div class="fs-3 fw-bold" style="color:#5e5873">{{ avg_mood|default:"—" }}</div>
+                <div class="text-muted small">Настроение студентов на уроке</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-person-check fs-3 d-block mb-1" style="color:#7367f0"></i>
+                <div class="fs-3 fw-bold" style="color:#5e5873">{{ avg_mentor|default:"—" }}</div>
+                <div class="text-muted small">Вашу работу оценивают как</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-lightning-charge fs-3 d-block mb-1" style="color:#28c76f"></i>
+                <div class="fs-3 fw-bold" style="color:#5e5873">{{ avg_activity|default:"—" }}</div>
+                <div class="text-muted small">Активность студентов</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="alert alert-light border mb-4">
+    <i class="bi bi-info-circle me-1"></i> Всего ответов: <strong>{{ total_responses }}</strong>
+</div>
+{% endif %}
+
+<!-- Lessons Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between">
+        <h6 class="mb-0 fw-semibold">Занятия</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead style="background:#fafafc">
+                <tr>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b" class="ps-3">#</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b">Дата</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b">Тема</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b">Статус</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b" class="text-center">Ответов</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b" class="text-end pe-3">Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in lesson_rows %}
+                <tr>
+                    <td class="ps-3">{{ forloop.counter }}</td>
+                    <td>{{ row.lesson.lesson_date|date:"d.m.Y" }}</td>
+                    <td>{{ row.lesson.title|default:"—" }}</td>
+                    <td>
+                        <span class="badge {% if row.lesson.status == 'completed' %}bg-success{% elif row.lesson.status == 'scheduled' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                            {{ row.lesson.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        {% if row.link %}
+                        <span class="badge bg-primary">{{ row.response_count }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-3">
+                        {% if row.link %}
+                        <a href="{% url 'reviews:detail' course_id=course.pk lesson_id=row.lesson.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Посмотреть отзывы">
+                            <i class="bi bi-eye me-1"></i>Посмотреть
+                        </a>
+                        <button class="btn btn-sm btn-outline-secondary copy-link-btn"
+                                data-link="{{ request.scheme }}://{{ request.get_host }}/feedback/{{ row.link.token }}/"
+                                title="Копировать ссылку">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                        {% else %}
+                        <button class="btn btn-sm btn-primary generate-link-btn"
+                                data-url="{% url 'reviews:generate_link' course_id=course.pk lesson_id=row.lesson.pk %}"
+                                data-lesson-id="{{ row.lesson.pk }}">
+                            <i class="bi bi-link-45deg me-1"></i>Сгенерировать форму
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        <i class="bi bi-calendar-x fs-3 d-block mb-2"></i>
+                        Нет занятий
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% block extra_js_base %}
+<script>
+document.querySelectorAll('.generate-link-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const url = this.dataset.url;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+            || '{{ csrf_token }}';
+        fetch(url, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded'},
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) {
+                location.reload();
+            }
+        });
+    });
+});
+document.querySelectorAll('.copy-link-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const link = this.dataset.link;
+        navigator.clipboard.writeText(link).then(() => {
+            const icon = this.querySelector('i');
+            icon.className = 'bi bi-check-lg text-success';
+            setTimeout(() => { icon.className = 'bi bi-clipboard'; }, 1500);
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

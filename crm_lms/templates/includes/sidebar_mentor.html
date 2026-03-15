@@ -1,0 +1,77 @@
+{% load static i18n %}
+{% url 'dashboard:index' as url_dashboard %}
+{% url 'calendar_app:mentor_calendar' as url_calendar %}
+{% url 'news:mentor_list' as url_news %}
+{% url 'accounts:profile' as url_profile %}
+{% url 'salaries:mentor_view' as url_salary %}
+
+<div class="main-menu menu-fixed menu-light menu-accordion menu-shadow" id="appSidebar">
+    <div class="navbar-header">
+        <ul class="nav navbar-nav flex-row">
+            <li class="nav-item me-auto">
+                <a class="navbar-brand" href="{{ url_dashboard }}">
+                    <div class="brand-logo"><i class="bi bi-mortarboard-fill"></i></div>
+                    <h2 class="brand-text">IT Academy</h2>
+                </a>
+            </li>
+            <li class="nav-item nav-toggle">
+                <button class="modern-nav-toggle" id="sidebarCollapseBtn" type="button">
+                    <i class="bi bi-record-circle d-none d-xl-block"></i>
+                    <i class="bi bi-x-lg d-block d-xl-none"></i>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="shadow-bottom"></div>
+
+    <div class="main-menu-content">
+        <ul class="navigation navigation-main">
+            <li class="navigation-header"><span>{% trans "Меню" %}</span></li>
+            <li class="nav-item {% if 'dashboard' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_dashboard }}">
+                    <i class="bi bi-house-door"></i><span class="menu-title text-truncate">{% trans "Главная" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'calendar' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_calendar }}">
+                    <i class="bi bi-calendar3"></i><span class="menu-title text-truncate">{% trans "Расписание" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'news' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_news }}">
+                    <i class="bi bi-megaphone"></i><span class="menu-title text-truncate">{% trans "Объявления" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'salary' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{{ url_salary }}">
+                    <i class="bi bi-wallet2"></i><span class="menu-title text-truncate">{% trans "Зарплата" %}</span>
+                </a>
+            </li>
+
+            {% if my_courses %}
+            <li class="navigation-header"><span>{% trans "Мои курсы" %}</span></li>
+            {% for course in my_courses %}
+            <li class="nav-item {% if course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'lectures:index' course_id=course.pk %}">
+                    <i class="bi bi-book"></i>
+                    <span class="menu-title text-truncate">{{ course.title }}</span>
+                    <span class="badge bg-secondary ms-auto" style="font-size:10px;">{{ course.current_students_count }}</span>
+                </a>
+            </li>
+            {% endfor %}
+            {% endif %}
+
+            <li class="navigation-header d-xl-none"><span>{% trans "Аккаунт" %}</span></li>
+            <li class="nav-item d-xl-none">
+                <form action="{% url 'accounts:logout' %}" method="post" style="margin:2px 12px;">
+                    {% csrf_token %}
+                    <button type="submit" class="d-flex align-items-center w-100 text-danger" style="background:none;border:none;padding:10px 15px;font-size:.85rem;border-radius:5px;">
+                        <i class="bi bi-box-arrow-right" style="margin-right:.6rem;width:1.1rem;"></i>
+                        <span>{% trans "Выйти" %}</span>
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>

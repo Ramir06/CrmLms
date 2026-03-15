@@ -1,0 +1,61 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}Автоматический расчет зарплат{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'salaries:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ page_title }}</h4>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Месяц для расчета</label>
+                        <input type="month" name="month" value="{{ current_month }}" class="form-control" required>
+                        <div class="form-text">Выберите месяц для автоматического расчета зарплат всех менторов</div>
+                    </div>
+
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Как работает расчет:</h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Фиксированная:</strong> установленная сумма</li>
+                            <li><strong>Почасовая:</strong> количество проведенных уроков × ставка за час</li>
+                            <li><strong>Процент:</strong> процент от всех оплат по курсам ментора</li>
+                            <li><strong>Смешанная:</strong> фиксированная + процент от оплат</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-calculator me-2"></i>Рассчитать и создать
+                        </button>
+                        <a href="{% url 'salaries:list' %}" class="btn btn-outline-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Советы</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small mb-0">
+                    <li>Перед расчетом убедитесь что у всех менторов настроены типы оплаты</li>
+                    <li>Для почасовой оплаты нужны проведенные уроки со статусом "завершен"</li>
+                    <li>Для процентной оплаты нужны оплаты по курсам ментора</li>
+                    <li>Существующие начисления будут обновлены, а не созданы заново</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

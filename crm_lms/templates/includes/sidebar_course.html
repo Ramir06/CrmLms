@@ -1,0 +1,98 @@
+{% load static i18n %}
+{% url 'dashboard:index' as url_dashboard %}
+{% url 'calendar_app:mentor_calendar' as url_calendar %}
+
+<div class="main-menu menu-fixed menu-light menu-accordion menu-shadow" id="appSidebar">
+    <div class="navbar-header">
+        <ul class="nav navbar-nav flex-row">
+            <li class="nav-item me-auto">
+                <a class="navbar-brand" href="{{ url_dashboard }}">
+                    <div class="brand-logo"><i class="bi bi-mortarboard-fill"></i></div>
+                    <h2 class="brand-text">IT Academy</h2>
+                </a>
+            </li>
+            <li class="nav-item nav-toggle">
+                <button class="modern-nav-toggle" id="sidebarCollapseBtn" type="button">
+                    <i class="bi bi-record-circle d-none d-xl-block"></i>
+                    <i class="bi bi-x-lg d-block d-xl-none"></i>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="shadow-bottom"></div>
+
+    <div class="main-menu-content">
+        <ul class="navigation navigation-main">
+            <li class="navigation-header"><span>{% trans "Меню" %}</span></li>
+            <li class="nav-item">
+                <a class="d-flex align-items-center" href="{{ url_dashboard }}">
+                    <i class="bi bi-house-door"></i><span class="menu-title text-truncate">{% trans "Главная" %}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="d-flex align-items-center" href="{{ url_calendar }}">
+                    <i class="bi bi-calendar3"></i><span class="menu-title text-truncate">{% trans "Расписание" %}</span>
+                </a>
+            </li>
+
+            {% if course %}
+            <li class="navigation-header">
+                <span>{{ course.title }}</span>
+            </li>
+            <li class="nav-item {% if active_menu == 'lectures' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'lectures:index' course_id=course.pk %}">
+                    <i class="bi bi-grid"></i><span class="menu-title text-truncate">{% trans "Лекции" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_menu == 'assignments' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'assignments:matrix' course_id=course.pk %}">
+                    <i class="bi bi-check2-square"></i><span class="menu-title text-truncate">{% trans "Задания" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_menu == 'lessons' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'lessons:calendar' course_id=course.pk %}">
+                    <i class="bi bi-calendar4-week"></i><span class="menu-title text-truncate">{% trans "Занятия" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_menu == 'attendance' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'attendance:table' course_id=course.pk %}">
+                    <i class="bi bi-person-check"></i><span class="menu-title text-truncate">{% trans "Посещаемость" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_menu == 'rating' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'assignments:student_stats' course_id=course.pk %}">
+                    <i class="bi bi-trophy"></i><span class="menu-title text-truncate">{% trans "Рейтинг" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_menu == 'reviews' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'reviews:list' course_id=course.pk %}">
+                    <i class="bi bi-chat-square-text"></i><span class="menu-title text-truncate">{% trans "Отзывы" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_menu == 'students' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'lectures:students' course_id=course.pk %}">
+                    <i class="bi bi-people"></i><span class="menu-title text-truncate">{% trans "Студенты" %}</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_menu == 'smart_report' %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'reports:smart_report' course_id=course.pk %}">
+                    <i class="bi bi-graph-up-arrow"></i><span class="menu-title text-truncate">{% trans "Смарт-отчёт" %}</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if my_courses %}
+            <li class="navigation-header"><span>{% trans "Мои курсы" %}</span></li>
+            {% for c in my_courses %}
+            <li class="nav-item {% if course and course.pk == c.pk %}active{% endif %}">
+                <a class="d-flex align-items-center" href="{% url 'lectures:index' course_id=c.pk %}">
+                    <i class="bi bi-book"></i>
+                    <span class="menu-title text-truncate">{{ c.title }}</span>
+                </a>
+            </li>
+            {% endfor %}
+            {% endif %}
+        </ul>
+    </div>
+</div>

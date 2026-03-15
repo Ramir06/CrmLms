@@ -1,0 +1,90 @@
+{% extends "base/mentor_base.html" %}
+{% load static humanize %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-box purple"><i class="bi bi-book-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ my_courses_count }}</div>
+                <div class="stat-label">Активных курсов</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-box blue"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ total_students }}</div>
+                <div class="stat-label">Студентов</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-box orange"><i class="bi bi-check2-square"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ pending_submissions }}</div>
+                <div class="stat-label">Заданий на проверке</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon-box green"><i class="bi bi-calendar3-week"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ today_lessons }}</div>
+                <div class="stat-label">Уроков сегодня</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course cards grouped by status -->
+{% regroup my_courses by get_status_display as courses_by_status %}
+{% for group in courses_by_status %}
+<h6 class="text-muted text-uppercase fw-semibold mb-3" style="font-size:11px;letter-spacing:.08em;">{{ group.grouper }}</h6>
+<div class="row g-3 mb-4">
+    {% for course in group.list %}
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card course-card h-100" style="border-radius:10px;border:1px solid var(--border-color);">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-start gap-2 mb-2">
+                    <i class="bi bi-geo-alt text-muted" style="font-size:13px;margin-top:2px;flex-shrink:0;"></i>
+                    <span class="text-muted" style="font-size:12px;">{{ course.room|default:"—" }}</span>
+                </div>
+                <a href="{% url 'lectures:index' course_id=course.pk %}" class="fw-semibold text-primary d-block mb-2" style="font-size:14px;text-decoration:none;">
+                    {{ course.title }}
+                </a>
+                {% if course.mentor %}
+                <div class="text-muted mb-2" style="font-size:12px;">{{ course.mentor.get_display_name }}</div>
+                {% endif %}
+                {% if course.start_date %}
+                <div class="d-flex align-items-center gap-1 text-muted mb-2" style="font-size:12px;">
+                    <i class="bi bi-calendar3" style="font-size:11px;"></i>
+                    <span>с {{ course.start_date|date:"d M" }}</span>
+                </div>
+                {% endif %}
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid var(--border-color);">
+                    <span class="text-muted" style="font-size:11px;">{{ course.get_days_display_short }}</span>
+                    <span class="text-muted" style="font-size:11px;">{{ course.duration_months }} мес.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+{% if not my_courses %}
+<div class="empty-state">
+    <i class="bi bi-book"></i>
+    <h6>Нет активных курсов</h6>
+    <p>Вам ещё не назначены курсы</p>
+</div>
+{% endif %}
+
+{% endblock %}

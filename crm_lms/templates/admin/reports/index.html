@@ -1,0 +1,68 @@
+{% extends "base/admin_base.html" %}
+{% load static humanize %}
+{% block title %}Отчёты{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Отчёты</h4>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="stat-card stat-purple"><div class="stat-icon"><i class="bi bi-people"></i></div><div class="stat-value">{{ total_students }}</div><div class="stat-label">Студентов всего</div></div></div>
+    <div class="col-md-3"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-cash"></i></div><div class="stat-value">{{ total_income|floatformat:0|intcomma }}</div><div class="stat-label">Доход (текущий месяц)</div></div></div>
+    <div class="col-md-3"><div class="stat-card stat-orange"><div class="stat-icon"><i class="bi bi-wallet2"></i></div><div class="stat-value">{{ total_salary|floatformat:0|intcomma }}</div><div class="stat-label">Зарплаты</div></div></div>
+    <div class="col-md-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-graph-up"></i></div><div class="stat-value">{{ total_profit|floatformat:0|intcomma }}</div><div class="stat-label">Прибыль</div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0">Сводная таблица по курсам</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Курс</th><th>Ментор</th><th>Студентов</th><th>Доход</th><th>Зарплата</th><th>Прибыль</th><th>Посещ.%</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for row in courses_report %}
+                        <tr>
+                            <td class="fw-medium">{{ row.course.title }}</td>
+                            <td class="text-muted small">{{ row.course.mentor.get_display_name|default:"—" }}</td>
+                            <td>{{ row.students }}</td>
+                            <td class="text-success">{{ row.income|floatformat:0|intcomma }}</td>
+                            <td class="text-warning">{{ row.salary|floatformat:0|intcomma }}</td>
+                            <td class="fw-bold text-primary">{{ row.profit|floatformat:0|intcomma }}</td>
+                            <td>{{ row.attendance_pct }}%</td>
+                            <td>
+                                <a href="{% url 'reports:smart_report' course_id=row.course.pk %}" class="btn btn-sm btn-outline-primary">Смарт-отчёт</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8" class="text-center text-muted py-3">Нет данных</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0">Источники лидов</h6></div>
+            <div class="card-body"><canvas id="leadsSourceChart" height="200"></canvas></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const leadsLabels = {{ leads_sources_labels|safe }};
+const leadsData = {{ leads_sources_data|safe }};
+document.addEventListener('DOMContentLoaded', function() {
+    new Chart(document.getElementById('leadsSourceChart'), {
+        type: 'doughnut',
+        data: { labels: leadsLabels, datasets: [{ data: leadsData, backgroundColor: ['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6'] }] },
+        options: { plugins: { legend: { position: 'bottom' } }, responsive: true }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base/course_base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'lectures:index' course_id=course.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ page_title }}</h4>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card"><div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3"><label class="form-label fw-medium">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}</div>
+                {% endfor %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Сохранить</button>
+                    <a href="{% url 'lectures:index' course_id=course.pk %}" class="btn btn-outline-secondary">Отмена</a>
+                </div>
+            </form>
+        </div></div>
+    </div>
+</div>
+{% endblock %}

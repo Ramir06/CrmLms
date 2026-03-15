@@ -1,0 +1,118 @@
+{% extends "students/base.html" %}
+{% load i18n %}
+{% block title %}{{ assignment.title }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="st-breadcrumb">
+    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
+    <span class="sep">/</span>
+    <a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a>
+    <span class="sep">/</span>
+    <a href="{% url 'students:assignments' course.pk %}">{% trans "Задания" %}</a>
+    <span class="sep">/</span>
+    <span class="current">{{ assignment.title|truncatechars:30 }}</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="p-4">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Assignment info -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div>
+                            <span class="badge bg-light text-dark border mb-2">{{ course.title }}</span>
+                            <h4 class="fw-bold mb-1">{{ assignment.title }}</h4>
+                        </div>
+                        <div class="text-end">
+                            <div class="fs-5 fw-bold text-primary">{{ assignment.max_score }}</div>
+                            <div class="text-muted small">{% trans "Макс. балл" %}</div>
+                        </div>
+                    </div>
+                    {% if assignment.description %}
+                    <div class="text-secondary mb-3" style="white-space:pre-line;">{{ assignment.description }}</div>
+                    {% endif %}
+                    <div class="d-flex flex-wrap gap-3 text-muted small">
+                        {% if assignment.due_date %}
+                        <span><i class="bi bi-calendar-event me-1"></i>{% trans "Срок" %}: {{ assignment.due_date|date:"d.m.Y" }}</span>
+                        {% endif %}
+                        {% if assignment.is_required %}
+                        <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>{% trans "Обязательное" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- Previous submission info -->
+            {% if submission.status == 'checked' %}
+            <div class="card border-0 shadow-sm mb-4 border-start border-success border-3" style="border-radius:12px;">
+                <div class="card-body">
+                    <h6 class="fw-semibold text-success mb-2"><i class="bi bi-check-circle me-1"></i>{% trans "Задание проверено" %}</h6>
+                    {% if submission.grade %}
+                    <div class="fs-4 fw-bold mb-1">{{ submission.grade.score }}/{{ assignment.max_score }}</div>
+                    {% if submission.grade.comment %}
+                    <div class="text-muted">{{ submission.grade.comment }}</div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% elif submission.status == 'submitted' %}
+            <div class="alert alert-info">
+                <i class="bi bi-hourglass-split me-1"></i>{% trans "Ваш ответ отправлен и ожидает проверки." %}
+            </div>
+            {% elif submission.status == 'revision' %}
+            <div class="alert alert-warning">
+                <i class="bi bi-arrow-repeat me-1"></i>{% trans "Задание возвращено на доработку." %}
+                {% if submission.grade and submission.grade.comment %}
+                <div class="mt-2 fw-medium">{{ submission.grade.comment }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Submit form -->
+            {% if submission.status != 'checked' %}
+            <div class="card border-0 shadow-sm" style="border-radius:12px;">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3"><i class="bi bi-send me-2"></i>{% trans "Ваш ответ" %}</h5>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">{% trans "Текст ответа" %}</label>
+                            <textarea name="answer_text" class="form-control" rows="6" placeholder="{% trans 'Введите ваш ответ...' %}">{{ submission.answer_text }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">{% trans "Прикрепить файл" %}</label>
+                            <input type="file" name="file" class="form-control">
+                            {% if submission.file %}
+                            <div class="small text-muted mt-1">
+                                {% trans "Текущий файл" %}: <a href="{{ submission.file.url }}" target="_blank">{{ submission.file.name|truncatechars:40 }}</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>
+                                {% if submission.status == 'not_submitted' %}{% trans "Отправить" %}{% else %}{% trans "Отправить повторно" %}{% endif %}
+                            </button>
+                            <a href="{% url 'students:assignments' course.pk %}" class="btn btn-outline-secondary">{% trans "Отмена" %}</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

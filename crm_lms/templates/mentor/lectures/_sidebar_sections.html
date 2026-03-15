@@ -1,0 +1,86 @@
+{% load static %}
+<!-- Left sidebar: sections tree -->
+<div class="lec-sidebar">
+    <div class="lec-sidebar-hdr d-flex align-items-center justify-content-between px-3 py-2">
+        <h6 class="mb-0 fw-semibold" style="color:#5e5873;font-size:.9rem">Структура курса</h6>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSectionModal" style="font-size:.72rem;padding:.2rem .5rem">
+            <i class="bi bi-folder-plus me-1"></i>Глава
+        </button>
+    </div>
+
+    <div class="lec-sidebar-body">
+        {% for section in sections %}
+        <div class="sb-section">
+            <div class="sb-sec-hdr d-flex align-items-center justify-content-between" data-bs-toggle="collapse" data-bs-target="#sb-sec-{{ section.pk }}">
+                <div class="d-flex align-items-center gap-1 flex-grow-1 overflow-hidden">
+                    <i class="bi bi-chevron-down sb-caret"></i>
+                    <i class="bi bi-folder-fill" style="color:#7367f0;font-size:.8rem"></i>
+                    <span class="sb-sec-title text-truncate">{{ section.title }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-1" onclick="event.stopPropagation()">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown" style="font-size:.7rem;line-height:1">📋</button>
+                        <ul class="dropdown-menu dropdown-menu-end" style="font-size:.8rem">
+                            <li><a class="dropdown-item add-item-btn" href="#" data-section="{{ section.pk }}" data-type="material"><i class="bi bi-book me-2"></i>Материал</a></li>
+                            <li><a class="dropdown-item add-item-btn" href="#" data-section="{{ section.pk }}" data-type="assignment"><i class="bi bi-pencil-square me-2"></i>Задание</a></li>
+                            <li><a class="dropdown-item add-item-btn" href="#" data-section="{{ section.pk }}" data-type="quiz"><i class="bi bi-patch-question me-2"></i>Тест</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown" style="font-size:.7rem;line-height:1">📋</button>
+                        <ul class="dropdown-menu dropdown-menu-end" style="font-size:.8rem">
+                            <li><a class="dropdown-item" href="{% url 'lectures:section_edit' course_id=course.pk section_id=section.pk %}"><i class="bi bi-pencil me-2"></i>Изменить</a></li>
+                            <li>
+                                <form method="post" action="{% url 'lectures:section_delete' course_id=course.pk section_id=section.pk %}" onsubmit="return confirm('Удалить раздел?')">
+                                    {% csrf_token %}
+                                    <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>Удалить</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="collapse show" id="sb-sec-{{ section.pk }}">
+                {% for material in section.materials.all %}
+                <a href="{% url 'lectures:material_detail' course_id=course.pk material_id=material.pk %}"
+                   class="sb-item {% if active_item_type == 'material' and active_item_id == material.pk %}active{% endif %}">
+                    <span class="sb-dot mat"></span>
+                    <span class="sb-item-title text-truncate">{{ material.title }}</span>
+                    <button class="sb-vis-btn {% if not material.is_visible %}off{% endif %}" onclick="event.preventDefault();toggleVis('material',{{ material.pk }},this)" title="Видимость">
+                        📋
+                    </button>
+                </a>
+                {% endfor %}
+                {% for assignment in section.assignments.all %}
+                <a href="{% url 'lectures:assignment_detail' course_id=course.pk assignment_id=assignment.pk %}"
+                   class="sb-item {% if active_item_type == 'assignment' and active_item_id == assignment.pk %}active{% endif %}">
+                    <span class="sb-dot task"></span>
+                    <span class="sb-item-title text-truncate">{{ assignment.title }}</span>
+                    <button class="sb-vis-btn {% if not assignment.is_visible %}off{% endif %}" onclick="event.preventDefault();toggleVis('assignment',{{ assignment.pk }},this)" title="Видимость">
+                        📋
+                    </button>
+                </a>
+                {% endfor %}
+                {% for quiz in section.quizzes.all %}
+                <a href="{% url 'quizzes:detail' course_id=course.pk quiz_id=quiz.pk %}"
+                   class="sb-item {% if active_item_type == 'quiz' and active_item_id == quiz.pk %}active{% endif %}">
+                    <span class="sb-dot quiz"></span>
+                    <span class="sb-item-title text-truncate">{{ quiz.title }}</span>
+                    <button class="sb-vis-btn {% if not quiz.is_active %}off{% endif %}" onclick="event.preventDefault();toggleVis('quiz',{{ quiz.pk }},this)" title="Видимость">
+                        📋
+                    </button>
+                </a>
+                {% endfor %}
+                {% if not section.materials.count and not section.assignments.count and not section.quizzes.count %}
+                <div class="sb-empty">Пусто</div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-4" style="font-size:.8rem">
+            📋
+            Нет разделов
+        </div>
+        {% endfor %}
+    </div>
+</div>

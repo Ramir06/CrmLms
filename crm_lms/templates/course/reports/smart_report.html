@@ -1,0 +1,69 @@
+{% extends "base/course_base.html" %}
+{% load static humanize %}
+{% block title %}Смарт-отчёт — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Смарт-отчёт</h4>
+    <span class="badge bg-light text-dark border">{{ course.title }}</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-people"></i></div><div class="stat-value">{{ total_students }}</div><div class="stat-label">Студентов</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-person-check"></i></div><div class="stat-value">{{ avg_attendance }}%</div><div class="stat-label">Посещаемость</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card stat-orange"><div class="stat-icon"><i class="bi bi-check2-square"></i></div><div class="stat-value">{{ assignments_done }}</div><div class="stat-label">Заданий сдано</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card stat-purple"><div class="stat-icon"><i class="bi bi-star"></i></div><div class="stat-value">{{ avg_review|floatformat:1 }}</div><div class="stat-label">Средний отзыв</div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="card-title mb-0">Посещаемость студентов</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>Студент</th><th>Присутствовал</th><th>Отсутствовал</th><th>Опоздал</th><th>%</th></tr></thead>
+                    <tbody>
+                        {% for row in attendance_rows %}
+                        <tr>
+                            <td class="fw-medium">{{ row.student.full_name }}</td>
+                            <td class="text-success">{{ row.present }}</td>
+                            <td class="text-danger">{{ row.absent }}</td>
+                            <td class="text-warning">{{ row.late }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height:5px">
+                                        <div class="progress-bar bg-{% if row.pct >= 80 %}success{% elif row.pct >= 60 %}warning{% else %}danger{% endif %}" style="width:{{ row.pct }}%"></div>
+                                    </div>
+                                    <small>{{ row.pct }}%</small>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">Нет данных</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0">Динамика заданий</h6></div>
+            <div class="card-body"><canvas id="assignmentsChart" height="200"></canvas></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const labels = {{ chart_labels|safe }};
+    const data = {{ chart_data|safe }};
+    new Chart(document.getElementById('assignmentsChart'), {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Сдано заданий', data: data, backgroundColor: '#6366f1' }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+});
+</script>
+{% endblock %}

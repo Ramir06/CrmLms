@@ -1,0 +1,197 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}Отметить посещение - {{ cs.student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'courses:detail' pk=cs.course.pk %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Назад
+        </a>
+        <div>
+            <h4 class="page-title mb-0">{{ page_title }}</h4>
+            <div class="text-muted small">
+                Курс: {{ cs.course.title }} | Студент: {{ cs.student.full_name }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-success bg-opacity-10">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-check-circle me-2"></i>Отметка посещения
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Текущий баланс -->
+                <div class="alert {% if remaining_tickets > 0 %}alert-success{% elif remaining_tickets > -2 %}alert-warning{% else %}alert-danger{% endif %} mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-medium">Текущий баланс талонов</div>
+                            <div class="text-muted small">
+                                {% if remaining_tickets > 0 %}
+                                    Достаточно для посещения
+                                {% elif remaining_tickets > -2 %}
+                                    Осталось мало талонов
+                                {% else %}
+                                    Перерасход талонов!
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge {% if remaining_tickets > 0 %}bg-success{% elif remaining_tickets > -2 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                                {{ remaining_tickets }} талон(ов)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.lessons_count.id_for_label }}" class="form-label">
+                            {{ form.lessons_count.label }}
+                        </label>
+                        {{ form.lessons_count }}
+                        {% if form.lessons_count.errors %}
+                            <div class="invalid-feedback d-block">{{ form.lessons_count.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Сколько занятий посетил студент</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.lesson_date.id_for_label }}" class="form-label">
+                            {{ form.lesson_date.label }}
+                        </label>
+                        {{ form.lesson_date }}
+                        {% if form.lesson_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.lesson_date.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Дата занятия</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.comment.id_for_label }}" class="form-label">
+                            {{ form.comment.label }}
+                        </label>
+                        {{ form.comment }}
+                        {% if form.comment.errors %}
+                            <div class="invalid-feedback d-block">{{ form.comment.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Необязательно</div>
+                    </div>
+                    
+                    <!-- Предпросчет -->
+                    <div class="alert bg-light border-secondary mb-4" id="previewAlert" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-medium">После отметки посещения</div>
+                                <div class="text-muted small">Прогноз остатка талонов</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="badge fs-6" id="remainingAfter">
+                                    {{ remaining_tickets }} талон(ов)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i>Отметить посещение
+                        </button>
+                        <a href="{% url 'courses:detail' pk=cs.course.pk %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Последние посещения -->
+        {% if cs.ticket_attendances.exists %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Последние посещения</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Дата</th>
+                                <th>Занятий</th>
+                                <th>Отметил</th>
+                                <th>Комментарий</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attendance in cs.ticket_attendances.all|slice:":5" %}
+                            <tr>
+                                <td class="text-muted small">{{ attendance.lesson_date|date:"d.m.Y" }}</td>
+                                <td class="fw-medium">{{ attendance.lessons_count }}</td>
+                                <td class="text-muted small">
+                                    {% if attendance.marked_by %}
+                                        {{ attendance.marked_by.get_display_name }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">
+                                    {% if attendance.comment %}
+                                        {{ attendance.comment|truncatechars:30 }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lessonsInput = document.getElementById('{{ form.lessons_count.id_for_label }}');
+    const remainingTickets = {{ remaining_tickets }};
+    const previewAlert = document.getElementById('previewAlert');
+    const remainingAfter = document.getElementById('remainingAfter');
+    
+    function updatePreview() {
+        const lessonsCount = parseInt(lessonsInput.value) || 0;
+        const newRemaining = remainingTickets - lessonsCount;
+        
+        if (lessonsCount > 0) {
+            previewAlert.style.display = 'block';
+            remainingAfter.textContent = `${newRemaining} талон(ов)`;
+            
+            // Обновить цвет бейджа
+            remainingAfter.className = 'badge fs-6';
+            if (newRemaining > 0) {
+                remainingAfter.classList.add('bg-success');
+            } else if (newRemaining > -2) {
+                remainingAfter.classList.add('bg-warning', 'text-dark');
+            } else {
+                remainingAfter.classList.add('bg-danger');
+            }
+        } else {
+            previewAlert.style.display = 'none';
+        }
+    }
+    
+    lessonsInput.addEventListener('input', updatePreview);
+});
+</script>
+{% endblock %}

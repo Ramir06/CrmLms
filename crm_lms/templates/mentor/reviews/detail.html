@@ -1,0 +1,99 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}Отзывы — {{ lesson.lesson_date }} — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Отзывы: {{ lesson.title|default:lesson.lesson_date }}</h4>
+    <a href="{% url 'reviews:list' course_id=course.pk %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Назад
+    </a>
+</div>
+
+<!-- Averages for this lesson -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-emoji-smile fs-3 d-block mb-1" style="color:#ff9f43"></i>
+                <div class="fs-3 fw-bold" style="color:#5e5873">{{ avg_mood|default:"—" }}</div>
+                <div class="text-muted small">Настроение на уроке</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-person-check fs-3 d-block mb-1" style="color:#7367f0"></i>
+                <div class="fs-3 fw-bold" style="color:#5e5873">{{ avg_mentor|default:"—" }}</div>
+                <div class="text-muted small">Оценка работы ментора</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-lightning-charge fs-3 d-block mb-1" style="color:#28c76f"></i>
+                <div class="fs-3 fw-bold" style="color:#5e5873">{{ avg_activity|default:"—" }}</div>
+                <div class="text-muted small">Самооценка активности</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share link -->
+<div class="alert alert-info border-0 d-flex align-items-center justify-content-between mb-4" style="background:#e8e5fc">
+    <div>
+        <i class="bi bi-link-45deg me-1"></i>
+        <strong>Ссылка на форму:</strong>
+        <code id="shareLink">{{ request.scheme }}://{{ request.get_host }}/feedback/{{ link.token }}/</code>
+    </div>
+    <button class="btn btn-sm btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('shareLink').textContent);this.innerHTML='<i class=\'bi bi-check-lg\'></i> Скопировано';setTimeout(()=>{this.innerHTML='<i class=\'bi bi-clipboard\'></i> Копировать'},1500)">
+        <i class="bi bi-clipboard"></i> Копировать
+    </button>
+</div>
+
+<!-- Individual responses -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-bottom">
+        <h6 class="mb-0 fw-semibold">Ответы ({{ responses|length }})</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead style="background:#fafafc">
+                <tr>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b" class="ps-3">Студент</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b" class="text-center">Ментор</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b" class="text-center">Активность</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b" class="text-center">Настроение</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b">Комментарий</th>
+                    <th style="font-size:.8rem;font-weight:600;color:#6e6b7b">Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in responses %}
+                <tr>
+                    <td class="ps-3 fw-medium">{{ r.student_name|default:"Аноним" }}</td>
+                    <td class="text-center">
+                        <span class="badge" style="background:#7367f0;color:#fff;font-size:.85rem;min-width:28px">{{ r.mentor_rating }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge" style="background:#28c76f;color:#fff;font-size:.85rem;min-width:28px">{{ r.self_activity }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge" style="background:#ff9f43;color:#fff;font-size:.85rem;min-width:28px">{{ r.mood }}</span>
+                    </td>
+                    <td class="text-muted small">{{ r.comment|default:"—" }}</td>
+                    <td class="text-muted small">{{ r.created_at|date:"d.m.Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        Пока нет ответов
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

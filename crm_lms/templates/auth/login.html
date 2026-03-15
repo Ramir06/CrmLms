@@ -1,0 +1,49 @@
+{% extends "base/auth_base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Вход" %}{% endblock %}
+
+{% block auth_content %}
+<h5 class="text-center mb-1 fw-bold">{% trans "Добро пожаловать" %}</h5>
+<p class="text-center text-muted mb-4 small">{% trans "Войдите в свой аккаунт" %}</p>
+
+<!-- Language switcher -->
+<div class="d-flex justify-content-center gap-1 mb-3">
+    <form method="post" action="{% url 'set_language' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        {% get_current_language as LANGUAGE_CODE %}
+        <div class="btn-group btn-group-sm">
+            <button type="submit" name="language" value="ru" class="btn {% if LANGUAGE_CODE == 'ru' %}btn-primary{% else %}btn-outline-secondary{% endif %}">RU</button>
+            <button type="submit" name="language" value="en" class="btn {% if LANGUAGE_CODE == 'en' %}btn-primary{% else %}btn-outline-secondary{% endif %}">EN</button>
+            <button type="submit" name="language" value="ky" class="btn {% if LANGUAGE_CODE == 'ky' %}btn-primary{% else %}btn-outline-secondary{% endif %}">KY</button>
+        </div>
+    </form>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div class="mb-3">
+        <label class="form-label fw-medium">Email</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+            <div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>
+        {% endif %}
+    </div>
+    <div class="mb-4">
+        <label class="form-label fw-medium">{% trans "Пароль" %}</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+            <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
+        {% endif %}
+    </div>
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger py-2 small mb-3">
+        <i class="bi bi-exclamation-triangle me-1"></i>{{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary w-100 btn-lg fw-medium">
+        <i class="bi bi-box-arrow-in-right me-2"></i>{% trans "Войти" %}
+    </button>
+</form>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}Лекции — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+{% include "mentor/lectures/_lectures_css.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0 fw-semibold">Программа обучения</h5>
+    <button class="btn btn-outline-primary btn-sm" onclick="showCopyCourseModal()">
+        <i class="bi bi-files me-1"></i>Скопировать программу обучения
+    </button>
+</div>
+
+<div class="row g-0 lec-layout">
+    <!-- LEFT: content area -->
+    <div class="col-md-8 col-lg-9 lec-left-col">
+        <div class="lec-content-area">
+            {% if not sections.count %}
+            <div class="text-center py-5">
+                <i class="bi bi-journal-text" style="font-size:3rem;color:#d6d0ff"></i>
+                <h5 class="mt-3" style="color:#5e5873">Начните создавать курс</h5>
+                <p class="text-muted">Добавьте первый раздел, затем материалы, задания и тесты</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                    <i class="bi bi-folder-plus me-1"></i>Создать раздел
+                </button>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-arrow-left-circle" style="font-size:3rem;color:#d6d0ff"></i>
+                <h5 class="mt-3" style="color:#5e5873">Выберите элемент</h5>
+                <p class="text-muted">Нажмите на материал, задание или тест в панели слева</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- RIGHT: sections sidebar -->
+    <div class="col-md-4 col-lg-3 lec-right-col">
+        {% include "mentor/lectures/_sidebar_sections.html" %}
+    </div>
+</div>
+
+{% include "mentor/lectures/_modals.html" %}
+
+{% block extra_js_base %}
+{% include "mentor/lectures/_lectures_js.html" %}
+{% endblock %}
+{% endblock %}

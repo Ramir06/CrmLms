@@ -1,0 +1,123 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}{{ assignment.title }}{% endblock %}
+
+{% block extra_css %}
+{% include "mentor/lectures/_lectures_css.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="row g-0 lec-layout">
+    <!-- LEFT: content area -->
+    <div class="col-md-8 col-lg-9 lec-left-col">
+        <div class="lec-content-area">
+            <div class="lec-detail-card">
+                <div class="lec-detail-hdr">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width:32px;height:32px;border-radius:6px;background:rgba(255,159,67,.12);display:flex;align-items:center;justify-content:center">
+                            <i class="bi bi-pencil-square" style="color:#ff9f43"></i>
+                        </div>
+                        <div>
+                            <h5>{{ assignment.title }}</h5>
+                            <div class="d-flex gap-2" style="margin-top:-2px">
+                                <span class="badge bg-light text-muted border" style="font-size:.7rem">Макс. балл: {{ assignment.max_score }}</span>
+                                {% if assignment.due_date %}
+                                <span class="badge bg-light text-muted border" style="font-size:.7rem"><i class="bi bi-calendar3 me-1"></i>{{ assignment.due_date|date:"d.m.Y" }}</span>
+                                {% endif %}
+                                {% if assignment.is_visible %}
+                                <span class="badge bg-light text-success border" style="font-size:.7rem"><i class="bi bi-eye me-1"></i>Видно студентам</span>
+                                {% else %}
+                                <span class="badge bg-light text-danger border" style="font-size:.7rem"><i class="bi bi-eye-slash me-1"></i>Скрыто</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lec-detail-body">
+                    {% if assignment.description %}
+                    <div class="mb-4" style="color:#6e6b7b">{{ assignment.description|linebreaks }}</div>
+                    {% endif %}
+
+                    <!-- Submissions -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="fw-semibold mb-0" style="color:#5e5873">
+                            <i class="bi bi-people me-1"></i>Просмотреть решения
+                            <span class="badge rounded-pill" style="background:#7367f0;font-size:.75rem">{{ submission_count }}</span>
+                        </h6>
+                        <a href="{% url 'assignments:matrix' course_id=course.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-grid me-1"></i>Матрица оценок
+                        </a>
+                    </div>
+
+                    {% if submissions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm" style="font-size:.85rem">
+                            <thead style="background:#fafafc">
+                                <tr>
+                                    <th style="color:#5e5873">Студент</th>
+                                    <th style="color:#5e5873">Статус</th>
+                                    <th style="color:#5e5873">Оценка</th>
+                                    <th style="color:#5e5873">Дата</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in submissions %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div style="width:28px;height:28px;border-radius:50%;background:#ebe9f1;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;color:#7367f0">
+                                                {{ sub.student.full_name|first }}
+                                            </div>
+                                            {{ sub.student.full_name }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if sub.status == 'submitted' %}
+                                        <span class="badge bg-warning text-dark" style="font-size:.7rem">На проверке</span>
+                                        {% elif sub.status == 'checked' %}
+                                        <span class="badge bg-success" style="font-size:.7rem">Проверено</span>
+                                        {% elif sub.status == 'revision' %}
+                                        <span class="badge bg-danger" style="font-size:.7rem">Доработка</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary" style="font-size:.7rem">{{ sub.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sub.grade %}
+                                        <strong>{{ sub.grade.score }}</strong> / {{ assignment.max_score }}
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted">{{ sub.submitted_at|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'assignments:submission_review' submission_id=sub.pk %}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem;padding:.15rem .4rem">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size:2rem;color:#d6d0ff"></i>
+                        <p class="text-muted mt-2 mb-0">Пока нет решений</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    <!-- RIGHT: sections sidebar -->
+    <div class="col-md-4 col-lg-3 lec-right-col">
+        {% include "mentor/lectures/_sidebar_sections.html" %}
+    </div>
+
+{% include "mentor/lectures/_modals.html" %}
+
+{% block extra_js_base %}
+{% include "mentor/lectures/_lectures_js.html" %}
+{% endblock %}
+{% endblock %}

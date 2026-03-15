@@ -1,0 +1,664 @@
+{% extends "base/course_base.html" %}
+{% load static i18n %}
+{% block title %}{% trans "Посещаемость" %} — {{ course.title }}{% endblock %}
+
+{% block course_extra_css %}
+<link rel="stylesheet" href="{% static 'app-assets/fonts/font-awesome/css/font-awesome.min.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    .att-grid {
+        overflow-x: auto;
+    }
+
+    .att-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: auto;
+        min-width: 100%;
+    }
+
+    .att-table th,
+    .att-table td {
+        border: 1px solid #e9ecef;
+        padding: 0;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .att-table .student-col {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 2;
+        min-width: 190px;
+        max-width: 240px;
+        text-align: left;
+        padding: 8px 10px;
+        font-weight: 500;
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .att-table thead th {
+        background: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+    }
+
+    .att-table thead th.student-col {
+        z-index: 4;
+    }
+
+    .att-date-header {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 6px 4px;
+        min-width: 58px;
+        width: 58px;
+    }
+
+    .att-date-header .date-day {
+        display: block;
+        font-size: 12px;
+        line-height: 1.2;
+    }
+
+    .att-date-header .date-month {
+        display: block;
+        font-size: 10px;
+        color: #8b8b8b;
+        line-height: 1.2;
+    }
+
+    .att-date-header input[type="checkbox"] {
+        margin-bottom: 2px;
+    }
+
+    .att-cell {
+        width: 72px;
+        min-width: 72px;
+        height: 42px;
+        position: relative;
+        cursor: pointer;
+        background: #fff;
+        transition: background .15s ease;
+    }
+
+    .att-cell:hover {
+        background: #f8faff;
+    }
+
+    .att-pct {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 8px;
+        min-width: 58px;
+    }
+
+    /* текущая иконка в ячейке */
+    .att-state {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .att-state svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .att-state .state-icon {
+        display: none;
+    }
+
+    .att-cell[data-val="present"] .state-present {
+        display: inline-block;
+        color: #28C76F;
+    }
+
+    .att-cell[data-val="absent"] .state-absent {
+        display: inline-block;
+        color: #EA5455;
+    }
+
+    .att-cell[data-val="comment"] .state-comment {
+        display: inline-block;
+        color: #00CFE8;
+    }
+
+    .att-cell[data-val=""] .state-empty,
+    .att-cell:not([data-val]) .state-empty {
+        display: inline-block;
+        color: #c8ccd3;
+        font-size: 16px;
+        font-weight: 300;
+    }
+
+    /* Индикатор для ячеек с комментариями */
+    .att-cell[data-comment]:not([data-comment=""])::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 6px;
+        height: 6px;
+        background: #00CFE8;
+        border-radius: 50%;
+        z-index: 10;
+    }
+
+    /* Показываем иконку комментария если есть комментарий */
+    .att-cell[data-comment]:not([data-comment=""]) .state-comment {
+        display: inline-block;
+        color: #00CFE8;
+        opacity: 0.7;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+        font-size: 12px;
+    }
+
+    /* Основная иконка состояния остается в центре */
+    .att-cell[data-comment]:not([data-comment=""]) .state-present,
+    .att-cell[data-comment]:not([data-comment=""]) .state-absent {
+        display: inline-block !important;
+    }
+
+    /* hover меню как у конкурента */
+    .hover-menu {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        background: #f8f9fa;
+        border: 1px solid #dcdfe4;
+        border-radius: 6px;
+        padding: 2px;
+        z-index: 20;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+        white-space: nowrap;
+    }
+
+    .att-cell:hover .hover-menu {
+        display: inline-flex;
+    }
+
+    .att-cell:hover .att-state {
+        opacity: 0;
+    }
+
+    .menu-option {
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: transparent;
+        color: #6e6b7b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background .15s ease, color .15s ease, transform .1s ease;
+        cursor: pointer;
+    }
+
+    .menu-option svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .menu-option:hover {
+        background: #eef1f6;
+        color: #2f2f35;
+        text-decoration: none;
+    }
+
+    .menu-option:active {
+        transform: scale(0.96);
+    }
+
+    .menu-option.present:hover {
+        background: rgba(40, 199, 111, 0.10);
+        color: #28C76F;
+    }
+
+    .menu-option.absent:hover {
+        background: rgba(234, 84, 85, 0.10);
+        color: #EA5455;
+    }
+
+    .menu-option.comment:hover {
+        background: rgba(0, 207, 232, 0.10);
+        color: #00CFE8;
+    }
+
+    .student-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .ticket-badge {
+        font-size: 10px;
+        line-height: 1;
+        padding: 4px 6px;
+        border-radius: 999px;
+        display: inline-block;
+        width: fit-content;
+    }
+
+    .ticket-badge.success {
+        background: #dff5e5;
+        color: #198754;
+    }
+
+    .ticket-badge.warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .ticket-badge.danger {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .att-legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 10px;
+    }
+
+    .att-legend svg {
+        width: 16px;
+        height: 16px;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+
+    .att-legend span {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .empty-state {
+        background: #fff;
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex align-items-center justify-content-between">
+    <h4 class="page-title mb-0">{% trans "Посещаемость" %}</h4>
+    {% if matrix %}
+    <button type="submit" form="att-form" class="btn btn-sm btn-primary">
+        <i class="bi bi-save me-1"></i>{% trans "Сохранить" %}
+    </button>
+    {% endif %}
+</div>
+
+{% if course.is_unlimited %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Бесконечный курс:</strong> талоны автоматически списываются при отметке студента как присутствующего.
+</div>
+{% endif %}
+
+{% if not lessons %}
+<div class="empty-state text-center py-5">
+    <i class="bi bi-person-check fs-1 text-muted"></i>
+    <h6 class="mt-3 text-muted">{% trans "Нет занятий" %}</h6>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body p-0">
+        <form method="post" id="att-form" action="{% url 'attendance:save_bulk' course_id=course.pk %}">
+            {% csrf_token %}
+            <div class="att-grid">
+                <table class="att-table">
+                    <thead>
+                        <tr>
+                            <th class="student-col">{% trans "Студент" %}</th>
+                            {% for lesson in lessons %}
+                            <th class="att-date-header" title="{{ lesson.title|default:'' }} — {{ lesson.lesson_date|date:'d.m.Y' }} {{ lesson.start_time|time:'H:i' }}">
+                                <input type="checkbox" class="select-all-date" data-lesson="{{ lesson.id }}" title="Выбрать всех">
+                                <span class="date-day">{{ lesson.lesson_date|date:"d" }}</span>
+                                <span class="date-month">{{ lesson.lesson_date|date:"m" }}</span>
+                            </th>
+                            {% endfor %}
+                            <th class="att-pct">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in matrix %}
+                        <tr>
+                            <td class="student-col" title="{{ row.cs.student.full_name }}">
+                                <div class="student-meta">
+                                    <div>{{ row.cs.student.full_name }}</div>
+
+                                    {% if course.is_unlimited and row.ticket_info %}
+                                        {% if row.ticket_info.remaining_tickets > 0 %}
+                                            <span class="ticket-badge success">{{ row.ticket_info.remaining_tickets }} т.</span>
+                                        {% elif row.ticket_info.remaining_tickets > -2 %}
+                                            <span class="ticket-badge warning">{{ row.ticket_info.remaining_tickets }} т.</span>
+                                        {% else %}
+                                            <span class="ticket-badge danger">{{ row.ticket_info.remaining_tickets }} т.</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            {% for cell in row.cells %}
+                            <td class="att-cell"
+                                data-val="{{ cell.status|default:'' }}"
+                                data-name="att_{{ cell.lesson_id }}_{{ row.cs.student_id }}"
+                                data-comment="{{ cell.comment|default:'' }}">
+
+                                <input type="hidden"
+                                       name="att_{{ cell.lesson_id }}_{{ row.cs.student_id }}"
+                                       value="{{ cell.status|default:'' }}">
+
+                                <div class="att-state">
+                                    <span class="state-icon state-empty">—</span>
+                                    <span class="state-icon state-present">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 6 9 17l-5-5"/>
+                                        </svg>
+                                    </span>
+                                    <span class="state-icon state-absent">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 6 6 18"/>
+                                            <path d="m6 6 12 12"/>
+                                        </svg>
+                                    </span>
+                                    <span class="state-icon state-comment">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+                                        </svg>
+                                    </span>
+                                </div>
+
+                                <div class="hover-menu">
+                                    <button type="button"
+                                            class="menu-option present js-att-set"
+                                            data-value="present"
+                                            title="Есть">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 6 9 17l-5-5"/>
+                                        </svg>
+                                    </button>
+
+                                    <button type="button"
+                                            class="menu-option absent js-att-set"
+                                            data-value="absent"
+                                            title="Нету">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 6 6 18"/>
+                                            <path d="m6 6 12 12"/>
+                                        </svg>
+                                    </button>
+
+                                    <a href="#"
+                                       class="menu-option comment ajax-form js-att-comment"
+                                       data-place="form-fragment"
+                                       data-modal="attendance-comment-form"
+                                       data-url="/lms/mentor/ajax/course-{{ course.pk }}/attendance-{{ cell.lesson_id }}-{{ row.cs.student_id }}/comment/"
+                                       title="Комментарий">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </td>
+                            {% endfor %}
+
+                            <td class="att-pct">
+                                <span class="badge {% if row.percent >= 80 %}bg-success{% elif row.percent >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ row.percent }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{{ lessons|length|add:2 }}" class="text-center text-muted py-4">
+                                {% trans "Нет студентов" %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="att-legend">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+        </svg>
+        Есть
+    </span>
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/>
+            <path d="m6 6 12 12"/>
+        </svg>
+        Нету
+    </span>
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+        </svg>
+        Комментарий
+    </span>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Глобальные переменные для защиты от повторных действий
+    const actionCooldown = new Set();
+    const COOLDOWN_TIME = 3000; // 3 секунды
+
+    function checkCooldown(element) {
+        const elementId = element.getAttribute('data-name') || element.outerHTML;
+        if (actionCooldown.has(elementId)) {
+            console.log('Действие в процессе, подождите...');
+            return false;
+        }
+        actionCooldown.add(elementId);
+        setTimeout(() => {
+            actionCooldown.delete(elementId);
+        }, COOLDOWN_TIME);
+        return true;
+    }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Инициализация существующих комментариев
+    document.querySelectorAll('.att-cell[data-comment]').forEach(function(cell) {
+        const comment = cell.getAttribute('data-comment');
+        if (comment) {
+            const commentIcon = cell.querySelector('.state-comment');
+            if (commentIcon) {
+                commentIcon.style.display = 'inline-block';
+            }
+        }
+    });
+
+    function setCellValue(cell, value) {
+        const input = cell.querySelector('input[type="hidden"]');
+        if (!input) return;
+        input.value = value;
+        cell.setAttribute('data-val', value);
+
+        cell.style.transform = 'scale(0.97)';
+        setTimeout(() => {
+            cell.style.transform = '';
+        }, 120);
+    }
+
+    function setCommentValue(cell, comment) {
+        // Сохраняем комментарий только в data-атрибуте
+        cell.setAttribute('data-comment', comment);
+        
+        // Обновляем отображение иконки комментария
+        const commentIcon = cell.querySelector('.state-comment');
+        if (comment) {
+            commentIcon.style.display = 'inline-block';
+        } else {
+            commentIcon.style.display = 'none';
+        }
+    }
+
+    document.querySelectorAll('.js-att-set').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!checkCooldown(this)) {
+                return;
+            }
+
+            const cell = this.closest('.att-cell');
+            const value = this.getAttribute('data-value');
+            setCellValue(cell, value);
+            
+            // Автосохранение
+            saveAttendance(cell);
+        });
+    });
+
+    document.querySelectorAll('.js-att-comment').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!checkCooldown(this)) {
+                return;
+            }
+
+            const cell = this.closest('.att-cell');
+            const currentComment = cell.getAttribute('data-comment') || '';
+            
+            if (currentComment) {
+                // Показываем существующий комментарий
+                alert('Комментарий: ' + currentComment);
+            } else {
+                // Запрашиваем новый комментарий
+                const comment = prompt('Введите комментарий:');
+                if (comment && comment.trim()) {
+                    setCommentValue(cell, comment.trim());
+                    // Сохраняем комментарий через AJAX
+                    saveAttendance(cell);
+                    cell.style.transform = 'scale(0.97)';
+                    setTimeout(() => {
+                        cell.style.transform = '';
+                    }, 120);
+                }
+            }
+        });
+    });
+
+    function saveAttendance(cell) {
+        // Просто показываем что данные сохранятся при отправке формы
+        if (cell) {
+            cell.style.background = '#dff5e5';
+            setTimeout(() => {
+                cell.style.background = '';
+            }, 500);
+        }
+        console.log('Данные будут сохранены при отправке формы');
+    }
+
+    document.querySelectorAll('.att-cell').forEach(function (cell) {
+        cell.addEventListener('click', function (e) {
+            if (e.target.closest('.hover-menu')) return;
+
+            if (!checkCooldown(this)) {
+                return;
+            }
+
+            const input = this.querySelector('input[type="hidden"]');
+            const current = input ? input.value : '';
+            const next = current === 'present' ? 'absent' : 'present';
+            setCellValue(this, next);
+            
+            // Автосохранение
+            saveAttendance(this);
+        });
+    });
+
+    // Функция "выбрать все" для даты
+    document.querySelectorAll('.select-all-date').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function(e) {
+            e.stopPropagation();
+            
+            if (!checkCooldown(this)) {
+                return;
+            }
+            
+            const lessonId = this.getAttribute('data-lesson');
+            const isChecked = this.checked;
+            const cells = document.querySelectorAll(`.att-cell[data-name*="_${lessonId}"]`);
+            
+            cells.forEach(function(cell) {
+                if (isChecked) {
+                    setCellValue(cell, 'present');
+                    saveAttendance(cell);
+                } else {
+                    setCellValue(cell, '');
+                    saveAttendance(cell);
+                }
+            });
+        });
+    });
+
+    // Собираем комментарии перед отправкой формы
+    document.getElementById('att-form').addEventListener('submit', function(e) {
+        const cells = document.querySelectorAll('.att-cell[data-comment]');
+        const commentsData = {};
+        
+        cells.forEach(function(cell) {
+            const comment = cell.getAttribute('data-comment');
+            if (comment && comment.trim()) {
+                const nameAttr = cell.getAttribute('data-name');
+                const match = nameAttr.match(/att_(\d+)_(\d+)/);
+                if (match) {
+                    const lessonId = match[1];
+                    const studentId = match[2];
+                    const key = `${lessonId}_${studentId}`;
+                    commentsData[key] = comment;
+                }
+            }
+        });
+        
+        console.log('Комментарии для сохранения:', commentsData);
+        
+        // Добавляем комментарии в форму как JSON
+        if (Object.keys(commentsData).length > 0) {
+            const commentsInput = document.createElement('input');
+            commentsInput.type = 'hidden';
+            commentsInput.name = 'comments_data';
+            commentsInput.value = JSON.stringify(commentsData);
+            this.appendChild(commentsInput);
+            console.log('Добавлены комментарии в форму:', commentsInput.value);
+        }
+    });
+});
+</script>
+{% endblock %}

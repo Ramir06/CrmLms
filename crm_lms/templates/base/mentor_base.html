@@ -1,0 +1,44 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mentor.css' %}">
+{% block mentor_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+
+{% include "includes/navbar.html" %}
+{% include "includes/sidebar_mentor.html" %}
+
+<div class="content-overlay" id="contentOverlay"></div>
+
+<div class="app-content content">
+    <div class="content-wrapper">
+        {% include "includes/messages.html" %}
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<footer class="footer footer-static footer-light">
+    <p class="clearfix mb-0">
+        <span class="float-md-end d-none d-md-block" style="font-size:12px;">
+            Made with <i class="bi bi-heart-fill text-danger" style="font-size:10px;"></i> by IT Academy
+        </span>
+    </p>
+</footer>
+
+<!-- Right Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer-panel" id="drawerPanel">
+    <div class="drawer-header">
+        <h6 class="mb-0" id="drawerTitle">Детали</h6>
+        <button class="btn btn-sm btn-link text-muted" onclick="closeDrawer()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+{% block extra_js_base %}{% endblock %}
+{% endblock %}

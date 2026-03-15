@@ -1,0 +1,96 @@
+{% extends "students/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Посещаемость" %} — {{ course.title }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="st-breadcrumb">
+    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
+    <span class="sep">/</span>
+    <a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a>
+    <span class="sep">/</span>
+    <span class="current">{% trans "Посещаемость" %}</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold mb-1" style="color:#111827">
+                <i class="bi bi-person-check me-2" style="color:#4f46e5"></i>{% trans "Посещаемость" %}
+            </h3>
+            <p class="mb-0" style="color:#6b7280;font-size:.875rem">{{ course.title }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="card border-0 shadow-sm" style="border-radius:10px">
+                <div class="card-body py-2 px-3 text-center">
+                    <div class="fw-bold" style="color:#4f46e5;font-size:1.1rem">{{ present_count }}/{{ total_lessons }}</div>
+                    <div style="font-size:.7rem;color:#6b7280">{% trans "Посещено" %}</div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm" style="border-radius:10px">
+                <div class="card-body py-2 px-3 text-center">
+                    <div class="fw-bold" style="{% if percent >= 80 %}color:#059669{% elif percent >= 60 %}color:#d97706{% else %}color:#dc2626{% endif %};font-size:1.1rem">{{ percent }}%</div>
+                    <div style="font-size:.7rem;color:#6b7280">{% trans "Процент" %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not attendance_data %}
+    <div class="text-center py-5 bg-white rounded-3 shadow-sm">
+        <i class="bi bi-calendar-check fs-1 d-block mb-2" style="color:#d1d5db"></i>
+        <p style="color:#6b7280" class="mb-0">{% trans "Нет занятий" %}</p>
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm" style="border-radius:12px">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background:#f9fafb">
+                    <tr>
+                        <th style="width:40px;font-size:.75rem;color:#6b7280;font-weight:600" class="text-center">#</th>
+                        <th style="font-size:.75rem;color:#6b7280;font-weight:600">{% trans "Дата" %}</th>
+                        <th style="font-size:.75rem;color:#6b7280;font-weight:600">{% trans "Тема урока" %}</th>
+                        <th style="font-size:.75rem;color:#6b7280;font-weight:600" class="text-center">{% trans "Урок" %}</th>
+                        <th style="font-size:.75rem;color:#6b7280;font-weight:600" class="text-center">{% trans "Посещение" %}</th>
+                        <th style="font-size:.75rem;color:#6b7280;font-weight:600">{% trans "Комментарий" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in attendance_data %}
+                    <tr{% if item.lesson_status == 'scheduled' %} style="opacity:.6"{% endif %}>
+                        <td class="text-center" style="color:#9ca3af;font-size:.8rem">{{ forloop.counter }}</td>
+                        <td class="fw-medium" style="font-size:.875rem;color:#111827">{{ item.lesson.lesson_date|date:"d.m.Y" }}</td>
+                        <td style="font-size:.875rem;color:#374151">{{ item.lesson.title|default:"—" }}</td>
+                        <td class="text-center">
+                            {% if item.lesson_status == 'completed' %}
+                                <span class="badge" style="background:#d1fae5;color:#065f46;font-size:.7rem">{% trans "Проведено" %}</span>
+                            {% elif item.lesson_status == 'scheduled' %}
+                                <span class="badge" style="background:#e0e7ff;color:#3730a3;font-size:.7rem">{% trans "Запланировано" %}</span>
+                            {% elif item.lesson_status == 'postponed' %}
+                                <span class="badge" style="background:#fef3c7;color:#92400e;font-size:.7rem">{% trans "Перенесено" %}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if item.status == 'present' %}
+                                <span class="badge" style="background:#d1fae5;color:#065f46;font-size:.75rem"><i class="bi bi-check-lg"></i> {% trans "Присутствовал" %}</span>
+                            {% elif item.status == 'late' %}
+                                <span class="badge" style="background:#fef3c7;color:#92400e;font-size:.75rem"><i class="bi bi-clock"></i> {% trans "Опоздал" %}</span>
+                            {% elif item.status == 'excused' %}
+                                <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:.75rem"><i class="bi bi-envelope-check"></i> {% trans "Уважительная" %}</span>
+                            {% elif item.status == 'pending' %}
+                                <span class="badge" style="background:#f3f4f6;color:#9ca3af;font-size:.75rem"><i class="bi bi-hourglass"></i> {% trans "Ожидается" %}</span>
+                            {% else %}
+                                <span class="badge" style="background:#fee2e2;color:#991b1b;font-size:.75rem"><i class="bi bi-x-lg"></i> {% trans "Отсутствовал" %}</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size:.8rem;color:#6b7280">{{ item.comment|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

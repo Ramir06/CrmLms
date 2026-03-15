@@ -1,0 +1,55 @@
+{% extends "base/admin_base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'admin_students:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ page_title }}</h4>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-key me-1"></i>Аккаунт для входа</h6></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">{{ form.password.label }}</label>
+                            {{ form.password }}
+                            {% if form.password.help_text and student %}<div class="text-muted small mt-1">{{ form.password.help_text }}</div>{% endif %}
+                            {% if form.password.errors %}<div class="text-danger small">{{ form.password.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-person me-1"></i>Данные студента</h6></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for field in form %}
+                            {% if field.name != 'email' and field.name != 'password' %}
+                            <div class="col-md-{% if field.name == 'note' %}12{% else %}6{% endif %}">
+                                <label class="form-label fw-medium">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Сохранить</button>
+                <a href="{% url 'admin_students:list' %}" class="btn btn-outline-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

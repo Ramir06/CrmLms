@@ -1,0 +1,53 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'quizzes:list' course_id=course.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ page_title }}</h4>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Название теста <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" value="{{ quiz.title|default:'' }}" required placeholder="Например: Тест по теме 1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Описание</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Краткое описание теста">{{ quiz.description|default:'' }}</textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Лимит времени (мин)</label>
+                            <input type="number" name="time_limit" class="form-control" value="{{ quiz.time_limit|default:'0' }}" min="0" placeholder="0 = без лимита">
+                            <div class="form-text">0 — без ограничения</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Проходной балл (%)</label>
+                            <input type="number" name="pass_score" class="form-control" value="{{ quiz.pass_score|default:'60' }}" min="1" max="100">
+                        </div>
+                        {% if quiz %}
+                        <div class="col-md-4 d-flex align-items-end pb-1">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="isActive" {% if quiz.is_active %}checked{% endif %}>
+                                <label class="form-check-label fw-medium" for="isActive">Активен</label>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Сохранить</button>
+                        <a href="{% url 'quizzes:list' course_id=course.pk %}" class="btn btn-outline-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

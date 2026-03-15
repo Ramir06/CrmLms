@@ -1,0 +1,60 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block body %}
+<div style="min-height:100vh;background:var(--bg-color,#f5f5f5);padding:2rem 1rem;">
+<div style="max-width:720px;margin:0 auto;">
+
+    <!-- Header -->
+    <div class="card mb-4" style="border-radius:14px;border:none;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;">
+        <div class="card-body p-4">
+            <h4 class="mb-1 fw-bold">{{ quiz.title }}</h4>
+            <p class="mb-2 opacity-75">{{ attempt.course_student.student.full_name }} · {{ attempt.course_student.course.title }}</p>
+            {% if quiz.description %}<p class="mb-0 opacity-75 small">{{ quiz.description }}</p>{% endif %}
+            <div class="d-flex gap-3 mt-3" style="font-size:13px;opacity:.85;">
+                <span><i class="bi bi-question-circle me-1"></i>{{ questions.count }} вопросов</span>
+                <span><i class="bi bi-trophy me-1"></i>{{ quiz.total_points }} баллов</span>
+                <span><i class="bi bi-percent me-1"></i>Порог: {{ quiz.pass_score }}%</span>
+                {% if quiz.time_limit %}<span><i class="bi bi-clock me-1"></i>{{ quiz.time_limit }} мин</span>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for q in questions %}
+        <div class="card mb-3" style="border-radius:12px;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width:28px;height:28px;min-width:28px;font-size:12px;">{{ forloop.counter }}</span>
+                    <div>
+                        <p class="fw-semibold mb-1" style="font-size:15px;">{{ q.text }}</p>
+                        <span class="text-muted small">
+                            {% if q.question_type == 'single' %}Выберите один вариант{% else %}Выберите все правильные{% endif %}
+                            · {{ q.points }} балл.
+                        </span>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-2 ms-4 ps-2">
+                    {% for choice in q.choices.all %}
+                    <label class="d-flex align-items-center gap-3 p-3 rounded-3 cursor-pointer" style="border:1px solid var(--border-color,#e0e0e0);cursor:pointer;transition:background .1s;" onmouseover="this.style.background='#f8f5ff'" onmouseout="this.style.background=''">
+                        <input type="{% if q.question_type == 'single' %}radio{% else %}checkbox{% endif %}"
+                               name="q_{{ q.pk }}" value="{{ choice.pk }}"
+                               class="form-check-input" style="width:18px;height:18px;flex-shrink:0;">
+                        <span style="font-size:14px;">{{ choice.text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="d-grid mt-4 mb-5">
+            <button type="submit" class="btn btn-primary btn-lg" style="border-radius:12px;padding:14px;">
+                <i class="bi bi-send me-2"></i>Отправить ответы
+            </button>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}

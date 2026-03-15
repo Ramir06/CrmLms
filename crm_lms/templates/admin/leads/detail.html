@@ -1,0 +1,54 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}{{ lead.full_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'leads:kanban' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ lead.full_name }}</h4>
+        <span class="badge bg-info">{{ lead.get_status_display }}</span>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0">Данные лида</h6></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Сохранить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0">История действий</h6></div>
+            <div class="card-body p-0">
+                {% if actions %}
+                <div class="timeline p-3">
+                    {% for action in actions %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="fw-medium small">{{ action.comment }}</div>
+                            <div class="text-muted small">{{ action.performed_by.get_display_name }} · {{ action.created_at|date:"d.m.Y H:i" }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3 small">Нет истории</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

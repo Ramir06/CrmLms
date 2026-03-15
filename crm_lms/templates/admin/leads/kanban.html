@@ -1,0 +1,68 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}CRM Лиды{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">CRM — Лиды</h4>
+    <div class="page-actions">
+        <a href="{% url 'leads:archive' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-archive me-1"></i>Архив</a>
+        <a href="{% url 'leads:create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Добавить лид</a>
+    </div>
+</div>
+
+<div class="kanban-board">
+    {% for status, data in leads_by_status.items %}
+    <div class="kanban-col">
+        <div class="kanban-col-header">
+            <span class="kanban-col-title">{{ data.label }}</span>
+            <span class="badge bg-light text-dark border">{{ data.leads|length }}</span>
+        </div>
+        <div class="kanban-cards" id="col-{{ status }}" data-status="{{ status }}">
+            {% for lead in data.leads %}
+            <div class="kanban-card" data-lead-id="{{ lead.pk }}">
+                <div class="kanban-card-body">
+                    <div class="fw-semibold mb-1">{{ lead.full_name }}</div>
+                    <div class="text-muted small mb-2">{{ lead.phone }}</div>
+                    {% if lead.interested_course %}
+                    <span class="badge bg-light text-dark border small">{{ lead.interested_course.title }}</span>
+                    {% endif %}
+                    {% if lead.source %}
+                    <span class="badge bg-light text-muted border small">{{ lead.get_source_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="kanban-card-footer">
+                    <small class="text-muted">{{ lead.created_at|date:"d.m" }}</small>
+                    <a href="{% url 'leads:detail' pk=lead.pk %}" class="btn btn-sm btn-link text-muted p-0">
+                        <i class="bi bi-arrow-right-circle"></i>
+                    </a>
+                </div>
+                <!-- Quick move buttons -->
+                <div class="kanban-move-bar">
+                    {% for s, label, color in kanban_columns %}
+                    {% if s != status %}
+                    <form method="post" action="{% url 'leads:move' pk=lead.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="{{ s }}">
+                        <button type="submit" class="btn btn-xs btn-outline-secondary" title="{{ label }}">{{ label|truncatechars:5 }}</button>
+                    </form>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="kanban-empty text-muted text-center small py-3">Пусто</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/leads.js' %}"></script>
+{% endblock %}

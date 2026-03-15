@@ -1,0 +1,291 @@
+# English translation
+msgid ""
+msgstr ""
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: Auth
+msgid "Вход"
+msgstr "Login"
+
+msgid "Добро пожаловать"
+msgstr "Welcome"
+
+msgid "Войдите в свой аккаунт"
+msgstr "Sign in to your account"
+
+msgid "Пароль"
+msgstr "Password"
+
+msgid "Войти"
+msgstr "Sign in"
+
+msgid "Управляй обучением"
+msgstr "Manage learning"
+
+msgid "эффективно"
+msgstr "efficiently"
+
+msgid "Полная платформа для управления учебным центром: студенты, менторы, курсы, финансы и аналитика в одном месте."
+msgstr "A complete platform for managing an educational center: students, mentors, courses, finances and analytics in one place."
+
+msgid "CRM для управления лидами"
+msgstr "CRM for lead management"
+
+msgid "LMS для ведения курсов"
+msgstr "LMS for course management"
+
+msgid "Финансовая аналитика"
+msgstr "Financial analytics"
+
+#: Navbar
+msgid "Расписание"
+msgstr "Schedule"
+
+msgid "Язык"
+msgstr "Language"
+
+msgid "Тема"
+msgstr "Theme"
+
+msgid "Уведомления"
+msgstr "Notifications"
+
+msgid "Прочитать все"
+msgstr "Read all"
+
+msgid "Нет новых уведомлений"
+msgstr "No new notifications"
+
+msgid "Все уведомления"
+msgstr "All notifications"
+
+msgid "Профиль"
+msgstr "Profile"
+
+msgid "Выйти"
+msgstr "Logout"
+
+#: Student portal
+msgid "Студент"
+msgstr "Student"
+
+msgid "Мой кабинет"
+msgstr "My Dashboard"
+
+msgid "Материалы"
+msgstr "Materials"
+
+msgid "Посещаемость"
+msgstr "Attendance"
+
+msgid "Оценки"
+msgstr "Grades"
+
+msgid "Выход"
+msgstr "Logout"
+
+msgid "Вот ваши курсы и последние активности"
+msgstr "Here are your courses and recent activities"
+
+msgid "Активных курсов"
+msgstr "Active courses"
+
+msgid "Прогресс"
+msgstr "Progress"
+
+msgid "Тестов пройдено"
+msgstr "Tests completed"
+
+msgid "Мои курсы"
+msgstr "My courses"
+
+msgid "У вас пока нет активных курсов"
+msgstr "You have no active courses yet"
+
+msgid "Активен"
+msgstr "Active"
+
+msgid "Открыть курс"
+msgstr "Open course"
+
+msgid "Последние тесты"
+msgstr "Recent tests"
+
+msgid "Тест"
+msgstr "Test"
+
+msgid "Курс"
+msgstr "Course"
+
+msgid "Результат"
+msgstr "Result"
+
+msgid "Дата"
+msgstr "Date"
+
+#: Attendance
+msgid "Нет завершённых занятий"
+msgstr "No completed lessons"
+
+msgid "Нет студентов"
+msgstr "No students"
+
+msgid "Сохранить"
+msgstr "Save"
+
+msgid "Присутствовал"
+msgstr "Present"
+
+msgid "Отсутствовал"
+msgstr "Absent"
+
+msgid "Опоздал"
+msgstr "Late"
+
+msgid "Уважительная"
+msgstr "Excused"
+
+msgid "Тема урока"
+msgstr "Lesson topic"
+
+msgid "Статус"
+msgstr "Status"
+
+msgid "Комментарий"
+msgstr "Comment"
+
+#: Grades
+msgid "Общий балл"
+msgstr "Total score"
+
+msgid "Место"
+msgstr "Rank"
+
+msgid "Нет заданий"
+msgstr "No assignments"
+
+msgid "Балл посещаемости"
+msgstr "Attendance score"
+
+msgid "Балл заданий"
+msgstr "Assignment score"
+
+msgid "Задание"
+msgstr "Assignment"
+
+msgid "Макс. балл"
+msgstr "Max score"
+
+msgid "Оценка"
+msgstr "Grade"
+
+msgid "Срок"
+msgstr "Due"
+
+msgid "Проверено"
+msgstr "Checked"
+
+msgid "Сдано"
+msgstr "Submitted"
+
+msgid "На доработке"
+msgstr "Revision"
+
+msgid "Не сдано"
+msgstr "Not submitted"
+
+#: Sidebar - common
+msgid "Меню"
+msgstr "Menu"
+
+msgid "Главная"
+msgstr "Home"
+
+msgid "Мои курсы"
+msgstr "My courses"
+
+msgid "Аккаунт"
+msgstr "Account"
+
+#: Sidebar - admin
+msgid "Основное"
+msgstr "Main"
+
+msgid "Дашборд"
+msgstr "Dashboard"
+
+msgid "Управление"
+msgstr "Management"
+
+msgid "Курсы"
+msgstr "Courses"
+
+msgid "Менторы"
+msgstr "Mentors"
+
+msgid "Лиды"
+msgstr "Leads"
+
+msgid "Финансы"
+msgstr "Finances"
+
+msgid "Оплаты"
+msgstr "Payments"
+
+msgid "Долги"
+msgstr "Debts"
+
+msgid "Зарплаты"
+msgstr "Salaries"
+
+msgid "Бухгалтерия"
+msgstr "Accounting"
+
+msgid "Другое"
+msgstr "Other"
+
+msgid "Объявления"
+msgstr "Announcements"
+
+msgid "Отчёты"
+msgstr "Reports"
+
+#: Sidebar - mentor
+msgid "Зарплата"
+msgstr "Salary"
+
+#: Sidebar - course
+msgid "Лекции"
+msgstr "Lectures"
+
+msgid "Задания"
+msgstr "Assignments"
+
+msgid "Занятия"
+msgstr "Lessons"
+
+msgid "Отзывы"
+msgstr "Reviews"
+
+msgid "Тесты"
+msgstr "Tests"
+
+msgid "Смарт-отчёт"
+msgstr "Smart Report"
+
+msgid "Студенты"
+msgstr "Students"
+
+#: Misc
+msgid "Скачать"
+msgstr "Download"
+
+msgid "Назад"
+msgstr "Back"
+
+msgid "Назад к курсу"
+msgstr "Back to course"

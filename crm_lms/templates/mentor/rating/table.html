@@ -1,0 +1,87 @@
+{% extends "base/course_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Оценки" %} — {{ course.title }}{% endblock %}
+
+{% block course_extra_css %}
+<style>
+    .grade-grid { overflow-x: auto; }
+    .grade-table { border-collapse: separate; border-spacing: 0; width: auto; min-width: 100%; }
+    .grade-table th, .grade-table td { border: 1px solid #e9ecef; padding: 0; vertical-align: middle; text-align: center; }
+    .grade-table .student-col { position: sticky; left: 0; background: #fff; z-index: 2; min-width: 180px; max-width: 220px; text-align: left; padding: 6px 10px; font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .grade-table thead th { background: #f8f9fa; position: sticky; top: 0; z-index: 3; padding: 6px 4px; font-size: 11px; font-weight: 600; }
+    .grade-table thead th.student-col { z-index: 4; }
+    .grade-cell { min-width: 52px; width: 52px; height: 38px; font-size: 12px; font-weight: 600; }
+    .grade-cell.has-grade { background: #d4edda; color: #155724; }
+    .grade-cell.no-grade { background: #f8f9fa; color: #adb5bd; }
+    .grade-cell.low-grade { background: #f8d7da; color: #721c24; }
+    .grade-total { min-width: 60px; font-weight: 700; font-size: 13px; padding: 6px 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex align-items-center justify-content-between">
+    <h4 class="page-title mb-0">{% trans "Оценки" %}</h4>
+</div>
+
+{% if not grades_matrix %}
+<div class="empty-state text-center py-5">
+    <i class="bi bi-journal-check fs-1 text-muted"></i>
+    <h6 class="mt-3 text-muted">{% trans "Нет заданий" %}</h6>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="grade-grid">
+            <table class="grade-table">
+                <thead>
+                    <tr>
+                        <th class="student-col">{% trans "Студент" %}</th>
+                        {% for a in assignments %}
+                        <th title="{{ a.title }}" style="min-width:52px; max-width:80px;">
+                            <div style="writing-mode:vertical-rl; transform:rotate(180deg); max-height:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:4px 2px; font-size:10px;">
+                                {{ a.title|truncatechars:20 }}
+                            </div>
+                        </th>
+                        {% endfor %}
+                        <th class="grade-total" style="min-width:55px;">{% trans "Посещаемость" %}</th>
+                        <th class="grade-total" style="min-width:55px;">{% trans "Задание" %}</th>
+                        <th class="grade-total" style="background:#e8f0fe;">{% trans "Общий балл" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in grades_matrix %}
+                    <tr>
+                        <td class="student-col" title="{{ row.student_name }}">
+                            {{ row.student_name }}
+                        </td>
+                        {% for cell in row.cells %}
+                        <td class="grade-cell {% if cell.score is not None %}{% if cell.percent >= 60 %}has-grade{% else %}low-grade{% endif %}{% else %}no-grade{% endif %}">
+                            {% if cell.score is not None %}{{ cell.score|floatformat:0 }}{% else %}—{% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="grade-total">
+                            {% if row.rating %}
+                            <span class="badge {% if row.rating.attendance_score >= 80 %}bg-success{% elif row.rating.attendance_score >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                {{ row.rating.attendance_score|floatformat:0 }}%
+                            </span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="grade-total">
+                            {% if row.rating %}{{ row.rating.assignment_score|floatformat:1 }}{% else %}—{% endif %}
+                        </td>
+                        <td class="grade-total" style="background:#e8f0fe;">
+                            {% if row.rating %}
+                            <span class="badge bg-primary">{{ row.rating.total_score|floatformat:0 }}</span>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="{{ assignments|length|add:4 }}" class="text-center text-muted py-4">{% trans "Нет студентов" %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

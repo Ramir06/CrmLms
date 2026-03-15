@@ -1,0 +1,219 @@
+{% extends "students/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Главная" %}{% endblock %}
+
+{% block student_extra_css %}
+<style>
+.dash-card{background:#fff;border-radius:.428rem;box-shadow:0 4px 24px 0 rgba(34,41,47,.1);border:none;margin-bottom:1.5rem}
+.dash-card .card-header{background:transparent;border-bottom:1px solid #ebe9f1;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between}
+.dash-card .card-header h4{font-size:.95rem;font-weight:600;color:#5e5873;margin:0}
+.dash-card .card-body{padding:1rem 1.2rem}
+.course-card{background:#fff;border-radius:.428rem;box-shadow:0 4px 24px 0 rgba(34,41,47,.1);border:none;overflow:hidden;transition:transform .15s,box-shadow .15s;height:100%}
+.course-card:hover{transform:translateY(-4px);box-shadow:0 6px 28px rgba(115,103,240,.15)}
+.course-card .cc-accent{height:4px}
+.course-card .card-body{padding:1rem 1.2rem}
+.course-card .cc-title{font-size:.95rem;font-weight:600;color:#5e5873;margin-bottom:.25rem}
+.course-card .cc-meta{font-size:.8rem;color:#b9b9c3;margin-bottom:.75rem}
+.course-card .cc-links{display:flex;flex-wrap:wrap;gap:6px}
+.course-card .cc-links a{font-size:.75rem;padding:4px 10px;border-radius:5px;text-decoration:none;color:#7367f0;background:#f0eeff;transition:all .15s;font-weight:500}
+.course-card .cc-links a:hover{background:#7367f0;color:#fff}
+.list-item-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #ebe9f1}
+.list-item-row:last-child{border-bottom:none}
+.list-item-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem}
+.list-item-row .li-title{font-size:.85rem;font-weight:500;color:#5e5873;margin:0;line-height:1.3}
+.list-item-row .li-sub{font-size:.75rem;color:#b9b9c3;margin:0}
+.list-item-row .li-badge{margin-left:auto;flex-shrink:0}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left column: Recent assignments + Recent grades -->
+    <div class="col-xl-4 col-lg-5">
+        <!-- Quick stats -->
+        <div class="dash-card">
+            <div class="card-body text-center py-4">
+                <div class="d-flex align-items-center justify-content-center gap-3 mb-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                         style="width:56px;height:56px;background:linear-gradient(118deg,#7367f0,rgba(115,103,240,.7));font-size:1.3rem">
+                        {{ user.full_name|first|default:"S" }}
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-0" style="color:#5e5873">{{ user.full_name|default:user.email }}</h5>
+                <p class="mb-2" style="color:#b9b9c3;font-size:.85rem">{% trans "Студент" %}</p>
+                <div class="d-flex justify-content-center gap-4">
+                    <div>
+                        <div class="fw-bold" style="color:#7367f0;font-size:1.2rem">{{ enrollments.count }}</div>
+                        <div style="font-size:.7rem;color:#b9b9c3">{% trans "Курсов" %}</div>
+                    </div>
+                    <div>
+                        <div class="fw-bold" style="color:#28c76f;font-size:1.2rem">{{ recent_quizzes|length }}</div>
+                        <div style="font-size:.7rem;color:#b9b9c3">{% trans "Тестов" %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent assignments -->
+        <div class="dash-card">
+            <div class="card-header">
+                <h4><i class="bi bi-file-earmark-text me-2" style="color:#7367f0"></i>{% trans "Последние задания" %}</h4>
+            </div>
+            <div class="card-body">
+                {% for item in recent_assignments %}
+                <div class="list-item-row">
+                    <div class="list-item-icon" style="background:{% if item.submitted %}#d4edda{% else %}#fff3cd{% endif %}">
+                        <i class="bi {% if item.submitted %}bi-check-circle-fill text-success{% else %}bi-hourglass-split text-warning{% endif %}"></i>
+                    </div>
+                    <div class="flex-grow-1 min-w-0">
+                        <p class="li-title text-truncate">{{ item.assignment.title }}</p>
+                        <p class="li-sub">{{ item.assignment.course.title|truncatechars:25 }}{% if item.assignment.due_date %} · {{ item.assignment.due_date|date:"d.m" }}{% endif %}</p>
+                    </div>
+                    <div class="li-badge">
+                        {% if item.submitted %}
+                        <span class="badge" style="background:#d4edda;color:#28c76f;font-size:.7rem">{% trans "Сдано" %}</span>
+                        {% else %}
+                        <span class="badge" style="background:#fff3cd;color:#ff9f43;font-size:.7rem">{% trans "Не сдано" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-3" style="color:#b9b9c3;font-size:.85rem">
+                    <i class="bi bi-inbox d-block mb-1" style="font-size:1.5rem"></i>
+                    {% trans "Нет заданий" %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent grades -->
+        <div class="dash-card">
+            <div class="card-header">
+                <h4><i class="bi bi-bar-chart-line me-2" style="color:#28c76f"></i>{% trans "Последние оценки" %}</h4>
+            </div>
+            <div class="card-body">
+                {% for grade in recent_grades %}
+                <div class="list-item-row">
+                    <div class="list-item-icon" style="background:#e8f5e9">
+                        <i class="bi bi-trophy-fill" style="color:#28c76f"></i>
+                    </div>
+                    <div class="flex-grow-1 min-w-0">
+                        <p class="li-title text-truncate">{{ grade.submission.assignment.title }}</p>
+                        <p class="li-sub">{{ grade.submission.assignment.course.title|truncatechars:25 }} · {{ grade.checked_at|date:"d.m.Y" }}</p>
+                    </div>
+                    <div class="li-badge">
+                        <span class="badge" style="background:linear-gradient(118deg,#28c76f,rgba(40,199,111,.7));color:#fff;font-size:.8rem">
+                            {{ grade.score|floatformat:"0" }}/{{ grade.submission.assignment.max_score }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-3" style="color:#b9b9c3;font-size:.85rem">
+                    <i class="bi bi-inbox d-block mb-1" style="font-size:1.5rem"></i>
+                    {% trans "Нет оценок" %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right column: Courses -->
+    <div class="col-xl-8 col-lg-7">
+        <!-- Welcome -->
+        <div class="dash-card">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div>
+                        <h4 class="fw-bold mb-1" style="color:#5e5873">{% trans "Добро пожаловать" %}, {{ user.first_name|default:user.full_name }}! 🎉</h4>
+                        <p class="mb-0" style="color:#b9b9c3;font-size:.85rem">{% trans "Здесь вы найдёте свои курсы, задания и результаты" %}</p>
+                    </div>
+                    <a href="{% url 'students:schedule' %}" class="btn btn-sm ms-auto" style="background:linear-gradient(118deg,#7367f0,rgba(115,103,240,.7));color:#fff;border-radius:6px;white-space:nowrap">
+                        <i class="bi bi-calendar3 me-1"></i>{% trans "Расписание" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if not enrollments %}
+        <div class="dash-card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-mortarboard" style="font-size:3rem;color:#ebe9f1"></i>
+                <h6 class="mt-3" style="color:#b9b9c3">{% trans "У вас пока нет активных курсов" %}</h6>
+            </div>
+        </div>
+        {% else %}
+        <div class="row g-3 mb-4">
+            {% for enrollment in enrollments %}
+            <div class="col-md-6">
+                <div class="course-card">
+                    <div class="cc-accent" style="background:{{ enrollment.course.color|default:'#7367f0' }}"></div>
+                    <div class="card-body">
+                        <h5 class="cc-title">{{ enrollment.course.title }}</h5>
+                        <div class="cc-meta">
+                            <i class="bi bi-person me-1"></i>{{ enrollment.course.mentor.get_display_name }}
+                            {% if enrollment.course.subject %} · {{ enrollment.course.subject }}{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1" style="font-size:.7rem">
+                                <span style="color:#b9b9c3">{% trans "Прогресс" %}</span>
+                                <span class="fw-bold" style="color:#5e5873">{{ enrollment.progress_percent }}%</span>
+                            </div>
+                            <div class="progress" style="height:5px;border-radius:99px;background:#ebe9f1">
+                                <div class="progress-bar" style="width:{{ enrollment.progress_percent }}%;border-radius:99px;background:{{ enrollment.course.color|default:'#7367f0' }}"></div>
+                            </div>
+                        </div>
+
+                        <div class="cc-links">
+                            <a href="{% url 'students:course_detail' enrollment.course.pk %}"><i class="bi bi-book-half me-1"></i>{% trans "Материалы" %}</a>
+                            <a href="{% url 'students:assignments' enrollment.course.pk %}"><i class="bi bi-file-earmark-text me-1"></i>{% trans "Задания" %}</a>
+                            <a href="{% url 'students:quizzes' enrollment.course.pk %}"><i class="bi bi-ui-checks me-1"></i>{% trans "Тесты" %}</a>
+                            <a href="{% url 'students:grades' enrollment.course.pk %}"><i class="bi bi-bar-chart-line me-1"></i>{% trans "Оценки" %}</a>
+                            <a href="{% url 'students:attendance' enrollment.course.pk %}"><i class="bi bi-check-square me-1"></i>{% trans "Посещения" %}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Recent quizzes -->
+        {% if recent_quizzes %}
+        <div class="dash-card">
+            <div class="card-header">
+                <h4><i class="bi bi-ui-checks me-2" style="color:#00cfe8"></i>{% trans "Последние тесты" %}</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr style="background:#fafafc">
+                                <th style="font-size:.75rem;color:#b9b9c3;font-weight:600;padding:.6rem 1rem">{% trans "Тест" %}</th>
+                                <th style="font-size:.75rem;color:#b9b9c3;font-weight:600;padding:.6rem .5rem">{% trans "Курс" %}</th>
+                                <th style="font-size:.75rem;color:#b9b9c3;font-weight:600;padding:.6rem .5rem" class="text-center">{% trans "Результат" %}</th>
+                                <th style="font-size:.75rem;color:#b9b9c3;font-weight:600;padding:.6rem 1rem">{% trans "Дата" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in recent_quizzes %}
+                            <tr>
+                                <td class="fw-medium" style="font-size:.85rem;color:#5e5873;padding:.6rem 1rem">{{ attempt.quiz.title }}</td>
+                                <td style="font-size:.8rem;color:#b9b9c3;padding:.6rem .5rem">{{ attempt.course_student.course.title|truncatechars:20 }}</td>
+                                <td class="text-center" style="padding:.6rem .5rem">
+                                    <span class="badge" style="{% if attempt.passed %}background:#28c76f{% else %}background:#ea5455{% endif %};color:#fff;font-size:.75rem">
+                                        {{ attempt.percentage }}%
+                                    </span>
+                                </td>
+                                <td style="font-size:.75rem;color:#b9b9c3;padding:.6rem 1rem">{{ attempt.submitted_at|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

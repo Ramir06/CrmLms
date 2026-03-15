@@ -1,0 +1,52 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}Менторы{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Менторы</h4>
+    <div class="page-actions">
+        <a href="{% url 'mentors:export' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Excel</a>
+        <a href="{% url 'mentors:create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
+    </div>
+</div>
+{% if search %}
+<div class="filter-bar mb-3">
+    <form method="get" class="d-flex gap-2">
+        <input type="text" name="q" value="{{ search }}" class="form-control form-control-sm" placeholder="Поиск..." style="width:240px">
+        <button type="submit" class="btn btn-primary btn-sm">Поиск</button>
+        <a href="{% url 'mentors:list' %}" class="btn btn-outline-secondary btn-sm">Сброс</a>
+    </form>
+</div>
+{% endif %}
+<div class="row g-3">
+    {% for m in mentors %}
+    <div class="col-sm-6 col-xl-4">
+        <div class="card mentor-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="mentor-avatar">{{ m.user.get_display_name|first|upper }}</div>
+                    <div>
+                        <h6 class="mb-0 fw-semibold">{{ m.get_display_name }}
+                            {% if not m.user.is_active %}
+                            <span class="badge bg-danger-subtle text-danger ms-1" title="Заблокирован"><i class="bi bi-lock-fill"></i></span>
+                            {% endif %}
+                        </h6>
+                        <small class="text-muted">{{ m.specialization|default:"—" }}</small>
+                    </div>
+                </div>
+                <div class="info-list">
+                    <div class="info-row"><span class="info-label">Email</span><span>{{ m.user.email }}</span></div>
+                    <div class="info-row"><span class="info-label">Зарплата</span><span>{{ m.get_salary_type_display }}</span></div>
+                    <div class="info-row"><span class="info-label">Активен с</span><span>{{ m.hired_at|date:"d.m.Y"|default:"—" }}</span></div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end">
+                <a href="{% url 'mentors:detail' pk=m.pk %}" class="btn btn-sm btn-outline-primary">Открыть</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted py-5"><i class="bi bi-person-badge fs-1 d-block mb-2"></i>Менторы не найдены</div>
+    {% endfor %}
+</div>
+{% endblock %}

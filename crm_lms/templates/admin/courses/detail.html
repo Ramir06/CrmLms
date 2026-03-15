@@ -1,0 +1,312 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}{{ course.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Course Hero Banner -->
+<div class="card mb-4" style="border:none;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,{{ course.color }}22 0%,{{ course.color }}08 100%);border-left:5px solid {{ course.color }};">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:52px;height:52px;border-radius:14px;background:{{ course.color }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-mortarboard-fill text-white" style="font-size:22px;"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h4 class="mb-0 fw-bold">{{ course.title }}</h4>
+                        <span class="badge {% if course.status == 'active' %}bg-success{% elif course.status == 'planned' %}bg-warning text-dark{% elif course.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                            {{ course.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 text-muted" style="font-size:13px;">
+                        {% if course.subject %}<span><i class="bi bi-bookmark me-1"></i>{{ course.subject }}</span>{% endif %}
+                        {% if course.mentor %}<span><i class="bi bi-person me-1"></i>{{ course.mentor.get_display_name }}</span>{% endif %}
+                        <span><i class="bi bi-calendar3 me-1"></i>{{ course.get_days_display_short }}</span>
+                        {% if course.lesson_start_time %}<span><i class="bi bi-clock me-1"></i>{{ course.lesson_start_time|time:"H:i" }}</span>{% endif %}
+                        {% if course.room %}<span><i class="bi bi-geo-alt me-1"></i>{{ course.room }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'courses:edit' pk=course.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Изменить</a>
+                <a href="{% url 'courses:add_student' pk=course.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1"></i>Добавить студента</a>
+                <a href="{% url 'courses:delete' pk=course.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Удалить</a>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        {% with pct=active_students.count|default:0 %}
+        <div class="mt-3">
+            <div class="d-flex justify-content-between mb-1" style="font-size:12px;">
+                <span class="text-muted">Заполненность группы</span>
+                <span class="fw-semibold {% if active_students.count >= course.capacity %}text-danger{% else %}text-success{% endif %}">
+                    {{ active_students.count }} / {{ course.capacity }}
+                </span>
+            </div>
+            <div class="progress" style="height:8px;border-radius:99px;">
+                <div class="progress-bar {% if active_students.count >= course.capacity %}bg-danger{% else %}bg-success{% endif %}"
+                     style="width:{% widthratio active_students.count course.capacity 100 %}%;border-radius:99px;"></div>
+            </div>
+        </div>
+        {% endwith %}
+    </div>
+</div>
+
+<!-- Stat cards row -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon-box blue"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ active_students.count }}</div>
+                <div class="stat-label">Студентов</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon-box green"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ course.price|floatformat:0 }}</div>
+                <div class="stat-label">Стоимость (сум)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon-box purple"><i class="bi bi-calendar3-week"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ course.duration_months }}</div>
+                <div class="stat-label">Месяцев</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon-box orange"><i class="bi bi-display"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ course.get_format_display }}</div>
+                <div class="stat-label">Формат</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Course info sidebar -->
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-info-circle me-2 text-primary"></i>Детали курса</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0" style="font-size:13px;">
+                    <tbody>
+                        <tr><td class="text-muted ps-3" style="width:45%">Направление</td><td class="fw-medium">{{ course.subject|default:"—" }}</td></tr>
+                        <tr><td class="text-muted ps-3">Ментор</td><td class="fw-medium">{{ course.mentor.get_display_name|default:"—" }}</td></tr>
+                        {% if course.assistant_mentor %}
+                        <tr><td class="text-muted ps-3">Помощник</td><td>{{ course.assistant_mentor.get_display_name }}</td></tr>
+                        {% endif %}
+                        <tr><td class="text-muted ps-3">Начало</td><td>{{ course.start_date|date:"d.m.Y"|default:"—" }}</td></tr>
+                        <tr><td class="text-muted ps-3">Конец</td><td>{{ course.end_date|date:"d.m.Y"|default:"—" }}</td></tr>
+                        <tr><td class="text-muted ps-3">Расписание</td><td>{{ course.get_days_display_short }}</td></tr>
+                        {% if course.lesson_start_time %}
+                        <tr><td class="text-muted ps-3">Время</td><td>{{ course.lesson_start_time|time:"H:i" }} — {{ course.lesson_end_time|time:"H:i" }}</td></tr>
+                        {% endif %}
+                        <tr><td class="text-muted ps-3">Кабинет</td><td>{{ course.room|default:"—" }}</td></tr>
+                        <tr><td class="text-muted ps-3">Вместимость</td>
+                            <td><span class="fw-semibold {% if active_students.count >= course.capacity %}text-danger{% else %}text-success{% endif %}">{{ active_students.count }}/{{ course.capacity }}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if course.description %}
+        <div class="card">
+            <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-text-paragraph me-2 text-muted"></i>Описание</h6></div>
+            <div class="card-body"><p class="mb-0 text-muted" style="font-size:13px;line-height:1.6;">{{ course.description }}</p></div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Ticket Table for Unlimited Courses -->
+    {% if course.is_unlimited and active_students %}
+        {% include "admin/courses/ticket_table.html" %}
+    {% endif %}
+
+    <!-- Active Students -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <h6 class="card-title mb-0">Студенты</h6>
+                    <span class="badge bg-primary">{{ active_students.count }}</span>
+                </div>
+                <a href="{% url 'courses:add_student' pk=course.pk %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Добавить
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" style="font-size:13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:32px">#</th>
+                                <th>ФИО</th>
+                                <th>Телефон</th>
+                                <th>Статус</th>
+                                <th>Прогресс</th>
+                                <th>Рейтинг</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cs in active_students %}
+                            <tr>
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'admin_students:detail' pk=cs.student.pk %}" class="text-decoration-none fw-medium d-flex align-items-center gap-2">
+                                        <span class="avatar-xs rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
+                                            {{ cs.student.full_name|first }}
+                                        </span>
+                                        {{ cs.student.full_name }}
+                                    </a>
+                                </td>
+                                <td class="text-muted">{{ cs.student.phone }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if cs.status == 'active' %}bg-success
+                                        {% elif cs.status == 'frozen' %}bg-info text-dark
+                                        {% elif cs.status == 'left' %}bg-danger
+                                        {% elif cs.status == 'graduated' %}bg-primary
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ cs.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height:5px;min-width:60px;">
+                                            <div class="progress-bar bg-primary" style="width:{{ cs.progress_percent }}%;"></div>
+                                        </div>
+                                        <small class="text-muted" style="white-space:nowrap;">{{ cs.progress_percent }}%</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if cs.rating %}
+                                    <span class="text-warning"><i class="bi bi-star-fill" style="font-size:10px;"></i></span>
+                                    <span class="fw-medium" style="font-size:12px;">{{ cs.rating }}</span>
+                                    {% else %}<span class="text-muted">—</span>{% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="loadStudentDrawer({{ cs.pk }})" title="Детали">
+                                        <i class="bi bi-person-lines-fill"></i>
+                                    </button>
+                                    <form method="post" action="{% url 'courses:remove_student' pk=cs.pk %}" style="display:inline;" onsubmit="return confirm('Удалить студента из курса?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить из курса"><i class="bi bi-person-x"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-5">
+                                    <i class="bi bi-people fs-2 d-block mb-2 opacity-50"></i>
+                                    Нет студентов. <a href="{% url 'courses:add_student' pk=course.pk %}">Добавить</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left Students -->
+        {% if left_students %}
+        <div class="card">
+            <div class="card-header bg-warning bg-opacity-10 border-warning">
+                <h6 class="card-title mb-0 text-warning"><i class="bi bi-x-circle me-2"></i>Покинули курс</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" style="font-size:13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:32px">#</th>
+                                <th>ФИО</th>
+                                <th>Телефон</th>
+                                <th>Статус</th>
+                                <th>Прогресс</th>
+                                <th>Рейтинг</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cs in left_students %}
+                            <tr class="table-warning bg-opacity-5">
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'admin_students:detail' pk=cs.student.pk %}" class="text-decoration-none fw-medium d-flex align-items-center gap-2">
+                                        <span class="avatar-xs rounded-circle bg-warning text-white d-inline-flex align-items-center justify-content-center" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
+                                            {{ cs.student.full_name|first }}
+                                        </span>
+                                        {{ cs.student.full_name }}
+                                    </a>
+                                </td>
+                                <td class="text-muted">{{ cs.student.phone }}</td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">
+                                        {{ cs.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height:5px;min-width:60px;">
+                                            <div class="progress-bar bg-warning" style="width:{{ cs.progress_percent }}%;"></div>
+                                        </div>
+                                        <small class="text-muted" style="white-space:nowrap;">{{ cs.progress_percent }}%</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if cs.rating %}
+                                    <span class="text-warning"><i class="bi bi-star-fill" style="font-size:10px;"></i></span>
+                                    <span class="fw-medium" style="font-size:12px;">{{ cs.rating }}</span>
+                                    {% else %}<span class="text-muted">—</span>{% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="loadStudentDrawer({{ cs.pk }})" title="Детали">
+                                        <i class="bi bi-person-lines-fill"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function loadStudentDrawer(csId) {
+    const drawerTitle = document.getElementById('drawerTitle');
+    const drawerBody = document.getElementById('drawerBody');
+    const drawer = document.getElementById('drawerPanel');
+    const overlay = document.getElementById('drawerOverlay');
+    if (!drawer) return;
+    if (drawerTitle) drawerTitle.textContent = 'Студент';
+    if (drawerBody) drawerBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+    drawer.classList.add('open');
+    if (overlay) overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    fetch('{% url "courses:student_drawer" pk=0 %}'.replace('0', csId))
+        .then(r => r.text())
+        .then(html => { if (drawerBody) drawerBody.innerHTML = html; })
+        .catch(() => { if (drawerBody) drawerBody.innerHTML = '<p class="text-danger p-3">Ошибка загрузки</p>'; });
+}
+</script>
+{% endblock %}

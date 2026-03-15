@@ -1,0 +1,101 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+{% block title %}Студенты — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Студенты курса</h4>
+    <span class="badge bg-primary" style="font-size:13px;">{{ course_students.count }}</span>
+</div>
+
+<!-- Stats mini row -->
+<div class="row g-2 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="stat-icon-box green"><i class="bi bi-person-check-fill"></i></div>
+            <div class="stat-info"><div class="stat-value">{{ active_count }}</div><div class="stat-label">Активных</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="stat-icon-box red"><i class="bi bi-person-x-fill"></i></div>
+            <div class="stat-info"><div class="stat-value">{{ left_count }}</div><div class="stat-label">Ушедших</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="stat-icon-box blue"><i class="bi bi-snow"></i></div>
+            <div class="stat-info"><div class="stat-value">{{ frozen_count }}</div><div class="stat-label">Заморожен.</div></div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="stat-icon-box purple"><i class="bi bi-award-fill"></i></div>
+            <div class="stat-info"><div class="stat-value">{{ graduated_count }}</div><div class="stat-label">Окончили</div></div></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" style="font-size:13px;">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:32px">#</th>
+                        <th>Студент</th>
+                        <th>Телефон</th>
+                        <th>Статус</th>
+                        <th>Прогресс</th>
+                        <th>Рейтинг</th>
+                        <th>Баллы</th>
+                        <th>Зачислен</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cs in course_students %}
+                    <tr>
+                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-semibold"
+                                      style="width:30px;height:30px;font-size:12px;flex-shrink:0;">{{ cs.student.full_name|first }}</span>
+                                <div>
+                                    <div class="fw-medium">{{ cs.student.full_name }}</div>
+                                    {% if cs.student.parent_name %}<div class="text-muted" style="font-size:11px;">Родитель: {{ cs.student.parent_name }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted">{{ cs.student.phone }}</td>
+                        <td>
+                            <span class="badge
+                                {% if cs.status == 'active' %}bg-success
+                                {% elif cs.status == 'frozen' %}bg-info text-dark
+                                {% elif cs.status == 'left' %}bg-danger
+                                {% elif cs.status == 'graduated' %}bg-primary
+                                {% else %}bg-secondary{% endif %}">
+                                {{ cs.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress" style="height:5px;width:60px;flex-shrink:0;">
+                                    <div class="progress-bar bg-primary" style="width:{{ cs.progress_percent }}%;"></div>
+                                </div>
+                                <small class="text-muted">{{ cs.progress_percent }}%</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if cs.rating %}
+                            <span class="text-warning"><i class="bi bi-star-fill" style="font-size:10px;"></i></span>
+                            <span class="fw-medium">{{ cs.rating }}</span>
+                            {% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td><span class="fw-medium text-primary">{{ cs.points }}</span></td>
+                        <td class="text-muted">{{ cs.joined_at|date:"d.m.Y"|default:"—" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="bi bi-people fs-2 d-block mb-2 opacity-50"></i>
+                            Нет студентов в этом курсе
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
