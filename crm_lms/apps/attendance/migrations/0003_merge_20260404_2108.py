@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('attendance', '0001_initial'),
         ('attendance', '0002_attendancerecord_marked_by'),
+        ('attendance', '0003_add_color_status'),
     ]
 
     operations = [
