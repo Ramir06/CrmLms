@@ -11,16 +11,31 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
 
 database_url = os.getenv('DATABASE_URL')
-if not database_url:
-    raise ValueError("DATABASE_URL is not set")
 
-DATABASES = {
-    'default': dj_database_url.parse(
-        database_url,
-        conn_max_age=600,
-        ssl_require=True
+if database_url:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            database_url,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+else:
+    # DATABASE_URL is not available at import time (e.g. during the build
+    # phase when collectstatic runs).  Keep a placeholder so the settings
+    # module can be imported without error; any actual database operation
+    # will raise ImproperlyConfigured at runtime, which is the correct
+    # behaviour when the variable is genuinely missing in production.
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "DATABASE_URL is not set — database operations will fail until "
+        "this environment variable is provided."
     )
-}
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.dummy',
+        }
+    }
 
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
 
