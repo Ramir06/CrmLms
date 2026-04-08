@@ -1,0 +1,80 @@
+{% extends 'base/admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-4">Настройки лидов</h4>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-tags display-4 text-primary mb-3"></i>
+                            <h5 class="card-title">Статусы лидов</h5>
+                            <p class="card-text text-muted">
+                                Управление статусами лидов, настройка цветов и иконок
+                            </p>
+                            <a href="{% url 'leads:lead_status_list' %}" class="btn btn-primary">
+                                <i class="bi bi-arrow-right me-1"></i>Перейти к статусам
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-link-45deg display-4 text-success mb-3"></i>
+                            <h5 class="card-title">Источники лидов</h5>
+                            <p class="card-text text-muted">
+                                Управление источниками лидов, настройка иконок и описаний
+                            </p>
+                            <a href="{% url 'leads:lead_source_list' %}" class="btn btn-success">
+                                <i class="bi bi-arrow-right me-1"></i>Перейти к источникам
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Быстрые действия</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <a href="{% url 'leads:lead_status_create' %}" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-plus-circle me-1"></i>Новый статус
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'leads:lead_source_create' %}" class="btn btn-outline-success w-100">
+                                        <i class="bi bi-plus-circle me-1"></i>Новый источник
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'leads:kanban' %}" class="btn btn-outline-info w-100">
+                                        <i class="bi bi-kanban me-1"></i>Канбан лидов
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'leads:form_list' %}" class="btn btn-outline-warning w-100">
+                                        <i class="bi bi-file-earmark-text me-1"></i>Формы лидогенерации
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

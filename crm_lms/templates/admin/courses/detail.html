@@ -1,312 +1,1307 @@
 {% extends "base/admin_base.html" %}
 {% load static %}
 
-{% block title %}{{ course.title }}{% endblock %}
+{% block page_title %}{{ course.title }}{% endblock %}
 
 {% block content %}
-
-<!-- Course Hero Banner -->
-<div class="card mb-4" style="border:none;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,{{ course.color }}22 0%,{{ course.color }}08 100%);border-left:5px solid {{ course.color }};">
-    <div class="card-body p-4">
-        <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <div style="width:52px;height:52px;border-radius:14px;background:{{ course.color }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <i class="bi bi-mortarboard-fill text-white" style="font-size:22px;"></i>
-                </div>
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <h4 class="mb-0 fw-bold">{{ course.title }}</h4>
-                        <span class="badge {% if course.status == 'active' %}bg-success{% elif course.status == 'planned' %}bg-warning text-dark{% elif course.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
-                            {{ course.get_status_display }}
-                        </span>
+<div class="container-fluid">
+    <!-- Course Header Card -->
+    <div class="card mb-4" style="border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: white;">
+        <div class="card-body p-4">
+            <div class="row align-items-start">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <div style="width: 48px; height: 48px; background: {{ course.color|default:'#6366f1' }}; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="bi bi-mortarboard-fill text-white" style="font-size: 20px;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h2 class="h3 mb-2 fw-bold">{{ course.title }}</h2>
+                            <div class="d-flex align-items-center gap-3 text-muted" style="font-size: 14px;">
+                                {% if course.start_date %}
+                                <span class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-calendar3"></i>
+                                    с {{ course.start_date|date:"d M Y" }}
+                                </span>
+                                {% endif %}
+                                <span class="badge {% if course.status == 'active' %}bg-success{% elif course.status == 'planned' %}bg-warning text-dark{% elif course.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}" style="font-size: 12px; border-radius: 6px;">
+                                    {{ course.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center gap-3 text-muted" style="font-size:13px;">
-                        {% if course.subject %}<span><i class="bi bi-bookmark me-1"></i>{{ course.subject }}</span>{% endif %}
-                        {% if course.mentor %}<span><i class="bi bi-person me-1"></i>{{ course.mentor.get_display_name }}</span>{% endif %}
-                        <span><i class="bi bi-calendar3 me-1"></i>{{ course.get_days_display_short }}</span>
-                        {% if course.lesson_start_time %}<span><i class="bi bi-clock me-1"></i>{{ course.lesson_start_time|time:"H:i" }}</span>{% endif %}
-                        {% if course.room %}<span><i class="bi bi-geo-alt me-1"></i>{{ course.room }}</span>{% endif %}
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="d-flex gap-2 justify-content-md-end">
+                        <button class="btn btn-outline-primary btn-sm" onclick="editPayment()">
+                            <i class="bi bi-pencil me-1"></i>Изменить
+                        </button>
                     </div>
                 </div>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="{% url 'courses:edit' pk=course.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Изменить</a>
-                <a href="{% url 'courses:add_student' pk=course.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1"></i>Добавить студента</a>
-                <a href="{% url 'courses:delete' pk=course.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Удалить</a>
-            </div>
         </div>
+    </div>
 
-        <!-- Progress bar -->
-        {% with pct=active_students.count|default:0 %}
-        <div class="mt-3">
-            <div class="d-flex justify-content-between mb-1" style="font-size:12px;">
-                <span class="text-muted">Заполненность группы</span>
-                <span class="fw-semibold {% if active_students.count >= course.capacity %}text-danger{% else %}text-success{% endif %}">
-                    {{ active_students.count }} / {{ course.capacity }}
-                </span>
-            </div>
-            <div class="progress" style="height:8px;border-radius:99px;">
-                <div class="progress-bar {% if active_students.count >= course.capacity %}bg-danger{% else %}bg-success{% endif %}"
-                     style="width:{% widthratio active_students.count course.capacity 100 %}%;border-radius:99px;"></div>
-            </div>
-        </div>
-        {% endwith %}
-    </div>
-</div>
-
-<!-- Stat cards row -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-icon-box blue"><i class="bi bi-people-fill"></i></div>
-            <div class="stat-info">
-                <div class="stat-value">{{ active_students.count }}</div>
-                <div class="stat-label">Студентов</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-icon-box green"><i class="bi bi-cash-stack"></i></div>
-            <div class="stat-info">
-                <div class="stat-value">{{ course.price|floatformat:0 }}</div>
-                <div class="stat-label">Стоимость (сум)</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-icon-box purple"><i class="bi bi-calendar3-week"></i></div>
-            <div class="stat-info">
-                <div class="stat-value">{{ course.duration_months }}</div>
-                <div class="stat-label">Месяцев</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-icon-box orange"><i class="bi bi-display"></i></div>
-            <div class="stat-info">
-                <div class="stat-value">{{ course.get_format_display }}</div>
-                <div class="stat-label">Формат</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-3">
-    <!-- Course info sidebar -->
-    <div class="col-lg-4">
-        <div class="card mb-3">
-            <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-info-circle me-2 text-primary"></i>Детали курса</h6></div>
-            <div class="card-body p-0">
-                <table class="table table-sm mb-0" style="font-size:13px;">
-                    <tbody>
-                        <tr><td class="text-muted ps-3" style="width:45%">Направление</td><td class="fw-medium">{{ course.subject|default:"—" }}</td></tr>
-                        <tr><td class="text-muted ps-3">Ментор</td><td class="fw-medium">{{ course.mentor.get_display_name|default:"—" }}</td></tr>
-                        {% if course.assistant_mentor %}
-                        <tr><td class="text-muted ps-3">Помощник</td><td>{{ course.assistant_mentor.get_display_name }}</td></tr>
-                        {% endif %}
-                        <tr><td class="text-muted ps-3">Начало</td><td>{{ course.start_date|date:"d.m.Y"|default:"—" }}</td></tr>
-                        <tr><td class="text-muted ps-3">Конец</td><td>{{ course.end_date|date:"d.m.Y"|default:"—" }}</td></tr>
-                        <tr><td class="text-muted ps-3">Расписание</td><td>{{ course.get_days_display_short }}</td></tr>
+    <!-- Course Management Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Schedule Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100" style="border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: white;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="mb-0 fw-semibold">Расписание</h6>
+                        <div class="d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #f3f4f6; border-radius: 50%;">
+                            <i class="bi bi-calendar-week" style="font-size: 14px; color: #6b7280;"></i>
+                        </div>
+                    </div>
+                    <div class="text-muted" style="font-size: 14px;">
+                        <div class="mb-2">{{ course.get_days_display_short }}</div>
                         {% if course.lesson_start_time %}
-                        <tr><td class="text-muted ps-3">Время</td><td>{{ course.lesson_start_time|time:"H:i" }} — {{ course.lesson_end_time|time:"H:i" }}</td></tr>
+                        <div>{{ course.lesson_start_time|time:"H:i" }} — {{ course.lesson_end_time|time:"H:i" }}</div>
                         {% endif %}
-                        <tr><td class="text-muted ps-3">Кабинет</td><td>{{ course.room|default:"—" }}</td></tr>
-                        <tr><td class="text-muted ps-3">Вместимость</td>
-                            <td><span class="fw-semibold {% if active_students.count >= course.capacity %}text-danger{% else %}text-success{% endif %}">{{ active_students.count }}/{{ course.capacity }}</span></td>
-                        </tr>
-                    </tbody>
-                </table>
+                        {% if course.room %}
+                        <div class="mt-2"><i class="bi bi-geo-alt me-1"></i>{{ course.room }}</div>
+                        {% endif %}
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm w-100 mt-3" onclick="editSchedule()">
+                        <i class="bi bi-pencil me-1"></i>Изменить
+                    </button>
+                </div>
             </div>
         </div>
-        {% if course.description %}
-        <div class="card">
-            <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-text-paragraph me-2 text-muted"></i>Описание</h6></div>
-            <div class="card-body"><p class="mb-0 text-muted" style="font-size:13px;line-height:1.6;">{{ course.description }}</p></div>
+
+        <!-- Mentors Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100" style="border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: white;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="mb-0 fw-semibold">Менторы</h6>
+                        <div class="d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #f3f4f6; border-radius: 50%;">
+                            <i class="bi bi-people" style="font-size: 14px; color: #6b7280;"></i>
+                        </div>
+                    </div>
+                    <div class="text-muted" style="font-size: 14px;">
+                        {% if course.mentor %}
+                        <div class="mb-2">
+                            <strong>Основной:</strong><br>
+                            {{ course.mentor.get_display_name }}
+                        </div>
+                        {% endif %}
+                        {% if course.assistant_mentor %}
+                        <div>
+                            <strong>Помощник:</strong><br>
+                            {{ course.assistant_mentor.get_display_name }}
+                        </div>
+                        {% endif %}
+                        {% if not course.mentor and not course.assistant_mentor %}
+                        <div class="text-muted">Менторы не назначены</div>
+                        {% endif %}
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm w-100 mt-3" onclick="editMentors()">
+                        <i class="bi bi-pencil me-1"></i>Изменить
+                    </button>
+                </div>
+            </div>
         </div>
-        {% endif %}
+
+        <!-- Stats Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100" style="border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: white;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="mb-0 fw-semibold">Статистика</h6>
+                        <div class="d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #f3f4f6; border-radius: 50%;">
+                            <i class="bi bi-bar-chart" style="font-size: 14px; color: #6b7280;"></i>
+                        </div>
+                    </div>
+                    <div class="text-muted" style="font-size: 14px;">
+                        <div class="mb-2">
+                            <strong>Студентов:</strong> {{ active_students.count }}/{{ course.capacity }}
+                        </div>
+                        <div class="mb-2">
+                            <strong>Стоимость:</strong> {{ course.price|floatformat:0 }} сум/мес
+                        </div>
+                        <div>
+                            <strong>Длительность:</strong> {{ course.duration_months }} мес
+                        </div>
+                    </div>
+                    <!-- Progress bar -->
+                    <div class="mt-3">
+                        <div class="progress" style="height: 6px; border-radius: 3px; background: #f3f4f6;">
+                            <div class="progress-bar {% if active_students.count >= course.capacity %}bg-danger{% else %}bg-success{% endif %}"
+                                 style="width: {% widthratio active_students.count course.capacity 100 %}%; border-radius: 3px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Ticket Table for Unlimited Courses -->
-    {% if course.is_unlimited and active_students %}
-        {% include "admin/courses/ticket_table.html" %}
-    {% endif %}
-
-    <!-- Active Students -->
-    <div class="col-lg-8">
-        <div class="card mb-4">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-2">
-                    <h6 class="card-title mb-0">Студенты</h6>
-                    <span class="badge bg-primary">{{ active_students.count }}</span>
+    <!-- Action Buttons -->
+    <div class="card mb-4" style="border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: white;">
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-flag me-2"></i>Изменить статус
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="changeStatus('planned')">
+                                <span class="badge bg-warning text-dark me-2">Подготовка</span>Запланирован
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeStatus('active')">
+                                <span class="badge bg-success me-2">Запущен</span>Активный
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeStatus('completed')">
+                                <span class="badge bg-secondary me-2">Завершен</span>Завершён
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeStatus('cancelled')">
+                                <span class="badge bg-danger me-2">Отменен</span>Отменён
+                            </a></li>
+                        </ul>
+                    </div>
                 </div>
-                <a href="{% url 'courses:add_student' pk=course.pk %}" class="btn btn-sm btn-primary">
+                <div class="col-md-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-people me-2"></i>Студенты
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'courses:add_student' pk=course.pk %}">
+                                <i class="bi bi-person-plus me-2"></i>Добавить студента
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="removeStudents()">
+                                <i class="bi bi-person-dash me-2"></i>Удалить студентов
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-success w-100" onclick="openPayment()">
+                        <i class="bi bi-cash-stack me-2"></i>Оплата
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-warning w-100" onclick="openExtendModal()">
+                        <i class="bi bi-calendar-plus me-2"></i>Продлить
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear me-2"></i>Действия
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="openLMS()">
+                                <i class="bi bi-box-arrow-up-right me-2"></i>Открыть кабинет курса
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="archiveCourse()">
+                                <i class="bi bi-archive me-2 text-warning"></i>Архивировать курс
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="deleteCourse()">
+                                <i class="bi bi-trash me-2 text-danger"></i>Удалить курс
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-info w-100" onclick="openLMS()">
+                        <i class="bi bi-box-arrow-up-right me-2"></i>LMS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lessons Schedule -->
+    <div class="card mt-4" style="border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: white;">
+        <div class="card-header d-flex align-items-center justify-content-between" style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+            <h6 class="mb-0 fw-semibold">
+                <i class="bi bi-calendar3 me-2"></i>Расписание занятий
+                <span class="badge bg-primary ms-2">{{ lessons.count }}</span>
+            </h6>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm" onclick="refreshLessons()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Обновить
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-calendar-x fs-1 mb-3"></i>
+                <p>Расписание занятий</p>
+                <small>Занятия будут автоматически созданы при продлении курса</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="card" style="border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: white;">
+        <div class="card-header d-flex align-items-center justify-content-between" style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+            <h6 class="mb-0 fw-semibold">
+                <i class="bi bi-people me-2"></i>Студенты курса
+                <span class="badge bg-primary ms-2">{{ active_students.count }}</span>
+            </h6>
+            <div class="d-flex gap-2">
+                {% if course.is_unlimited %}
+                <a href="/admin/courses/{{ course.id }}/students/" class="btn btn-success btn-sm">
+                    <i class="bi bi-ticket-perforated me-1"></i>Талоны
+                </a>
+                {% endif %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-gear me-1"></i>Действия
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="archiveStudents()">
+                            <i class="bi bi-archive me-2"></i>Архивация студентов
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="deleteStudents()">
+                            <i class="bi bi-trash me-2 text-danger"></i>Удаление студентов
+                        </a></li>
+                    </ul>
+                </div>
+                <a href="{% url 'courses:add_student' pk=course.pk %}" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg me-1"></i>Добавить
                 </a>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" style="font-size:13px;">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:32px">#</th>
-                                <th>ФИО</th>
-                                <th>Телефон</th>
-                                <th>Статус</th>
-                                <th>Прогресс</th>
-                                <th>Рейтинг</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for cs in active_students %}
-                            <tr>
-                                <td class="text-muted">{{ forloop.counter }}</td>
-                                <td>
-                                    <a href="{% url 'admin_students:detail' pk=cs.student.pk %}" class="text-decoration-none fw-medium d-flex align-items-center gap-2">
-                                        <span class="avatar-xs rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
-                                            {{ cs.student.full_name|first }}
-                                        </span>
-                                        {{ cs.student.full_name }}
-                                    </a>
-                                </td>
-                                <td class="text-muted">{{ cs.student.phone }}</td>
-                                <td>
-                                    <span class="badge
-                                        {% if cs.status == 'active' %}bg-success
-                                        {% elif cs.status == 'frozen' %}bg-info text-dark
-                                        {% elif cs.status == 'left' %}bg-danger
-                                        {% elif cs.status == 'graduated' %}bg-primary
-                                        {% else %}bg-secondary{% endif %}">
-                                        {{ cs.get_status_display }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="progress flex-grow-1" style="height:5px;min-width:60px;">
-                                            <div class="progress-bar bg-primary" style="width:{{ cs.progress_percent }}%;"></div>
-                                        </div>
-                                        <small class="text-muted" style="white-space:nowrap;">{{ cs.progress_percent }}%</small>
-                                    </div>
-                                </td>
-                                <td>
-                                    {% if cs.rating %}
-                                    <span class="text-warning"><i class="bi bi-star-fill" style="font-size:10px;"></i></span>
-                                    <span class="fw-medium" style="font-size:12px;">{{ cs.rating }}</span>
-                                    {% else %}<span class="text-muted">—</span>{% endif %}
-                                </td>
-                                <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="loadStudentDrawer({{ cs.pk }})" title="Детали">
-                                        <i class="bi bi-person-lines-fill"></i>
-                                    </button>
-                                    <form method="post" action="{% url 'courses:remove_student' pk=cs.pk %}" style="display:inline;" onsubmit="return confirm('Удалить студента из курса?')">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить из курса"><i class="bi bi-person-x"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-5">
-                                    <i class="bi bi-people fs-2 d-block mb-2 opacity-50"></i>
-                                    Нет студентов. <a href="{% url 'courses:add_student' pk=course.pk %}">Добавить</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
+        <div class="card-body p-0">
+            {% if active_students %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" style="font-size: 14px;">
+                    <thead>
+                        <tr style="background: #f9fafb;">
+                            <th class="ps-4">Студент</th>
+                            <th>Телефон</th>
+                            <th>Талоны</th>
+                            <th>Статус</th>
+                            {% if not course.is_unlimited %}
+                            <th>Оплата</th>
+                            {% endif %}
+                            <th class="text-end pe-4">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in active_students %}
+                        <tr class="student-row" data-enrollment-id="{{ enrollment.id }}" onclick="showStudentDetails('{{ enrollment.id }}')" style="cursor: pointer;">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #f3f4f6; border-radius: 50%;">
+                                        <span style="font-size: 12px; font-weight: 600;">{{ enrollment.student.full_name.0 }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ enrollment.student.full_name }}</div>
+                                        <div class="text-muted" style="font-size: 12px;">{{ enrollment.student.created_at|date:"d.m.Y" }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ enrollment.student.phone|default:"-" }}</td>
+                            <td>
+                                {% if course.is_unlimited %}
+                                    {% with ticket_balance=enrollment.ticket_balance %}
+                                        {% if ticket_balance %}
+                                            {% with remaining=ticket_balance.remaining_tickets total=ticket_balance.total_tickets %}
+                                                {% if total == 0 %}
+                                                    <span class="badge bg-secondary" style="font-size: 11px;">0/0</span>
+                                                {% else %}
+                                                    {% if remaining == 0 %}
+                                                        <span class="badge bg-danger" style="font-size: 11px;">{{ remaining }}/{{ total }}</span>
+                                                    {% elif remaining <= 3 %}
+                                                        <span class="badge bg-warning" style="font-size: 11px;">{{ remaining }}/{{ total }}</span>
+                                                    {% elif remaining <= 5 %}
+                                                        <span class="badge bg-info" style="font-size: 11px;">{{ remaining }}/{{ total }}</span>
+                                                    {% else %}
+                                                        <span class="badge bg-success" style="font-size: 11px;">{{ remaining }}/{{ total }}</span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% else %}
+                                            <span class="badge bg-secondary" style="font-size: 11px;">0/0</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="text-muted" style="font-size: 12px;">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if enrollment.status == 'active' %}bg-success{% elif enrollment.status == 'frozen' %}bg-info{% else %}bg-secondary{% endif %}" style="font-size: 11px;">
+                                    {{ enrollment.get_status_display }}
+                                </span>
+                            </td>
+                            {% if not course.is_unlimited %}
+                            <td>
+                                {% with paid_months=enrollment.paid_months total_months=course.duration_months %}
+                                <span class="fw-medium {% if paid_months >= total_months %}text-success{% elif paid_months > 0 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ paid_months }}/{{ total_months }}
+                                </span>
+                                {% endwith %}
+                            </td>
+                            {% endif %}
+                            <td class="text-end pe-4" onclick="event.stopPropagation()">
+                                <div class="btn-group btn-group-sm">
+                                    {% if course.is_unlimited %}
+                                    <a href="{% url 'courses:mark_attendance' enrollment.pk %}" class="btn btn-outline-success btn-sm" title="Отметить посещение">
+                                        <i class="bi bi-check-lg"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'admin_students:detail' enrollment.student.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'admin_students:edit' enrollment.student.pk %}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div style="width: 64px; height: 64px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-people fs-3 text-muted"></i>
+                    </div>
+                </div>
+                <h6 class="text-muted mb-2">Нет студентов</h6>
+                <p class="text-muted mb-3">На этот курс еще не записаны студенты</p>
+                <a href="{% url 'courses:add_student' pk=course.pk %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>Добавить первого студента
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
-        <!-- Left Students -->
-        {% if left_students %}
-        <div class="card">
-            <div class="card-header bg-warning bg-opacity-10 border-warning">
-                <h6 class="card-title mb-0 text-warning"><i class="bi bi-x-circle me-2"></i>Покинули курс</h6>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" style="font-size:13px;">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:32px">#</th>
-                                <th>ФИО</th>
-                                <th>Телефон</th>
-                                <th>Статус</th>
-                                <th>Прогресс</th>
-                                <th>Рейтинг</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for cs in left_students %}
-                            <tr class="table-warning bg-opacity-5">
-                                <td class="text-muted">{{ forloop.counter }}</td>
-                                <td>
-                                    <a href="{% url 'admin_students:detail' pk=cs.student.pk %}" class="text-decoration-none fw-medium d-flex align-items-center gap-2">
-                                        <span class="avatar-xs rounded-circle bg-warning text-white d-inline-flex align-items-center justify-content-center" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
-                                            {{ cs.student.full_name|first }}
-                                        </span>
-                                        {{ cs.student.full_name }}
-                                    </a>
-                                </td>
-                                <td class="text-muted">{{ cs.student.phone }}</td>
-                                <td>
-                                    <span class="badge bg-warning text-dark">
-                                        {{ cs.get_status_display }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="progress flex-grow-1" style="height:5px;min-width:60px;">
-                                            <div class="progress-bar bg-warning" style="width:{{ cs.progress_percent }}%;"></div>
-                                        </div>
-                                        <small class="text-muted" style="white-space:nowrap;">{{ cs.progress_percent }}%</small>
-                                    </div>
-                                </td>
-                                <td>
-                                    {% if cs.rating %}
-                                    <span class="text-warning"><i class="bi bi-star-fill" style="font-size:10px;"></i></span>
-                                    <span class="fw-medium" style="font-size:12px;">{{ cs.rating }}</span>
-                                    {% else %}<span class="text-muted">—</span>{% endif %}
-                                </td>
-                                <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="loadStudentDrawer({{ cs.pk }})" title="Детали">
-                                        <i class="bi bi-person-lines-fill"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- Student Details Panel -->
+    <div class="student-details-panel" id="studentDetailsPanel">
+        <div class="panel-header">
+            <h5>Детали студента</h5>
+            <button type="button" class="btn-close" onclick="closeStudentDetails()"></button>
         </div>
-        {% endif %}
+        <div class="panel-body" id="studentDetailsContent">
+            <!-- Content will be loaded via JavaScript -->
+        </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<!-- Modals -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Изменить статус курса</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите изменить статус курса на <span id="newStatusText" class="fw-bold"></span>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" onclick="confirmStatusChange()">Изменить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Tickets Modal -->
+<div class="modal fade" id="addTicketsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить талоны</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addTicketsForm">
+                    <div class="mb-3">
+                        <label for="studentName" class="form-label">Студент</label>
+                        <input type="text" class="form-control" id="studentName" name="studentName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="courseName" class="form-label">Курс</label>
+                        <input type="text" class="form-control" id="courseName" name="courseName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tariff" class="form-label">Тариф</label>
+                        <select class="form-select" id="tariff" name="tariff_id" required>
+                            <option value="">Выберите тариф...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="issueDate" class="form-label">Дата выдачи</label>
+                        <input type="datetime-local" class="form-control" id="issueDate" name="issue_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Комментарий</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success" onclick="addTickets()">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ticket History Modal -->
+<div class="modal fade" id="ticketHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">История талонов</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="ticketHistoryContent">
+                    <!-- Content will be loaded via JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Extend Course Modal -->
+<div class="modal fade" id="extendModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Продлить курс "{{ course.title }}"</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Тип продления</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="extendType" id="extendMonths" value="months" checked>
+                        <label class="form-check-label" for="extendMonths">
+                            Продлить на месяцы
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="extendType" id="extendLessons" value="lessons">
+                        <label class="form-check-label" for="extendLessons">
+                            Продлить на количество занятий
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3" id="monthsInput">
+                    <label for="extendMonthsCount" class="form-label">На сколько месяцев?</label>
+                    <input type="number" class="form-control" id="extendMonthsCount" min="1" max="12" value="1">
+                    <div class="form-text">Оставьте пустым, если хотите продлить на количество занятий</div>
+                </div>
+                
+                <div class="mb-3 d-none" id="lessonsInput">
+                    <label for="extendLessonsCount" class="form-label">На сколько занятий?</label>
+                    <input type="number" class="form-control" id="extendLessonsCount" min="1" max="50" value="1">
+                    <div class="form-text">Оставьте пустым, если хотите продлить на месяца</div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Внимание:</strong> При продлении курса будут автоматически созданы дополнительные уроки для всех студентов.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-warning" onclick="extendCourse()">
+                    <i class="bi bi-calendar-plus me-2"></i>Продлить курс
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function loadStudentDrawer(csId) {
-    const drawerTitle = document.getElementById('drawerTitle');
-    const drawerBody = document.getElementById('drawerBody');
-    const drawer = document.getElementById('drawerPanel');
-    const overlay = document.getElementById('drawerOverlay');
-    if (!drawer) return;
-    if (drawerTitle) drawerTitle.textContent = 'Студент';
-    if (drawerBody) drawerBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
-    drawer.classList.add('open');
-    if (overlay) overlay.classList.add('show');
-    document.body.style.overflow = 'hidden';
-    fetch('{% url "courses:student_drawer" pk=0 %}'.replace('0', csId))
-        .then(r => r.text())
-        .then(html => { if (drawerBody) drawerBody.innerHTML = html; })
-        .catch(() => { if (drawerBody) drawerBody.innerHTML = '<p class="text-danger p-3">Ошибка загрузки</p>'; });
+let newStatus = '';
+
+function changeStatus(status) {
+    newStatus = status;
+    const statusTexts = {
+        'planned': 'Запланирован',
+        'active': 'Активный',
+        'completed': 'Завершён',
+        'cancelled': 'Отменён'
+    };
+    document.getElementById('newStatusText').textContent = statusTexts[status];
+    new bootstrap.Modal(document.getElementById('statusModal')).show();
+}
+
+function confirmStatusChange() {
+    // Здесь можно добавить AJAX запрос для изменения статуса
+    window.location.href = `{% url 'courses:edit' course.pk %}?status=${newStatus}`;
+}
+
+function editPayment() {
+    window.location.href = `{% url 'courses:edit' course.pk %}#payment`;
+}
+
+function editSchedule() {
+    window.location.href = `{% url 'courses:edit' course.pk %}#schedule`;
+}
+
+function editMentors() {
+    window.location.href = `{% url 'courses:edit' course.pk %}#mentors`;
+}
+
+function openPayment() {
+    window.location.href = `{% url 'courses:detail' course.pk %}#payments`;
+}
+
+function openLMS() {
+    // Администратор переходит в кабинет курса через lectures
+    window.open(`/mentor/courses/{{ course.pk }}/lectures/`, '_blank');
+}
+
+function removeStudents() {
+    if (confirm('Вы уверены, что хотите удалить студентов с курса?')) {
+        window.location.href = `{% url 'courses:remove_student' course.pk %}`;
+    }
+}
+
+function archiveStudents() {
+    if (confirm('Вы уверены, что хотите архивировать студентов курса?\n\nЭто изменит их статус на "Выбыл" и сохранит историю обучения.')) {
+        // Здесь можно добавить AJAX запрос для архивации
+        alert('Функция архивации будет реализована в следующем обновлении.\n\nПока можно использовать индивидуальное удаление студентов через таблицу.');
+    }
+}
+
+function deleteStudents() {
+    if (confirm('Вы уверены, что хотите удалить студентов курса?\n\nВНИМАНИЕ: Это действие удалит студентов из системы без возможности восстановления!')) {
+        // Здесь можно добавить AJAX запрос для массового удаления
+        alert('Функция массового удаления будет реализована в следующем обновлении.\n\nПока можно использовать индивидуальное удаление студентов через таблицу.');
+    }
+}
+
+function archiveCourse() {
+    if (confirm('Вы уверены, что хотите архивировать курс "{{ course.title }}"?\n\nКурс будет перемещен в архив, но сохранен в системе. Студенты смогут просматривать свои материалы.')) {
+        // Изменяем статус курса на "completed" (завершен) как форму архивации
+        changeStatus('completed');
+    }
+}
+
+function deleteCourse() {
+    if (confirm('ВНИМАНИЕ! Вы уверены, что хотите удалить курс "{{ course.title }}"?\n\nЭто действие необратимо и удалит:\n• Все материалы курса\n• Все данные студентов\n• Всю историю обучения\n\nЭто действие нельзя отменить!')) {
+        // Переходим на страницу подтверждения удаления
+        window.location.href = `{% url 'courses:delete' course.pk %}`;
+    }
+}
+
+function openExtendModal() {
+    // Сбрасываем форму
+    document.getElementById('extendMonths').checked = true;
+    document.getElementById('extendMonthsCount').value = 1;
+    document.getElementById('extendLessonsCount').value = 1;
+    document.getElementById('monthsInput').classList.remove('d-none');
+    document.getElementById('lessonsInput').classList.add('d-none');
+    
+    // Показываем модальное окно
+    new bootstrap.Modal(document.getElementById('extendModal')).show();
+}
+
+function refreshLessons() {
+    // Перезагружаем страницу для обновления списка уроков
+    location.reload();
+}
+
+function extendCourse() {
+    const extendType = document.querySelector('input[name="extendType"]:checked').value;
+    let months = 0;
+    let lessons = 0;
+    
+    if (extendType === 'months') {
+        months = parseInt(document.getElementById('extendMonthsCount').value) || 0;
+        if (months < 1 || months > 12) {
+            alert('Пожалуйста, укажите количество месяцев от 1 до 12');
+            return;
+        }
+    } else {
+        lessons = parseInt(document.getElementById('extendLessonsCount').value) || 0;
+        if (lessons < 1 || lessons > 50) {
+            alert('Пожалуйста, укажите количество занятий от 1 до 50');
+            return;
+        }
+    }
+    
+    // Подтверждение
+    const confirmText = extendType === 'months' 
+        ? `Продлить курс на ${months} ${getMonthWord(months)}?` 
+        : `Продлить курс на ${lessons} ${getLessonWord(lessons)}?`;
+    
+    if (confirm(confirmText + '\n\nБудут созданы дополнительные уроки для всех студентов.')) {
+        // Отправляем запрос на продление
+        const formData = new FormData();
+        formData.append('extend_type', extendType);
+        if (extendType === 'months') {
+            formData.append('months', months);
+        } else {
+            formData.append('lessons', lessons);
+        }
+        
+        fetch(`/admin/courses/{{ course.pk }}/extend/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Закрываем модальное окно
+                bootstrap.Modal.getInstance(document.getElementById('extendModal')).hide();
+                
+                // Показываем сообщение об успехе
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                alertDiv.style.zIndex = '9999';
+                alertDiv.innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>${data.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                // Перезагружаем страницу через 2 секунды для отображения новых уроков
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при продлении курса');
+        });
+    }
+}
+
+function getMonthWord(count) {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+        return 'месяцев';
+    }
+    if (lastDigit === 1) {
+        return 'месяц';
+    }
+    if (lastDigit >= 2 && lastDigit <= 4) {
+        return 'месяца';
+    }
+    return 'месяцев';
+}
+
+function getLessonWord(count) {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+        return 'занятий';
+    }
+    if (lastDigit === 1) {
+        return 'занятие';
+    }
+    if (lastDigit >= 2 && lastDigit <= 4) {
+        return 'занятия';
+    }
+    return 'занятий';
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Обработчик переключения типа продления
+document.addEventListener('DOMContentLoaded', function() {
+    const extendRadios = document.querySelectorAll('input[name="extendType"]');
+    extendRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'months') {
+                document.getElementById('monthsInput').classList.remove('d-none');
+                document.getElementById('lessonsInput').classList.add('d-none');
+            } else {
+                document.getElementById('monthsInput').classList.add('d-none');
+                document.getElementById('lessonsInput').classList.remove('d-none');
+            }
+        });
+    });
+});
+
+// Student details functionality
+function showStudentDetails(enrollmentId) {
+    console.log('showStudentDetails called with:', enrollmentId);
+    
+    // Convert to integer if it's a string
+    enrollmentId = parseInt(enrollmentId);
+    console.log('Parsed enrollmentId:', enrollmentId);
+    
+    // Remove previous selection
+    document.querySelectorAll('.student-row').forEach(row => {
+        row.classList.remove('selected');
+    });
+    
+    // Add selection to current row
+    const currentRow = document.querySelector(`[data-enrollment-id="${enrollmentId}"]`);
+    if (currentRow) {
+        currentRow.classList.add('selected');
+        console.log('Row selected');
+    } else {
+        console.error('Row not found for ID:', enrollmentId);
+    }
+    
+    // Load student details
+    console.log('Fetching from API...');
+    fetch(`/courses/student-details/${enrollmentId}/`)
+        .then(response => {
+            console.log('API response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('API data:', data);
+            displayStudentDetails(data);
+        })
+        .catch(error => {
+            console.error('API Error:', error);
+            // Показываем базовую информацию если API не работает
+            console.log('Falling back to basic details...');
+            displayBasicStudentDetails(enrollmentId);
+        });
+}
+
+function displayStudentDetails(data) {
+    const content = document.getElementById('studentDetailsContent');
+    const panel = document.getElementById('studentDetailsPanel');
+    
+    const remainingTickets = data.remaining_tickets || 0;
+    const totalTickets = data.total_tickets || 0;
+    const percentage = totalTickets > 0 ? (remainingTickets / totalTickets) * 100 : 0;
+    
+    // Определяем цвет прогресс-бара в зависимости от количества талонов
+    let progressColor = 'bg-success'; // зеленый по умолчанию
+    if (percentage <= 20) {
+        progressColor = 'bg-danger'; // красный - критично мало
+    } else if (percentage <= 40) {
+        progressColor = 'bg-warning'; // желтый - мало
+    } else if (percentage <= 60) {
+        progressColor = 'bg-info'; // синий - средне
+    }
+    
+    // Генерируем точки для занятий (пока 5 штук для примера)
+    let lessonDots = '';
+    for (let i = 0; i < 5; i++) {
+        if (i < 2) {
+            lessonDots += '<span class="lesson-dot completed">✓</span>';
+        } else if (i === 2) {
+            lessonDots += '<span class="lesson-dot current">→</span>';
+        } else {
+            lessonDots += '<span class="lesson-dot empty">-</span>';
+        }
+    }
+    
+    content.innerHTML = `
+        <div class="student-detail-section">
+            <h6>Информация о студенте</h6>
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="student-avatar-large">
+                    ${data.student_name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                    <div class="fw-bold fs-5">${data.student_name}</div>
+                    <div class="text-muted">${data.phone || 'Нет телефона'}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="student-detail-section">
+            <h6>Название текущего курса</h6>
+            <p class="mb-2">${data.course_title}</p>
+            
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-medium">Талоны</span>
+                    <span class="badge bg-${percentage <= 20 ? 'danger' : percentage <= 40 ? 'warning' : percentage <= 60 ? 'info' : 'primary'}">${remainingTickets}/${totalTickets}</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar ${progressColor}" role="progressbar" style="width: ${percentage}%" aria-valuenow="${remainingTickets}" aria-valuemin="0" aria-valuemax="${totalTickets}"></div>
+                </div>
+                <div class="text-muted small mt-1">${percentage.toFixed(1)}% осталось</div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="fw-medium mb-2">Пройдено занятий:</div>
+                <div class="lesson-progress-dots">
+                    ${lessonDots}
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center justify-content-between">
+                <span class="text-muted">Талоны курса</span>
+                <div class="d-flex gap-2">
+                    <a href="/admin/courses/tickets/mark-attendance/${enrollmentId}/" class="btn btn-outline-success btn-sm" title="Отметить посещение">
+                        <i class="bi bi-check"></i>
+                    </a>
+                    <a href="#" class="history-link" onclick="showTicketHistory(${enrollmentId}); return false;">История ></a>
+                    <a href="#" class="add-tickets-btn" onclick="showAddTicketsModal(${enrollmentId}, '${studentName}', '${courseTitle}'); return false;">+</a>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Show panel
+    panel.classList.add('show');
+}
+
+function closeStudentDetails() {
+    const panel = document.getElementById('studentDetailsPanel');
+    panel.classList.remove('show');
+    
+    // Remove selection from rows
+    document.querySelectorAll('.student-row').forEach(row => {
+        row.classList.remove('selected');
+    });
+}
+
+function displayBasicStudentDetails(enrollmentId) {
+    console.log('displayBasicStudentDetails called with:', enrollmentId);
+    
+    const content = document.getElementById('studentDetailsContent');
+    const panel = document.getElementById('studentDetailsPanel');
+    const currentRow = document.querySelector(`[data-enrollment-id="${enrollmentId}"]`);
+    
+    console.log('Panel element:', panel);
+    console.log('Content element:', content);
+    console.log('Current row:', currentRow);
+    
+    if (!currentRow) {
+        console.error('Current row not found');
+        return;
+    }
+    
+    // Получаем базовую информацию из строки таблицы
+    const studentName = currentRow.querySelector('.fw-medium').textContent;
+    const phone = currentRow.cells[1].textContent;
+    const status = currentRow.querySelector('.badge').textContent;
+    
+    console.log('Student data:', { studentName, phone, status });
+    
+    // Определяем является ли курс бесконечным
+    const isUnlimited = false; // Скрываем талоны для обычных курсов
+    
+    let ticketsHtml = '';
+    if (isUnlimited) {
+        ticketsHtml = `
+            <div class="student-detail-section">
+                <h6>Талоны</h6>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="ticket-count">0</span>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="add-tickets-btn" onclick="alert('Функция добавления талонов будет реализована'); return false;">+</a>
+                        <a href="#" class="history-link" onclick="alert('Функция истории талонов будет реализована'); return false;">История ></a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = `
+        <div class="student-detail-section">
+            <h6>Информация о студенте</h6>
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="student-avatar-large">
+                    ${studentName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                    <div class="fw-bold fs-5">${studentName}</div>
+                    <div class="text-muted">${phone}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="student-detail-section">
+            <h6>Название текущего курса</h6>
+            <p class="mb-2">{{ course.title }}</p>
+            
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-medium">Талоны</span>
+                    <span class="badge bg-primary">0/0</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="fw-medium mb-2">Пройдено занятий:</div>
+                <div class="lesson-progress-dots">
+                    <span class="lesson-dot empty">-</span>
+                    <span class="lesson-dot empty">-</span>
+                    <span class="lesson-dot empty">-</span>
+                    <span class="lesson-dot empty">-</span>
+                    <span class="lesson-dot empty">-</span>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center justify-content-between">
+                <span class="text-muted">Талоны курса</span>
+                <div class="d-flex gap-2">
+                    <a href="#" class="history-link" onclick="showTicketHistory(${enrollmentId}); return false;">История ></a>
+                    <a href="#" class="add-tickets-btn" onclick="showAddTicketsModal(${enrollmentId}, '${studentName}', '{{ course.title }}'); return false;">+</a>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    console.log('Content set, showing panel...');
+    
+    // Show panel
+    panel.classList.add('show');
+    console.log('Panel classes after adding show:', panel.className);
+}
+
+// Modal functions
+function showAddTicketsModal(enrollmentId, studentName, courseTitle) {
+    document.getElementById('studentName').value = studentName;
+    document.getElementById('courseName').value = courseTitle;
+    
+    // Set current date/time
+    const now = new Date();
+    const dateTimeLocal = now.toISOString().slice(0, 16);
+    document.getElementById('issueDate').value = dateTimeLocal;
+    
+    // Load tariffs
+    loadTariffs();
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addTicketsModal'));
+    modal.show();
+}
+
+function showTicketHistory(enrollmentId) {
+    // Load ticket history
+    loadTicketHistory(enrollmentId);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('ticketHistoryModal'));
+    modal.show();
+}
+
+function loadTariffs() {
+    fetch('/admin/courses/tariffs-api/')
+        .then(response => response.json())
+        .then(tariffs => {
+            const select = document.getElementById('tariff');
+            select.innerHTML = '<option value="">Выберите тариф...</option>';
+            
+            tariffs.forEach(tariff => {
+                const option = document.createElement('option');
+                option.value = tariff.id;
+                option.textContent = `${tariff.title} - ${tariff.lessons_count} талонов`;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading tariffs:', error);
+        });
+}
+
+function loadTicketHistory(enrollmentId) {
+    fetch(`/courses/ticket-history/${enrollmentId}/`)
+        .then(response => response.json())
+        .then(data => {
+            displayTicketHistory(data);
+        })
+        .catch(error => {
+            console.error('Error loading ticket history:', error);
+        });
+}
+
+function displayTicketHistory(data) {
+    const content = document.getElementById('ticketHistoryContent');
+    
+    if (data.length === 0) {
+        content.innerHTML = '<p class="text-muted">История талонов пуста</p>';
+        return;
+    }
+    
+    let html = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Дата</th><th>Тип</th><th>Количество</th><th>Цена</th><th>Комментарий</th></tr></thead><tbody>';
+    
+    data.forEach(transaction => {
+        html += `
+            <tr>
+                <td>${new Date(transaction.created_at).toLocaleString()}</td>
+                <td><span class="badge bg-${transaction.transaction_type === 'add' ? 'success' : 'danger'}">${transaction.get_transaction_type_display}</span></td>
+                <td>${transaction.quantity > 0 ? '+' : ''}${transaction.quantity}</td>
+                <td>${transaction.price_per_ticket || '-'}</td>
+                <td>${transaction.comment || '-'}</td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    content.innerHTML = html;
+}
+
+function addTickets() {
+    const form = document.getElementById('addTicketsForm');
+    const formData = new FormData(form);
+    
+    // Add enrollment ID with correct field name
+    const enrollmentId = document.querySelector('.student-row.selected').getAttribute('data-enrollment-id');
+    formData.append('course_student_id', enrollmentId);
+    
+    fetch('/admin/courses/add-tickets/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('addTicketsModal')).hide();
+            
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Refresh student details
+            const currentRow = document.querySelector('.student-row.selected');
+            if (currentRow) {
+                const enrollmentId = currentRow.getAttribute('data-enrollment-id');
+                displayBasicStudentDetails(parseInt(enrollmentId));
+            }
+            
+            // Remove alert after 3 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при добавлении талонов');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 </script>
+
+<style>
+.student-details-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -4px 0 12px rgba(0,0,0,0.15);
+    z-index: 9999;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: block;
+}
+
+.student-details-panel.show {
+    transform: translateX(0);
+}
+
+.panel-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+}
+
+.panel-header h5 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.panel-body {
+    padding: 20px;
+    overflow-y: auto;
+    height: calc(100vh - 80px);
+}
+
+.student-row:hover {
+    background-color: #f8f9fa !important;
+}
+
+.student-row.selected {
+    background-color: #e3f2fd !important;
+    border-left: 4px solid #007cba;
+}
+
+.student-detail-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.student-detail-section h6 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.student-detail-section p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.ticket-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.ticket-count {
+    font-size: 24px;
+    font-weight: bold;
+    color: #007cba;
+}
+
+.add-tickets-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.add-tickets-btn:hover {
+    background: #218838;
+}
+
+.history-link {
+    color: #007cba;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.history-link:hover {
+    text-decoration: underline;
+}
+
+.student-avatar-large {
+    width: 60px;
+    height: 60px;
+    background: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: #6c757d;
+    flex-shrink: 0;
+}
+
+.student-detail-section h6 {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+.lesson-progress-dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.lesson-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.lesson-dot.empty {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.lesson-dot.completed {
+    background: #28a745;
+    color: white;
+}
+
+.lesson-dot.current {
+    background: #ffc107;
+    color: #212529;
+}
+</style>
 {% endblock %}

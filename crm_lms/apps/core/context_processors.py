@@ -11,6 +11,18 @@ def global_context(request):
         context['is_admin_role'] = request.user.role in ('admin', 'superadmin')
         context['is_mentor_role'] = request.user.role == 'mentor'
         context['is_student_role'] = request.user.role == 'student'
+        
+        # Добавляем текущую организацию
+        if hasattr(request, 'current_organization'):
+            context['current_organization'] = request.current_organization
+        else:
+            # Fallback: пытаемся получить организацию
+            try:
+                from .mixins import get_current_organization
+                context['current_organization'] = get_current_organization(request.user)
+            except:
+                context['current_organization'] = None
+        
         if request.user.role in ('mentor', 'admin', 'superadmin'):
             from apps.courses.models import Course
             context['my_courses'] = Course.objects.filter(

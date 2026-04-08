@@ -1,0 +1,186 @@
+{% load static %}
+<div id="contents-column" data-tour-id="table-of-contents">
+    <div class="mb-1 d-flex justify-content-between">
+        <div class="btn-group" data-tour-id="add-section">
+            <button class="btn btn-sm btn-primary dropdown-toggle waves-effect waves-float waves-light" type="button" data-bs-toggle="dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Добавить
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#addSectionModal" class="dropdown-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-folder-plus"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg> Добавить главу
+                </a>
+                
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item" onclick="showCopyCourseModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Скопировать программу
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card course-lectures">
+        {% for section in sections %}
+        <div class="lesson-section spoiler {% if forloop.first %}is-expanded{% endif %}" id="section-{{ section.pk }}" data-id="{{ section.pk }}">
+            <div class="draggable-item" data-drag="section" draggable="true">
+                {% if section.materials.count or section.assignments.count or section.quizzes.count %}
+                <div class="drag-and-dropper">
+                    <img src="{% static 'img/drag-button.svg' %}" alt="Drag" draggable="false">
+                </div>
+                {% endif %}
+                
+                <div class="lesson-section-header" data-tour-id="add-task">
+                        <div class="section-info">
+                            <div class="section-id spoiler-trigger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-folder"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                {{ section.title }}
+                                <img class="spoiler-caret" src="{% static 'img/icons/ic_caret_up.svg' %}" alt="spoiler">
+                            </div>
+                        </div>
+
+                        <div class="section-controls">
+                            <div class="icons">
+                                <div class="d-inline">
+                                    <i class="fa fa-plus dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></i>
+                                    <div class="dropdown-menu dropdown-menu-end" data-popper-placement="top-end">
+                                        <a href="#" class="dropdown-item add-item-btn" data-section="{{ section.pk }}" data-type="material">
+                                            <i class="fa fa-plus"></i> Материал
+                                        </a>
+                                        <a href="#" class="dropdown-item add-item-btn" data-section="{{ section.pk }}" data-type="assignment">
+                                            <i class="fa fa-plus"></i> Задание
+                                        </a>
+                                        <a href="#" class="dropdown-item add-item-btn" data-section="{{ section.pk }}" data-type="quiz">
+                                            <i class="fa fa-plus"></i> Тест
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="d-inline">
+                                    <i class="fa fa-ellipsis-v dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                                    <div class="dropdown-menu dropdown-menu-end" style="">
+                                        <a href="{% url 'lectures:section_edit' course_id=course.pk section_id=section.pk %}" class="dropdown-item">
+                                            <i class="fa fa-pencil-alt"></i> Изменить
+                                        </a>
+                                        <a href="{% url 'lectures:section_delete' course_id=course.pk section_id=section.pk %}" class="dropdown-item delete-button text-danger">
+                                            <i class="fa fa-trash"></i> Удалить
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            <div class="lessons-list spoiler-content" style="{% if forloop.first %}display: block;{% else %}display: none;{% endif %}">
+                {% for material in section.materials.all %}
+                <div class="draggable-item" data-drag="lecture" id="lecture-{{ material.pk }}" data-id="{{ material.pk }}" draggable="true">
+                    <div class="drag-and-dropper">
+                        <img src="{% static 'img/drag-button.svg' %}" alt="Drag" draggable="false">
+                    </div>
+                    
+                    <div class="lesson-item is-lecture {% if active_item_type == 'material' and active_item_id == material.pk %}selected{% endif %}" data-id="{{ material.pk }}">
+                        <div class="lecture-id">
+                        </div>
+                        <div class="lecture-title">
+                            <div class="item-header">
+                                <div class="label-with-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                    <span class="material-label">Материал {{ forloop.counter }}</span>
+                                </div>
+                                <span class="icon visibility-icon" onclick="event.stopPropagation(); toggleVis('material', {{ material.pk }}, this)" style="cursor: pointer;">
+                                    <i id="lecture-icon-{{ material.pk }}" class="fa fa-eye {% if not material.is_visible %}is-red{% else %}is-blue{% endif %}"></i>
+                                </span>
+                            </div>
+                            <div class="item-content">{{ material.title }}</div>
+                        </div>
+                        <div class="icons">
+                            <div class="d-inline">
+                                <i class="fa fa-ellipsis-v dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></i>
+                                <div class="dropdown-menu dropdown-menu-end" data-popper-placement="top-end">
+                                    <a href="{% url 'lectures:material_edit' course_id=course.pk material_id=material.pk %}" class="dropdown-item">
+                                        <i class="fa fa-pencil-alt"></i> Изменить
+                                    </a>
+                                    <a href="{% url 'lectures:material_delete' course_id=course.pk material_id=material.pk %}" class="dropdown-item delete-button">
+                                        <i class="fa fa-times"></i> Удалить
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% for assignment in section.assignments.all %}
+                <div class="draggable-item" data-drag="task" id="task-{{ assignment.pk }}" data-id="{{ assignment.pk }}" draggable="true">
+                    <div class="drag-and-dropper">
+                        <img src="{% static 'img/drag-button.svg' %}" alt="Drag" draggable="false">
+                    </div>
+                    
+                    <div class="lesson-item is-task {% if active_item_type == 'assignment' and active_item_id == assignment.pk %}selected{% endif %}" data-id="{{ assignment.pk }}">
+                        <div class="lecture-id">
+                        </div>
+                        <div class="lecture-title">
+                            <div class="item-header">
+                                <div class="label-with-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-3"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                    <span class="assignment-label">Задание {{ forloop.counter }}</span>
+                                </div>
+                                <span class="icon visibility-icon" onclick="event.stopPropagation(); toggleVis('assignment', {{ assignment.pk }}, this)" style="cursor: pointer;">
+                                    <i id="task-icon-{{ assignment.pk }}" class="fa fa-eye {% if not assignment.is_visible %}is-red{% else %}is-blue{% endif %}"></i>
+                                </span>
+                            </div>
+                            <div class="item-content">{{ assignment.title }}</div>
+                        </div>
+                        <div class="icons">
+                            <div class="d-inline">
+                                <i class="fa fa-ellipsis-v dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></i>
+                                <div class="dropdown-menu dropdown-menu-end" data-popper-placement="top-end">
+                                    <a href="{% url 'lectures:assignment_detail' course_id=course.pk assignment_id=assignment.pk %}" class="dropdown-item">
+                                        <i class="fa fa-pencil-alt"></i> Изменить
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% for quiz in section.quizzes.all %}
+                <div class="draggable-item" data-drag="task" id="task-{{ quiz.pk }}" data-id="{{ quiz.pk }}" draggable="true">
+                    <div class="drag-and-dropper">
+                        <img src="{% static 'img/drag-button.svg' %}" alt="Drag" draggable="false">
+                    </div>
+                    
+                    <div class="lesson-item is-task {% if active_item_type == 'quiz' and active_item_id == quiz.pk %}selected{% endif %}" data-id="{{ quiz.pk }}">
+                        <div class="lecture-id">
+                        </div>
+                        <div class="lecture-title">
+                            <div class="item-header">
+                                <div class="label-with-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-square"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                                    <span class="quiz-label">Тест {{ forloop.counter }}</span>
+                                </div>
+                                <span class="icon visibility-icon" onclick="event.stopPropagation(); toggleVis('quiz', {{ quiz.pk }}, this)" style="cursor: pointer;">
+                                    <i id="quiz-icon-{{ quiz.pk }}" class="fa fa-eye {% if not quiz.is_active %}is-red{% else %}is-blue{% endif %}"></i>
+                                </span>
+                            </div>
+                            <div class="item-content">{{ quiz.title }}</div>
+                        </div>
+                        <div class="icons">
+                            <div class="d-inline">
+                                <i class="fa fa-ellipsis-v dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></i>
+                                <div class="dropdown-menu dropdown-menu-end" data-popper-placement="top-end">
+                                    <a href="{% url 'quizzes:detail' course_id=course.pk quiz_id=quiz.pk %}" class="dropdown-item">
+                                        <i class="fa fa-pencil-alt"></i> Изменить
+                                    </a>
+                                    <a href="{% url 'quizzes:delete' course_id=course.pk quiz_id=quiz.pk %}" class="dropdown-item delete-button">
+                                        <i class="fa fa-times"></i> Удалить
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

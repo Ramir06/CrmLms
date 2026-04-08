@@ -1,0 +1,293 @@
+{% extends "manager/base.html" %}
+{% load static humanize %}
+
+{% block title %}Дашборд менеджера{% endblock %}
+
+{% block manager_content %}
+<div class="content-wrapper">
+    <div class="content-header row">
+        <div class="content-header-left col-md-7 col-12">
+            <div class="breadcrumbs-top">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'manager:dashboard' %}">Главная</a></li>
+                        <li class="breadcrumb-item active">Дашборд менеджера</li>
+                    </ol>
+                </nav>
+            </div>
+            <h2 class="content-header-title mb-0">Дашборд менеджера</h2>
+            <div class="content-header-search d-lg-inline-block">
+                <p class="text-muted mb-0">Добро пожаловать, {{ request.user.get_display_name }}!</p>
+                {% if current_organization %}
+                <p class="text-muted">Текущая организация: {{ current_organization.name }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="content-body">
+        {% if no_organization %}
+        <!-- Сообщение об отсутствии организации -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">Нет доступных организаций</h5>
+                            <p class="mb-0">У вас нет доступа к организациям. Пожалуйста, свяжитесь с администратором для предоставления доступа.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Stats cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar bg-primary rounded-circle me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-people-fill text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0">{{ students_count|default:0|intcomma }}</h3>
+                                <p class="text-muted mb-0">Студентов</p>
+                                {% if new_students_today > 0 %}
+                                <small class="text-success">+{{ new_students_today }} сегодня</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar bg-info rounded-circle me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-person-badge-fill text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0">{{ mentors_count|default:0|intcomma }}</h3>
+                                <p class="text-muted mb-0">Менторов</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar bg-warning rounded-circle me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-funnel-fill text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0">{{ leads_count|default:0|intcomma }}</h3>
+                                <p class="text-muted mb-0">Лидов</p>
+                                {% if new_leads_today > 0 %}
+                                <small class="text-success">+{{ new_leads_today }} сегодня</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar bg-success rounded-circle me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-book-fill text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0">{{ courses_count|default:0|intcomma }}</h3>
+                                <p class="text-muted mb-0">Активных курсов</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional stats row -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-xl-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar bg-success rounded-circle me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-currency-dollar text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0">{{ monthly_income|default:0|intcomma }} ₽</h3>
+                                <p class="text-muted mb-0">Доход за текущий месяц</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content rows -->
+        <div class="row">
+            <!-- Active Courses -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title">Активные курсы</h4>
+                        {% if not no_organization %}
+                        <a href="/admin/courses/" class="btn btn-sm btn-outline-primary">Все курсы</a>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if active_courses %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Название</th>
+                                        <th>Студентов</th>
+                                        <th>Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for course in active_courses %}
+                                    <tr>
+                                        <td>
+                                            <a href="/admin/courses/{{ course.pk }}/">{{ course.title }}</a>
+                                        </td>
+                                        <td>{{ course.current_students_count|default:0 }}</td>
+                                        <td>
+                                            {% if course.status == 'active' %}
+                                                <span class="badge bg-success">Активен</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ course.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-book d-block fs-2 mb-2 text-muted"></i>
+                            <p class="text-muted">
+                                {% if no_organization %}
+                                Сначала вам нужно получить доступ к организации
+                                {% else %}
+                                Активные курсы не найдены
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent News -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title">Последние новости</h4>
+                        {% if not no_organization %}
+                        <a href="/admin/news/" class="btn btn-sm btn-outline-primary">Все новости</a>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if recent_news %}
+                        <div class="news-list">
+                            {% for news_item in recent_news %}
+                            <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <a href="/admin/news/{{ news_item.pk }}/" class="text-decoration-none">
+                                                {{ news_item.title }}
+                                            </a>
+                                        </h6>
+                                        <p class="text-muted small mb-1">{{ news_item.content|truncatewords:20 }}</p>
+                                        <small class="text-muted">{{ news_item.created_at|date:"d.m.Y H:i" }}</small>
+                                    </div>
+                                    {% if news_item.image %}
+                                    <img src="{{ news_item.image.url }}" alt="{{ news_item.title }}" class="rounded ms-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-newspaper d-block fs-2 mb-2 text-muted"></i>
+                            <p class="text-muted">
+                                {% if no_organization %}
+                                Новости будут доступны после получения доступа к организации
+                                {% else %}
+                                Новости не найдены
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications row -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title">
+                            Последние уведомления
+                            {% if unread_count > 0 %}
+                            <span class="badge bg-danger ms-2">{{ unread_count }}</span>
+                            {% endif %}
+                        </h4>
+                        {% if not no_organization %}
+                        <a href="/notifications/" class="btn btn-sm btn-outline-primary">Все уведомления</a>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if recent_notifications %}
+                        <div class="notification-list">
+                            {% for notification in recent_notifications %}
+                            <div class="mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %} {% if not notification.is_read %}bg-light rounded p-2{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 {% if not notification.is_read %}fw-bold{% endif %}">
+                                            {{ notification.title }}
+                                        </h6>
+                                        <p class="text-muted small mb-1">{{ notification.message|truncatewords:15 }}</p>
+                                        <small class="text-muted">{{ notification.created_at|date:"d.m.Y H:i" }}</small>
+                                    </div>
+                                    {% if not notification.is_read %}
+                                    <span class="badge bg-primary ms-2">Новое</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-bell d-block fs-2 mb-2 text-muted"></i>
+                            <p class="text-muted">
+                                {% if no_organization %}
+                                Уведомления будут доступны после получения доступа к организации
+                                {% else %}
+                                Уведомления не найдены
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

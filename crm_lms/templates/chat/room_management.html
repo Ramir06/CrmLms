@@ -1,0 +1,241 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}Управление чатами{% endblock %}
+
+{% block extra_css %}
+<style>
+.room-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.room-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-left-color: #007bff;
+}
+
+.room-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.room-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.room-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.room-badge.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.room-badge.inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.message-count {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="room-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">
+                    <i class="bi bi-chat-dots me-2"></i>Управление чатами
+                </h4>
+                <p class="mb-0">Создавайте и управляйте комнатами для общения команды</p>
+            </div>
+            <div>
+                <a href="{% url 'chat_admin:room_management' %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Обновить
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ rooms.count }}</div>
+            <div class="stat-label">Всего комнат</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ active_rooms_count }}</div>
+            <div class="stat-label">Активных комнат</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="total-messages">0</div>
+            <div class="stat-label">Всего сообщений</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="active-users">0</div>
+            <div class="stat-label">Активных пользователей</div>
+        </div>
+    </div>
+
+    <!-- Форма создания новой комнаты -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-plus-circle me-2"></i>Создать новую комнату
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Название комнаты</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.is_active.id_for_label }}" class="form-label">Статус</label>
+                            <div class="form-check mt-2">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Активна
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Создать комнату
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Список комнат -->
+    <div class="row">
+        {% for room in rooms %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card room-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">
+                            <i class="bi bi-door-open me-2"></i>{{ room.name }}
+                        </h5>
+                        <span class="room-badge {% if room.is_active %}active{% else %}inactive{% endif %}">
+                            {% if room.is_active %}Активна{% else %}Неактивна{% endif %}
+                        </span>
+                    </div>
+                    
+                    <p class="card-text text-muted">{{ room.description|default:"Нет описания" }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                        <div>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                Создана: {{ room.created_at|date:"d.m.Y" }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i class="bi bi-chat-text me-1"></i>
+                                <span class="message-count">0 сообщений</span>
+                            </small>
+                        </div>
+                        
+                        <div class="room-actions">
+                            <a href="/chat/room/{{ room.id }}/" class="btn btn-sm btn-outline-primary" title="Открыть чат">
+                                <i class="bi bi-chat"></i>
+                            </a>
+                            <a href="{% url 'chat_admin:edit_room' room.id %}" class="btn btn-sm btn-outline-secondary" title="Редактировать">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-chat-dots" style="font-size: 4rem; color: #6c757d;"></i>
+                <h4 class="mt-3">Нет комнат</h4>
+                <p class="text-muted">Создайте первую комнату для общения команды</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+// Загрузка статистики
+document.addEventListener('DOMContentLoaded', function() {
+    // TODO: Реализовать получение реальной статистики
+    document.getElementById('total-messages').textContent = '0';
+    document.getElementById('active-users').textContent = '0';
+    
+    // Подсчет сообщений для каждой комнаты (заглушка)
+    document.querySelectorAll('.message-count').forEach(function(element) {
+        element.textContent = '0 сообщений';
+    });
+});
+</script>
+{% endblock %}

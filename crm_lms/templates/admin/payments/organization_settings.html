@@ -1,0 +1,132 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'payments:list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ page_title }}</h4>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Здесь вы можете настроить данные организации, которые будут использоваться при формировании чеков об оплате.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.organization_name.id_for_label }}" class="form-label fw-medium">
+                            Название организации *
+                        </label>
+                        {{ form.organization_name }}
+                        {% if form.organization_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.organization_name.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.organization_type.id_for_label }}" class="form-label fw-medium">
+                            Тип организации *
+                        </label>
+                        {{ form.organization_type }}
+                        {% if form.organization_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.organization_type.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.inn.id_for_label }}" class="form-label fw-medium">
+                            ИНН *
+                        </label>
+                        {{ form.inn }}
+                        {% if form.inn.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.inn.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Введите ИНН организации (12 цифр)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.tax_per_receipt.id_for_label }}" class="form-label fw-medium">
+                            Налог с каждого чека (%)
+                        </label>
+                        {{ form.tax_per_receipt }}
+                        {% if form.tax_per_receipt.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.tax_per_receipt.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Если налог не взимается, оставьте значение 0</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Использовать эти данные для формирования чеков
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-2"></i>Сохранить настройки
+                        </button>
+                        <a href="{% url 'payments:list' %}" class="btn btn-outline-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if org_exists %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Предпросмотр чека</h5>
+                <p class="text-muted mb-3">Так будет выглядеть чек с текущими настройками:</p>
+                
+                <div style="border: 1px solid #ddd; padding: 15px; font-family: monospace; font-size: 12px; max-width: 300px;">
+                    <div style="text-align: center; font-weight: bold; margin-bottom: 10px;">
+                        {{ form.instance.organization_name|default:"Название организации" }}
+                    </div>
+                    <div style="border-top: 2px dashed #333; margin: 10px 0;"></div>
+                    <div>Чек #: #000001</div>
+                    <div>Компания: {{ form.instance.organization_type|default:"ИП" }} {{ form.instance.organization_name|default:"Название организации" }}</div>
+                    <div>ИНН: {{ form.instance.inn|default:"123456789012" }}</div>
+                    <div>Налог: {% if form.instance.tax_per_receipt %}{{ form.instance.tax_per_receipt }}%{% else %}-{% endif %}</div>
+                    <div style="border-top: 2px dashed #333; margin: 10px 0;"></div>
+                    <div style="font-weight: bold;">Наименование товаров:</div>
+                    <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                        <span>Курс (1 мес.)</span>
+                        <span>100 000.00</span>
+                    </div>
+                    {% if form.instance.tax_per_receipt %}
+                    <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                        <span>Налог ({{ form.instance.tax_per_receipt }}%)</span>
+                        <span>5 000.00</span>
+                    </div>
+                    {% endif %}
+                    <div style="border-top: 1px solid #333; margin: 10px 0; padding-top: 5px; font-weight: bold;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>ИТОГО:</span>
+                            <span>{% if form.instance.tax_per_receipt %}105 000.00{% else %}100 000.00{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

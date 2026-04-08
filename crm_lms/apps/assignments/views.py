@@ -4,33 +4,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+import json
 
 from apps.core.mixins import mentor_required
 from apps.courses.models import Course, CourseStudent
 from .models import Assignment, AssignmentSubmission, AssignmentGrade
-
-
-from django import forms
-
-
-class AssignmentForm(forms.ModelForm):
-    class Meta:
-        model = Assignment
-        fields = ['section', 'title', 'description', 'max_score', 'due_date', 'order', 'is_required', 'is_visible']
-        widgets = {
-            'section': forms.Select(attrs={'class': 'form-select'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'max_score': forms.NumberInput(attrs={'class': 'form-control'}),
-            'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, course=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if course:
-            from apps.lectures.models import Section
-            self.fields['section'].queryset = Section.objects.filter(course=course)
+from .forms import AssignmentForm
+from apps.core.ai_service import nvidia_ai_service
 
 
 def get_mentor_course(user, course_id):
@@ -63,19 +43,29 @@ def assignments_matrix(request, course_id):
                     grade = submission.grade
                 except AssignmentGrade.DoesNotExist:
                     pass
+            
+            # Check for quiz results if assignment is linked to a quiz
+            quiz_score = None
+            if assignment.quiz:
+                quiz_score = assignment.get_quiz_score(cs.student)
+                
             row['cells'].append({
                 'assignment': assignment,
                 'submission': submission,
                 'grade': grade,
+                'quiz_score': quiz_score,
                 'student_id': cs.pk,  # CourseStudent.pk, не Student.pk
+                'grade_percentage': grade and int((grade.score / assignment.max_score) * 100) if grade else None,
+                'quiz_percentage': quiz_score and quiz_score.percentage if quiz_score else None,
             })
         matrix.append(row)
 
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'assignments': assignments,
         'matrix': matrix,
-        'page_title': 'Проверка заданий',
+        'page_title': 'Оценки',
         'active_menu': 'assignments',
     }
     return render(request, 'mentor/assignments/matrix.html', context)
@@ -95,6 +85,29 @@ def assignment_create(request, course_id):
     return render(request, 'mentor/assignments/form.html', {
         'form': form, 'course': course, 'page_title': 'Новое задание'
     })
+
+
+@login_required
+@mentor_required
+def assignment_solutions(request, course_id, assignment_id):
+    """Show solutions for a specific assignment."""
+    course = get_mentor_course(request.user, course_id)
+    assignment = get_object_or_404(Assignment, pk=assignment_id, course=course)
+    
+    submissions = AssignmentSubmission.objects.filter(
+        assignment=assignment
+    ).exclude(status='not_submitted').select_related('student', 'grade').order_by('-submitted_at')
+    
+    context = {
+        'course': course,
+        'current_course': course,
+        'assignment': assignment,
+        'submissions': submissions,
+        'page_title': f'Решения для задачи: {assignment.title}',
+        'active_menu': 'assignments',
+    }
+    
+    return render(request, 'mentor/assignments/solutions.html', context)
 
 
 @login_required
@@ -137,6 +150,8 @@ def submission_review(request, submission_id):
         'submission': submission,
         'grade': grade,
         'course': course,
+        'current_course': course,  # Добавляем для навбара
+        'assignment': submission.assignment,
         'page_title': f'Проверка: {submission.student.full_name}',
         'active_menu': 'assignments',
     }
@@ -341,6 +356,7 @@ def student_stats(request, course_id):
     
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'student_stats': student_stats,
         'total_students': total_students,
         'avg_score_all': round(avg_score_all, 1),
@@ -350,3 +366,170 @@ def student_stats(request, course_id):
     }
     
     return render(request, 'mentor/assignments/student_stats.html', context)
+
+
+@login_required
+@mentor_required
+@require_POST
+def ai_check_submission(request, submission_id):
+    """AI проверка задания"""
+    submission = get_object_or_404(AssignmentSubmission, pk=submission_id)
+    course = submission.assignment.course
+    
+    # Проверяем права доступа
+    if request.user.role not in ('admin', 'superadmin') and course.mentor != request.user:
+        return JsonResponse({'error': 'Доступ запрещен'}, status=403)
+    
+    # Проверяем, есть ли ответ для проверки
+    if not submission.answer_text and not submission.file:
+        return JsonResponse({'error': 'Нет ответа для проверки'}, status=400)
+    
+    try:
+        # Подготавливаем текст ответа
+        answer_text = submission.answer_text
+        if submission.file:
+            try:
+                # Если есть файл, пытаемся прочитать его содержимое
+                answer_text += f"\n\n[Файл: {submission.file.name}]"
+                # Здесь можно добавить логику чтения файла в зависимости от типа
+            except Exception as e:
+                print(f"Error reading file: {e}")
+        
+        # Получаем критерии оценки из описания задания
+        criteria = ""
+        if submission.assignment.description:
+            criteria = submission.assignment.description
+        
+        # Вызываем AI для проверки
+        ai_result = nvidia_ai_service.check_assignment(
+            assignment_text=submission.assignment.description or submission.assignment.title,
+            student_answer=answer_text,
+            criteria=criteria
+        )
+        
+        if 'error' in ai_result:
+            return JsonResponse({'error': f'AI ошибка: {ai_result["error"]}'}, status=500)
+        
+        # Создаем или обновляем оценку
+        grade, created = AssignmentGrade.objects.get_or_create(
+            submission=submission,
+            defaults={
+                'score': ai_result.get('score', 0),
+                'comment': ai_result.get('feedback', ''),
+                'checked_by': request.user,
+                'ai_graded': True,
+                'ai_confidence': ai_result.get('confidence', 80),
+                'ai_feedback': ai_result,
+                'ai_strengths': ', '.join(ai_result.get('strengths', [])),
+                'ai_weaknesses': ', '.join(ai_result.get('weaknesses', [])),
+                'ai_suggestions': ', '.join(ai_result.get('recommendations', [])),
+            }
+        )
+        
+        if not created:
+            grade.score = ai_result.get('score', 0)
+            grade.comment = ai_result.get('feedback', '')
+            grade.ai_graded = True
+            grade.ai_confidence = ai_result.get('confidence', 80)
+            grade.ai_feedback = ai_result
+            grade.ai_strengths = ', '.join(ai_result.get('strengths', []))
+            grade.ai_weaknesses = ', '.join(ai_result.get('weaknesses', []))
+            grade.ai_suggestions = ', '.join(ai_result.get('recommendations', []))
+            grade.save()
+        
+        # Обновляем статус ответа
+        submission.status = 'checked'
+        submission.save()
+        
+        return JsonResponse({
+            'success': True,
+            'grade': {
+                'score': float(grade.score),
+                'comment': grade.comment,
+                'ai_graded': grade.ai_graded,
+                'ai_confidence': grade.ai_confidence,
+                'ai_feedback': grade.ai_feedback,
+                'ai_strengths': grade.ai_strengths,
+                'ai_weaknesses': grade.ai_weaknesses,
+                'ai_suggestions': grade.ai_suggestions,
+            }
+        })
+        
+    except Exception as e:
+        print(f"AI check error: {e}")
+        return JsonResponse({'error': f'Внутренняя ошибка: {str(e)}'}, status=500)
+
+
+@login_required
+@mentor_required
+def ai_analyze_class(request, course_id):
+    """AI анализ всего класса"""
+    course = get_mentor_course(request.user, course_id)
+    
+    try:
+        # Собираем данные по всем студентам курса
+        students_data = []
+        course_students = CourseStudent.objects.filter(
+            course=course, status='active'
+        ).select_related('student')
+        
+        for cs in course_students:
+            student_data = {
+                'name': cs.student.full_name or cs.student.user.username,
+                'email': cs.student.user.email,
+                'enrollment_date': cs.enrolled_at.isoformat() if cs.enrolled_at else None,
+                'assignments_stats': {
+                    'total': Assignment.objects.filter(course=course).count(),
+                    'submitted': AssignmentSubmission.objects.filter(
+                        assignment__course=course, 
+                        student=cs.student, 
+                        status='submitted'
+                    ).count(),
+                    'graded': AssignmentGrade.objects.filter(
+                        submission__assignment__course=course,
+                        submission__student=cs.student
+                    ).count(),
+                }
+            }
+            
+            # Добавляем оценки
+            grades = AssignmentGrade.objects.filter(
+                submission__assignment__course=course,
+                submission__student=cs.student
+            )
+            if grades:
+                scores = [float(g.score) for g in grades]
+                student_data['assignments_stats']['avg_score'] = sum(scores) / len(scores)
+                student_data['assignments_stats']['max_score'] = max(scores)
+                student_data['assignments_stats']['min_score'] = min(scores)
+            else:
+                student_data['assignments_stats']['avg_score'] = 0
+                student_data['assignments_stats']['max_score'] = 0
+                student_data['assignments_stats']['min_score'] = 0
+            
+            students_data.append(student_data)
+        
+        # Данные курса
+        course_data = {
+            'title': course.title,
+            'description': course.description,
+            'mentor': course.mentor.full_name or course.mentor.username if course.mentor else 'No mentor',
+            'total_students': len(students_data),
+            'students': students_data
+        }
+        
+        # Вызываем AI для анализа
+        ai_analysis = nvidia_ai_service.analyze_dashboard(course_data)
+        
+        if 'error' in ai_analysis:
+            return JsonResponse({'error': f'AI ошибка: {ai_analysis["error"]}'}, status=500)
+        
+        return JsonResponse({
+            'success': True,
+            'analysis': ai_analysis,
+            'course_data': course_data
+        })
+        
+    except Exception as e:
+        print(f"AI analysis error: {e}")
+        return JsonResponse({'error': f'Внутренняя ошибка: {str(e)}'}, status=500)

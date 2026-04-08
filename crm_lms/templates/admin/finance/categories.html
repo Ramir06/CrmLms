@@ -1,0 +1,278 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.categories-header {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-bottom: 1.5rem;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.category-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.category-income {
+    border-left-color: #10b981;
+}
+
+.category-expense {
+    border-left-color: #ef4444;
+}
+
+.category-color-indicator {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    opacity: 0.1;
+    border-radius: 0 12px 0 60px;
+}
+
+.category-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.category-type {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+.type-income {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.type-expense {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.category-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #374151;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.empty-state {
+    background: white;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.floating-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 1000;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .category-stats {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Заголовок -->
+    <div class="categories-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="mb-2">📁 Категории</h1>
+                <p class="text-muted mb-0">Управление категориями финансовых операций</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <a href="{% url 'finance:dashboard' %}" class="btn btn-outline-secondary">
+                        🏠 Дашборд
+                    </a>
+                    <a href="{% url 'finance:list' %}" class="btn btn-outline-secondary">
+                        📋 Транзакции
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сетка категорий -->
+    <div class="category-grid">
+        {% for category in categories %}
+        <div class="category-card category-{{ category.type }}">
+            <div class="category-color-indicator" style="background-color: {{ category.color }};"></div>
+            
+            <div class="category-name">
+                <span style="color: {{ category.color }};">●</span>
+                {{ category.name }}
+            </div>
+            
+            <div class="category-type type-{{ category.type }}">
+                {% if category.type == 'income' %}📈 Доход{% else %}📉 Расход{% endif %}
+            </div>
+            
+            <div class="category-stats">
+                <div class="stat-box">
+                    <div class="stat-value">{{ category.transaction_count }}</div>
+                    <div class="stat-label">Транзакций</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value {% if category.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                        {{ category.total_amount|floatformat:0 }} ₽
+                    </div>
+                    <div class="stat-label">Общая сумма</div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <a href="{% url 'finance:list' %}?category={{ category.pk }}" class="btn btn-outline-primary btn-sm flex-fill">
+                    📋 Транзакции
+                </a>
+                <button class="btn btn-outline-secondary btn-sm" onclick="showCategoryDetails({{ category.pk }})">
+                    📊 Детали
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="mb-4">
+                <div style="font-size: 4rem;">📁</div>
+            </div>
+            <h3 class="mb-3">Нет категорий</h3>
+            <p class="text-muted mb-4">Создайте категории для классификации финансовых операций</p>
+            <a href="{% url 'finance:category_create' %}" class="btn btn-primary">
+                ➕ Создать категорию
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Статистика -->
+    {% if categories %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                <div class="h4 mb-1">{{ categories|length }}</div>
+                <div class="text-muted small">Всего категорий</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                <div class="h4 mb-1 text-success">
+                    {{ categories|selectattr:"type"|selectattr:"type","equalto":"income"|list|length }}
+                </div>
+                <div class="text-muted small">Категорий доходов</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                <div class="h4 mb-1 text-danger">
+                    {{ categories|selectattr:"type"|selectattr:"type","equalto":"expense"|list|length }}
+                </div>
+                <div class="text-muted small">Категорий расходов</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Плавающая кнопка добавления -->
+<a href="{% url 'finance:category_create' %}" class="floating-btn" title="Добавить категорию">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showCategoryDetails(categoryId) {
+    // Здесь можно добавить модальное окно с детальной информацией по категории
+    // или переход на страницу детальной статистики
+    window.location.href = `/finance/transactions/?category=${categoryId}`;
+}
+</script>
+{% endblock %}

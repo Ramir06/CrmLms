@@ -4,6 +4,9 @@
 {% block title %}{% trans "Вход" %}{% endblock %}
 
 {% block auth_content %}
+<script>
+// Принудительно включаем темную тему для страницы входа
+</script>
 <h5 class="text-center mb-1 fw-bold">{% trans "Добро пожаловать" %}</h5>
 <p class="text-center text-muted mb-4 small">{% trans "Войдите в свой аккаунт" %}</p>
 
@@ -24,7 +27,7 @@
 <form method="post" novalidate>
     {% csrf_token %}
     <div class="mb-3">
-        <label class="form-label fw-medium">Email</label>
+        <label class="form-label fw-medium">Username</label>
         {{ form.username }}
         {% if form.username.errors %}
             <div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>

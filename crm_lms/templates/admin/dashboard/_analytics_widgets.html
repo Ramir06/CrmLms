@@ -1,0 +1,286 @@
+<!-- Analytics Widgets -->
+{% if analytics_widgets %}
+<div class="row g-3 mb-4">
+    {% for widget in analytics_widgets %}
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="card-title mb-0">
+                    <i class="{{ widget.icon }} me-2"></i>{{ widget.title }}
+                </h6>
+                <a href="/analytics/" class="btn btn-sm btn-outline-primary">Подробнее</a>
+            </div>
+            <div class="card-body">
+                {% if widget.type == 'chart' %}
+                    <canvas id="attendanceWidget" height="100"></canvas>
+                {% elif widget.type == 'pie_chart' %}
+                    <canvas id="coursesWidget" height="150"></canvas>
+                {% elif widget.type == 'bar_chart' %}
+                    <canvas id="studentsMonthsWidget" height="150"></canvas>
+                {% elif widget.type == 'top_students' %}
+                    <div class="top-students-list">
+                        {% for student_data in widget.data %}
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark me-2">{{ forloop.counter }}</span>
+                                <div>
+                                    <div class="fw-semibold">{{ student_data.student.full_name }}</div>
+                                    <small class="text-muted">{{ student_data.course.title }}</small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="badge bg-success">{{ student_data.rating|floatformat:0 }}%</div>
+                                <div class="small text-muted">
+                                    <i class="fas fa-graduation-cap me-1"></i>{{ student_data.grade_percentage|floatformat:0 }}%
+                                    <i class="fas fa-check-circle ms-2 me-1"></i>{{ student_data.attendance_percentage|floatformat:0 }}%
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-trophy fa-2x mb-2"></i>
+                            <div>Нет данных за текущий месяц</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% elif widget.type == 'students_analytics' %}
+                    <div class="students-analytics">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="analytics-item">
+                                    <div class="analytics-value text-primary">
+                                        <i class="fas fa-graduation-cap mb-2"></i>
+                                        <div class="h4 mb-0">{{ widget.data.average_grade|floatformat:1 }}%</div>
+                                    </div>
+                                    <div class="analytics-label text-muted small">Ср. балл</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="analytics-item">
+                                    <div class="analytics-value text-success">
+                                        <i class="fas fa-user-check mb-2"></i>
+                                        <div class="h4 mb-0">{{ widget.data.average_attendance|floatformat:1 }}%</div>
+                                    </div>
+                                    <div class="analytics-label text-muted small">Ср. посещаемость</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="analytics-item">
+                                    <div class="analytics-value text-danger">
+                                        <i class="fas fa-user-minus mb-2"></i>
+                                        <div class="h4 mb-0">{{ widget.data.left_count }}</div>
+                                    </div>
+                                    <div class="analytics-label text-muted small">Ушли с курса</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% elif widget.type == 'ai_prediction' %}
+                    <div class="ai-prediction">
+                        <!-- Студенты в группе риска -->
+                        <div class="mb-3">
+                            <h6 class="text-danger mb-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                {{ widget.data.risk_students|length }} студентов скоро уйдут с курса:
+                            </h6>
+                            <div class="risk-students-list" style="max-height: 120px; overflow-y: auto;">
+                                {% for student_data in widget.data.risk_students %}
+                                <div class="d-flex align-items-center justify-content-between py-1 border-bottom">
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-danger me-2">{{ forloop.counter }}</span>
+                                        <div>
+                                            <div class="small fw-semibold">{{ student_data.student.full_name }}</div>
+                                            <small class="text-muted">{{ student_data.course.title }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="small text-danger">
+                                            <i class="fas fa-brain me-1"></i>{{ student_data.ai_analysis.confidence|default:0 }}%
+                                        </div>
+                                        <div class="small text-muted">
+                                            {% if student_data.ai_analysis.risk_level %}
+                                                <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">
+                                                    {{ student_data.ai_analysis.risk_level }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-muted small">Студенты в группе риска не найдены</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Улучшающиеся студенты -->
+                        <div>
+                            <h6 class="text-success mb-2">
+                                <i class="fas fa-chart-line me-1"></i>
+                                {{ widget.data.improving_students|length }} студентов подтянулись в знаниях:
+                            </h6>
+                            <div class="improving-students-list" style="max-height: 120px; overflow-y: auto;">
+                                {% for student_data in widget.data.improving_students %}
+                                <div class="d-flex align-items-center justify-content-between py-1 border-bottom">
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success me-2">{{ forloop.counter }}</span>
+                                        <div>
+                                            <div class="small fw-semibold">{{ student_data.student.full_name }}</div>
+                                            <small class="text-muted">{{ student_data.course.title }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="small text-success">
+                                            <i class="fas fa-brain me-1"></i>{{ student_data.ai_analysis.confidence|default:0 }}%
+                                        </div>
+                                        <div class="small text-muted">
+                                            {% if student_data.ai_analysis.prediction %}
+                                                <span class="badge bg-info text-white" style="font-size: 0.65rem;">
+                                                    {{ student_data.ai_analysis.prediction }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-muted small">Улучшающиеся студенты не найдены</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- AI Резюме -->
+                        {% if widget.data.risk_students or widget.data.improving_students %}
+                        <div class="mt-3 p-2 bg-light rounded">
+                            <div class="small">
+                                <i class="fas fa-robot me-1"></i>
+                                <strong>AI-анализ Gemini:</strong>
+                                {% for student_data in widget.data.risk_students|slice:":2" %}
+                                    {% if student_data.ai_analysis.summary %}
+                                        {{ student_data.student.full_name }}: {{ student_data.ai_analysis.summary|truncatechars:50 }}{% if not forloop.last %}; {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="text-center mt-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="showAIDetails()">
+                                <i class="fas fa-brain me-1"></i>Подробнее
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Данные для виджетов
+{% for widget in analytics_widgets %}
+    {% if widget.type == 'chart' %}
+        var attendanceWidgetData = {{ widget.data|safe }};
+        
+        new Chart(document.getElementById('attendanceWidget').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: attendanceWidgetData.map(function(d) { return d.date; }),
+                datasets: [{
+                    label: 'Присутствовали',
+                    data: attendanceWidgetData.map(function(d) { return d.present; }),
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Отсутствовали',
+                    data: attendanceWidgetData.map(function(d) { return d.absent; }),
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    {% elif widget.type == 'pie_chart' %}
+        var coursesWidgetData = {{ widget.data|safe }};
+        
+        new Chart(document.getElementById('coursesWidget').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: coursesWidgetData.map(function(c) { return c.title; }),
+                datasets: [{
+                    data: coursesWidgetData.map(function(c) { return c.student_count; }),
+                    backgroundColor: coursesWidgetData.map(function(c) { return c.color; }),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                onClick: function(evt, item) {
+                    if (item.length > 0) {
+                        var courseData = coursesWidgetData[item[0].index];
+                        window.location.href = courseData.url;
+                    }
+                }
+            }
+        });
+    {% elif widget.type == 'bar_chart' %}
+        var studentsMonthsWidgetData = {{ widget.data|safe }};
+        
+        new Chart(document.getElementById('studentsMonthsWidget').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: studentsMonthsWidgetData.map(function(m) { return m.month; }),
+                datasets: [{
+                    label: 'Новые студенты',
+                    data: studentsMonthsWidgetData.map(function(m) { return m.count; }),
+                    backgroundColor: '#17a2b8',
+                    borderColor: '#17a2b8',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    {% endif %}
+{% endfor %}
+</script>
+{% endif %}

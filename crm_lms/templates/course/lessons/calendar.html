@@ -41,6 +41,11 @@
                 <a href="{% url 'lessons:edit' course_id=course.pk pk=lesson.pk %}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-pencil"></i>
                 </a>
+                {% if user.role == 'admin' or course.mentor == user %}
+                <a href="{% url 'lessons_substitute:substitute_mentor' course.pk lesson.pk %}" class="btn btn-sm btn-outline-warning" title="Заменить ментора">
+                    <i class="bi bi-person-plus"></i>
+                </a>
+                {% endif %}
                 <form method="post" action="{% url 'lessons:delete' course_id=course.pk pk=lesson.pk %}" onsubmit="return confirm('Удалить?')">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>

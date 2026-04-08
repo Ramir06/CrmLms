@@ -5,7 +5,7 @@ import django
 
 # Устанавливаем путь к проекту
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.dev')
 
 # Инициализируем Django
 django.setup()
@@ -13,4 +13,6 @@ django.setup()
 from django.core.management import execute_from_command_line
 
 # Применяем миграции
-execute_from_command_line(['manage.py', 'migrate', 'mentors'])
+execute_from_command_line(['manage.py', 'migrate'])
+
+print("Миграции успешно применены!")

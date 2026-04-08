@@ -1,0 +1,114 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<!-- Admin-specific CSS overrides -->
+<style>
+/* Force override old styles */
+.navigation-main .nav-item > a {
+    padding: 12px 18px !important;
+    font-size: 0.95rem !important;
+    margin: 4px 15px !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+}
+
+.card {
+    border-radius: 8px !important;
+    transition: all 0.3s ease-in-out !important;
+}
+
+.btn {
+    border-radius: 6px !important;
+    transition: all 0.15s !important;
+}
+
+.stat-card {
+    padding: 22px 24px !important;
+}
+
+/* Динамические стили для положения меню */
+{% if menu_position == 'right' %}
+/* Стиль для меню справа */
+.main-menu {
+    left: auto !important;
+    right: 0 !important;
+}
+
+.app-content.content {
+    margin-left: 0 !important;
+    margin-right: 260px !important;
+}
+
+.header-navbar {
+    left: 32px !important;
+    right: 270px !important;
+}
+
+/* Инвертируем сайдбар */
+.main-menu .navbar-header {
+    flex-direction: row-reverse;
+}
+
+.main-menu .main-menu-content {
+    direction: rtl;
+}
+
+.main-menu .navigation {
+    direction: ltr;
+}
+
+.main-menu .navigation .nav-item a {
+    justify-content: flex-end;
+}
+
+.main-menu .navigation .nav-item a i {
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+{% else %}
+/* Стиль для меню слева (по умолчанию) */
+.app-content.content {
+    margin-left: 260px;
+}
+
+.header-navbar {
+    left: 270px;
+    right: 32px;
+}
+{% endif %}
+</style>
+{% block admin_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+
+{% if user.role == 'manager' %}
+    {% include "includes/sidebar_manager.html" %}
+{% else %}
+    {% include "includes/sidebar_admin_role_based.html" %}
+{% endif %}
+
+<div class="content-overlay" id="contentOverlay"></div>
+
+<div class="app-content content">
+    <div class="content-wrapper">
+        {% include "includes/messages.html" %}
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<footer class="footer footer-static footer-light">
+    <p class="clearfix mb-0">
+        <span class="float-md-left d-block d-md-inline-block mt-25">
+            COPYRIGHT  © 2024 ОкууTrack
+        </span>
+        <span class="float-md-right d-none d-lg-block mt-25">
+            Hand-crafted & Made with<i class="bi bi-heart text-danger"></i> by ОкууTrack
+        </span>
+    </p>
+</footer>
+
+{% block admin_extra_js %}{% endblock %}
+{% endblock %}

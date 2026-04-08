@@ -1,0 +1,170 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}Чек об оплате #{{ receipt_number }}{% endblock %}
+{% block content %}
+{% if standalone %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Чек об оплате #{{ receipt_number }}</h4>
+        <div>
+            <button onclick="window.print()" class="btn btn-primary btn-sm me-2">
+                <i class="bi bi-printer me-1"></i>Печать
+            </button>
+            <a href="{% url 'payments:create' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Назад
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="{% if standalone %}container{% else %}mx-auto{% endif %}" {% if not standalone %}style="max-width: 400px;"{% endif %}>
+    <div class="receipt">
+        <!-- Название организации -->
+        <div class="header">
+            {{ organization.organization_name }}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Информация о чеке -->
+        <div class="info-row receipt-number">
+            Чек #: {{ receipt_number }}
+        </div>
+        <div class="info-row">
+            Компания: {{ organization.organization_type }} {{ organization.organization_name }}
+        </div>
+        <div class="info-row">
+            ИНН: {{ organization.inn }}
+        </div>
+        <div class="info-row">
+            {% if organization.tax_per_receipt > 0 %}
+            Налог: {{ organization.tax_per_receipt }}%
+            {% else %}
+            Налог: -
+            {% endif %}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Наименование товаров -->
+        <div class="items">
+            <div style="font-weight: bold; margin-bottom: 10px;">Наименование товаров:</div>
+            
+            <div class="item">
+                <span>{{ payment.course.title }} ({{ payment.month_count }} мес.)</span>
+                <span>{{ payment.amount|floatformat:2 }}</span>
+            </div>
+            
+            {% if organization.tax_per_receipt > 0 %}
+            <div class="item">
+                <span>Налог ({{ organization.tax_per_receipt }}%)</span>
+                <span>{{ tax_amount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Итого -->
+        <div class="total">
+            <div class="item">
+                <span>ИТОГО:</span>
+                <span>
+                    {% if organization.tax_per_receipt > 0 %}
+                        {{ total_with_tax|floatformat:2 }}
+                    {% else %}
+                        {{ payment.amount|floatformat:2 }}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Дополнительная информация -->
+        <div class="info-row">
+            Студент: {{ payment.student.full_name }}
+        </div>
+        <div class="info-row">
+            Дата оплаты: {{ payment.paid_at|date:"d.m.Y" }}
+        </div>
+        <div class="info-row">
+            Способ оплаты: {{ payment.payment_method.name|default:"—" }}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="footer">
+            Чек сформирован: {{ current_date }}<br>
+            Спасибо за оплату!
+        </div>
+    </div>
+</div>
+
+<style>
+.receipt {
+    font-family: 'Courier New', monospace;
+    border: 1px solid #333;
+    padding: 20px;
+    background: white;
+    {% if standalone %}
+    max-width: 400px;
+    margin: 0 auto;
+    {% endif %}
+}
+.header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+.divider {
+    border-top: 2px dashed #333;
+    margin: 15px 0;
+}
+.info-row {
+    margin: 5px 0;
+    font-size: 12px;
+}
+.receipt-number {
+    font-size: 14px;
+    font-weight: bold;
+}
+.items {
+    margin: 15px 0;
+}
+.item {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-size: 12px;
+}
+.total {
+    font-weight: bold;
+    font-size: 14px;
+    border-top: 1px solid #333;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 10px;
+    color: #666;
+}
+@media print {
+    body { 
+        padding: 0; 
+        background: white !important;
+    }
+    .receipt { 
+        border: none; 
+        box-shadow: none;
+    }
+    {% if standalone %}
+    .container > .d-flex {
+        display: none !important;
+    }
+    {% endif %}
+}
+</style>
+{% endblock %}

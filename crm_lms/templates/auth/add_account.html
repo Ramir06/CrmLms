@@ -1,0 +1,72 @@
+{% extends "base/admin_base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">
+                    <i class="bi bi-person-plus me-2"></i>
+                    Добавить аккаунт
+                </h4>
+                <a href="{% url 'accounts:manage_accounts' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Назад к аккаунтам
+                </a>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Логин пользователя</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="form-text">Введите логин аккаунта, который хотите добавить</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Пароль</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="form-text">Пароль не сохраняется, используется только для проверки</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Название аккаунта</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="Например: Рабочий аккаунт">
+                        <div class="form-text">Как будет отображаться этот аккаунт в списке</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Важно:</strong> Вы не можете добавить свой текущий аккаунт или уже добавленный аккаунт.
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Добавить аккаунт
+                        </button>
+                        <a href="{% url 'accounts:manage_accounts' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,578 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='courses' %}">Courses</a>
+&rsaquo; <a href="{% url 'admin:courses_course_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; <a href="{% url 'admin:courses_course_change' course.id %}">{{ course.title }}</a>
+&rsaquo; {% trans 'Students' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module">
+        <h2>{% trans 'Students of course' %} "{{ course.title }}"</h2>
+        
+        {% if course.is_unlimited %}
+            <p>{% trans 'This is an unlimited course. Students use tickets for attendance.' %}</p>
+            
+            <div class="students-layout">
+                <div class="students-table-container">
+                    <div class="results">
+                        <table id="result_list">
+                            <thead>
+                                <tr>
+                                    <th scope="col">{% trans 'Full Name' %}</th>
+                                    <th scope="col">{% trans 'Phone' %}</th>
+                                    <th scope="col">{% trans 'Tickets' %}</th>
+                                    <th scope="col">{% trans 'Status' %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student_data in students_data %}
+                                <tr class="{% cycle 'row1' 'row2' %} student-row" data-cs-id="{{ student_data.cs_id }}">
+                                    <td>{{ student_data.student.full_name }}</td>
+                                    <td>{{ student_data.phone|default:"-" }}</td>
+                                    <td>
+                                        <span class="ticket-count" data-cs-id="{{ student_data.cs_id }}">
+                                            {{ student_data.tickets }}
+                                        </span>
+                                    </td>
+                                    <td>{{ student_data.status }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="student-details-panel" id="studentDetailsPanel">
+                    <div class="panel-placeholder">
+                        <p>Выберите студента для просмотра деталей</p>
+                    </div>
+                    <div class="panel-content" id="panelContent" style="display: none;">
+                        <!-- Детали студента будут загружены сюда -->
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p>{% trans 'This is a regular course. Please use the standard CourseStudent admin interface.' %}</p>
+        {% endif %}
+    </div>
+</div>
+
+
+<!-- Modal for adding tickets -->
+<div id="addTicketsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>{% trans 'Add Tickets' %}</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="addTicketsForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="studentName">{% trans 'Student' %}:</label>
+                        <input type="text" id="studentName" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="courseName">{% trans 'Course' %}:</label>
+                        <input type="text" id="courseName" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="issueDate">{% trans 'Issue Date' %}:</label>
+                        <input type="datetime-local" id="issueDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tariff">{% trans 'Tariff' %}:</label>
+                        <select id="tariff" required>
+                            <option value="">Select tariff...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="lessonsCount">{% trans 'Number of Lessons' %}:</label>
+                        <input type="number" id="lessonsCount" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pricePerLesson">{% trans 'Price per Lesson' %}:</label>
+                        <input type="text" id="pricePerLesson" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="totalPrice">{% trans 'Total Price' %}:</label>
+                        <input type="text" id="totalPrice" readonly>
+                    </div>
+                </div>
+                <input type="hidden" id="courseStudentId">
+                <div class="submit-row">
+                    <button type="submit" class="default">{% trans 'Add' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.students-layout {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.students-table-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.student-details-panel {
+    width: 400px;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 20px;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+}
+
+.panel-placeholder {
+    text-align: center;
+    color: #666;
+    padding: 40px 20px;
+}
+
+.panel-content {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.student-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.student-row:hover {
+    background-color: #f0f0f0 !important;
+}
+
+.student-row.selected {
+    background-color: #e6f2ff !important;
+    border-left: 4px solid #007cba;
+}
+
+.student-details-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.student-details-section h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.student-details-section p {
+    margin: 5px 0;
+    color: #555;
+}
+
+.ticket-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.ticket-count {
+    font-size: 24px;
+    font-weight: bold;
+    color: #007cba;
+}
+
+.add-tickets-btn {
+    background-color: #28a745;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 1;
+    display: inline-block;
+}
+
+.add-tickets-btn:hover {
+    background-color: #218838;
+}
+
+.history-link {
+    color: #007cba;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.history-link:hover {
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 0;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 5px;
+}
+
+.modal-header {
+    background-color: #f8f8f8;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-row {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.submit-row {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.submit-row button {
+    background-color: #007cba;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.submit-row button:hover {
+    background-color: #005a87;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addTicketsModal = document.getElementById('addTicketsModal');
+    const closeBtns = document.getElementsByClassName('close');
+    const panelPlaceholder = document.querySelector('.panel-placeholder');
+    const panelContent = document.getElementById('panelContent');
+    
+    // Close modals
+    for (let btn of closeBtns) {
+        btn.onclick = function() {
+            addTicketsModal.style.display = 'none';
+        }
+    }
+    
+    // Student row clicks
+    document.querySelectorAll('.student-row').forEach(row => {
+        row.addEventListener('click', function() {
+            // Remove previous selection
+            document.querySelectorAll('.student-row').forEach(r => r.classList.remove('selected'));
+            
+            // Add selection to current row
+            this.classList.add('selected');
+            
+            // Load student details
+            const csId = this.getAttribute('data-cs-id');
+            loadStudentDetails(csId);
+        });
+    });
+    
+    function loadStudentDetails(csId) {
+        fetch(`/admin/courses/student-details/${csId}/`)
+            .then(response => response.json())
+            .then(data => {
+                displayStudentDetails(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                panelPlaceholder.style.display = 'block';
+                panelContent.style.display = 'none';
+            });
+    }
+    
+    function displayStudentDetails(data) {
+        // Hide placeholder and show content
+        panelPlaceholder.style.display = 'none';
+        panelContent.style.display = 'block';
+        
+        let accountStatus = data.has_account ? 'Есть' : 'Нет';
+        let ticketsHtml = '';
+        
+        if (data.is_unlimited_course) {
+            ticketsHtml = `
+                <div class="student-details-section">
+                    <h4>Талоны</h4>
+                    <div class="ticket-info">
+                        <span class="ticket-count">${data.remaining_tickets}</span>
+                        <a href="#" class="add-tickets-btn" onclick="showAddTicketsModal(${data.cs_id}, '${data.student_name}', '${data.course_title}', ${data.remaining_tickets}); return false;">+</a>
+                        <a href="#" class="history-link" onclick="showTicketHistory(${data.cs_id}); return false;">История ></a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        panelContent.innerHTML = `
+            <div class="student-details-section">
+                <h4>ФИО</h4>
+                <p>${data.student_name}</p>
+            </div>
+            <div class="student-details-section">
+                <h4>Аккаунт</h4>
+                <p>${accountStatus}</p>
+            </div>
+            <div class="student-details-section">
+                <h4>Название текущего курса</h4>
+                <p>${data.course_title}</p>
+            </div>
+            ${ticketsHtml}
+        `;
+    }
+    
+    window.showTicketHistory = function(csId) {
+        fetch(`/admin/courses/ticket-history/${csId}/`)
+            .then(response => response.json())
+            .then(data => {
+                displayTicketHistory(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading ticket history');
+            });
+    }
+    
+    function displayTicketHistory(transactions) {
+        // Создаем модальное окно для истории
+        const modalHtml = `
+            <div id="ticketHistoryModal" class="modal" style="display: block;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>История покупок талонов</h3>
+                        <span class="close" onclick="closeTicketHistory()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <table id="result_list">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Тип</th>
+                                    <th>Количество</th>
+                                    <th>Цена за талон</th>
+                                    <th>Комментарий</th>
+                                    <th>Создал</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${transactions.map(t => `
+                                    <tr class="${transactions.indexOf(t) % 2 === 0 ? 'row1' : 'row2'}">
+                                        <td>${t.created_at}</td>
+                                        <td>${t.type}</td>
+                                        <td>${t.quantity > 0 ? '+' : ''}${t.quantity}</td>
+                                        <td>${t.price_per_ticket ? t.price_per_ticket + ' сом' : '-'}</td>
+                                        <td>${t.comment || '-'}</td>
+                                        <td>${t.created_by}</td>
+                                    </tr>
+                                `).join('')}
+                                ${transactions.length === 0 ? '<tr><td colspan="6" style="text-align: center;">История пуста</td></tr>' : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Добавляем модальное окно на страницу
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHtml;
+        document.body.appendChild(modalContainer);
+    }
+    
+    window.closeTicketHistory = function() {
+        const modal = document.getElementById('ticketHistoryModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+    window.showAddTicketsModal = function(csId, studentName, courseTitle, currentTickets) {
+        document.getElementById('courseStudentId').value = csId;
+        document.getElementById('studentName').value = studentName;
+        document.getElementById('courseName').value = courseTitle;
+        
+        // Set current date/time
+        const now = new Date();
+        const dateTimeLocal = now.toISOString().slice(0, 16);
+        document.getElementById('issueDate').value = dateTimeLocal;
+        
+        // Load tariffs
+        loadTariffs();
+        
+        addTicketsModal.style.display = 'block';
+    }
+    
+    function loadTariffs() {
+        fetch('/admin/courses/tariffs/')
+            .then(response => response.json())
+            .then(tariffs => {
+                const select = document.getElementById('tariff');
+                select.innerHTML = '<option value="">Select tariff...</option>';
+                
+                tariffs.forEach(tariff => {
+                    const option = document.createElement('option');
+                    option.value = tariff.id;
+                    option.textContent = `${tariff.title} - ${tariff.lessons_count} зан. (${tariff.total_price} сом)`;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading tariffs:', error);
+            });
+    }
+    
+    // Handle tariff selection
+    document.getElementById('tariff').addEventListener('change', function() {
+        const tariffId = this.value;
+        if (tariffId) {
+            fetch(`/admin/courses/tariff/${tariffId}/`)
+                .then(response => response.json())
+                .then(tariff => {
+                    document.getElementById('lessonsCount').value = tariff.lessons_count;
+                    document.getElementById('pricePerLesson').value = tariff.price_per_lesson + ' сом';
+                    document.getElementById('totalPrice').value = tariff.total_price + ' сом';
+                })
+                .catch(error => {
+                    console.error('Error loading tariff details:', error);
+                });
+        } else {
+            document.getElementById('lessonsCount').value = '';
+            document.getElementById('pricePerLesson').value = '';
+            document.getElementById('totalPrice').value = '';
+        }
+    });
+    
+    // Handle form submission
+    document.getElementById('addTicketsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append('course_student_id', document.getElementById('courseStudentId').value);
+        formData.append('tariff_id', document.getElementById('tariff').value);
+        formData.append('issue_date', document.getElementById('issueDate').value);
+        
+        fetch('/admin/courses/add-tickets/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Tickets added successfully!');
+                addTicketsModal.style.display = 'none';
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding tickets');
+        });
+    });
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

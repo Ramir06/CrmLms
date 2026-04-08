@@ -1,0 +1,259 @@
+{% extends "codecoins/admin/base.html" %}
+
+{% block title %}Кодкойны - Админка{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Кодкойны</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Главная</a></li>
+                    <li class="breadcrumb-item active">Кодкойны</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Кнопки управления -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if setting.is_open %}
+                                <form method="post" action="{% url 'codecoins_admin:admin_toggle_withdrawal' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="close">
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="bi bi-lock"></i> Закрыть вывод кодкойнов
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="{% url 'codecoins_admin:admin_toggle_withdrawal' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="open">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-unlock"></i> Открыть вывод кодкойнов
+                                    </button>
+                                </form>
+                                <a href="{% url 'codecoins_admin:admin_set_next_date' %}" class="btn btn-info">
+                                    <i class="bi bi-calendar"></i> Установить дату следующего вывода
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'codecoins_admin:admin_transactions' %}" class="btn btn-primary">
+                                <i class="bi bi-list-ul"></i> Все операции
+                            </a>
+                            <a href="{% url 'codecoins_admin:admin_withdrawal_requests' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-right-circle"></i> Заявки на вывод ({{ total_pending }})
+                            </a>
+                            <a href="{% url 'codecoins_admin:admin_scales' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-sliders"></i> Шкалы начислений
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статус вывода -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="stats-card">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="stats-label">Статус вывода</div>
+                            <div class="stats-number">
+                                {% if setting.is_open %}
+                                    <span class="text-success">Открыт</span>
+                                {% else %}
+                                    <span class="text-warning">Закрыт</span>
+                                {% endif %}
+                            </div>
+                            {% if setting.next_open_at %}
+                                <div class="text-muted small">
+                                    Следующее открытие: {{ setting.next_open_at|date:"d.m.Y H:i" }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="ms-3">
+                            {% if setting.is_open %}
+                                <i class="bi bi-unlock-fill text-success" style="font-size: 3rem;"></i>
+                            {% else %}
+                                <i class="bi bi-lock-fill text-warning" style="font-size: 3rem;"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stats-card">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="stats-label">Заявок в ожидании</div>
+                            <div class="stats-number">{{ total_pending }}</div>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-clock-history text-info" style="font-size: 3rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Заявки на вывод -->
+        {% if pending_requests %}
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-arrow-right-circle"></i> Заявки на вывод
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ФИО</th>
+                                        <th>Сумма</th>
+                                        <th>Способ вывода</th>
+                                        <th>Телефон</th>
+                                        <th>Дата заявки</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for req in pending_requests %}
+                                    <tr>
+                                        <td>{{ req.student.full_name }}</td>
+                                        <td class="coin-negative">{{ req.amount }}</td>
+                                        <td>{{ req.get_payout_method_display }}</td>
+                                        <td>{{ req.phone_number }}</td>
+                                        <td>{{ req.created_at|date:"d.m.Y H:i" }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <form method="post" action="{% url 'codecoins_admin:admin_process_withdrawal' req.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="approve">
+                                                    <button type="submit" class="btn btn-sm btn-success" 
+                                                            onclick="return confirm('Подтвердить вывод {{ req.amount }} кодкойнов?')">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#rejectModal{{ req.id }}">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- Модальное окно отклонения -->
+                                            <div class="modal fade" id="rejectModal{{ req.id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Отклонить заявку</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <form method="post" action="{% url 'codecoins_admin:admin_process_withdrawal' req.id %}">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="reject">
+                                                            <div class="modal-body">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Причина отклонения</label>
+                                                                    <textarea name="rejection_reason" class="form-control" rows="3" required></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                                                <button type="submit" class="btn btn-danger">Отклонить</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Последние операции -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-clock-history"></i> Последние операции
+                        </h3>
+                        <a href="{% url 'codecoins_admin:admin_transactions' %}" class="btn btn-sm btn-primary float-end">
+                            Все операции
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Сумма</th>
+                                        <th>Студент</th>
+                                        <th>Тип операции</th>
+                                        <th>Описание</th>
+                                        <th>Дата</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trans in recent_transactions %}
+                                    <tr class="transaction-{% if trans.is_income %}income{% else %}expense{% endif %}">
+                                        <td class="{% if trans.is_income %}coin-positive{% else %}coin-negative{% endif %}">
+                                            {% if trans.is_income %}+{% endif %}{{ trans.amount }}
+                                        </td>
+                                        <td>{{ trans.wallet.student.full_name }}</td>
+                                        <td>{{ trans.get_transaction_type_display }}</td>
+                                        <td>{{ trans.description|truncatechars:50 }}</td>
+                                        <td>{{ trans.created_at|date:"d.m.Y H:i" }}</td>
+                                        <td>
+                                            {% if not trans.is_cancelled and trans.transaction_type not in 'withdrawal_approved,withdrawal_rejected' %}
+                                                <a href="{% url 'codecoins_admin:admin_cancel_transaction' trans.id %}" 
+                                                   class="btn btn-sm btn-outline-warning"
+                                                   onclick="return confirm('Отменить эту операцию?')">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Отменить
+                                                </a>
+                                            {% elif trans.is_cancelled %}
+                                                <span class="badge bg-secondary">Отменена</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p>Операций пока нет</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

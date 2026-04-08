@@ -3,13 +3,11 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block breadcrumb %}
-<div class="st-breadcrumb">
-    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
-    <span class="sep">/</span>
-    <a href="{% url 'students:schedule' %}">{% trans "Расписание" %}</a>
-    <span class="sep">/</span>
-    <span class="current">{{ lesson.title|default:"Занятие"|truncatechars:30 }}</span>
-</div>
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">{{ page_title }}</li>
+    <li class="breadcrumb-item"><a href="{% url 'students:schedule' %}">{% trans "Расписание" %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a></li>
+</ol>
 {% endblock %}
 
 {% block content %}

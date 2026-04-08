@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}Сообщение отправлено{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header row">
+        <div class="content-header-left col-md-9 col-12 mb-2">
+            <div class="row breadcrumbs-top">
+                <div class="col-12">
+                    <h2 class="content-header-title float-left mb-0">Сообщение отправлено</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-body">
+        <div class="row">
+            <div class="col-lg-6 col-12 mx-auto">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        
+                        <h3 class="card-title mb-3">Спасибо за ваше сообщение!</h3>
+                        
+                        <p class="card-text text-muted mb-4">
+                            Мы получили вашу обратную связь и обязательно изучим её. 
+                            Если вы указали email, мы свяжемся с вами в ближайшее время.
+                        </p>
+                        
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="{% url 'feedback:feedback_list' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Отправить ещё сообщение
+                            </a>
+                            <a href="/" class="btn btn-secondary">
+                                <i class="bi bi-house me-2"></i>На главную
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-clock-history me-2"></i>Что дальше?
+                        </h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-check2 text-success me-2"></i>
+                                Ваше сообщение отправлено команде поддержки
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check2 text-success me-2"></i>
+                                Мы изучим его в течение нескольких часов
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check2 text-success me-2"></i>
+                                При необходимости свяжемся с вами для уточнения деталей
+                            </li>
+                            <li>
+                                <i class="bi bi-check2 text-success me-2"></i>
+                                Ваши идеи помогают нам делать платформу лучше!
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        {{ page_title }}
+                        <small class="text-muted">- {{ salary.month|date:"F Y" }}</small>
+                    </h4>
+                    <a href="{% url 'salaries:list' %}" class="btn btn-outline-secondary float-end">
+                        <i class="bi bi-arrow-left"></i> Назад
+                    </a>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Общая информация -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Общая сумма</h5>
+                                    <h3 class="mb-0">{{ salary.amount|floatformat:2 }} ₽</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Всего часов</h5>
+                                    <h3 class="mb-0">{{ details.total_hours|floatformat:1 }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Проведено уроков</h5>
+                                    <h3 class="mb-0">{{ details.total_lessons }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Уроков с заменой</h5>
+                                    <h3 class="mb-0">{{ details.substituted_lessons }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Детали по курсам -->
+                    <div class="accordion" id="coursesAccordion">
+                        {% for course_detail in details.courses %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                        <span>
+                                            <i class="bi bi-book me-2"></i>
+                                            {{ course_detail.course.title }}
+                                        </span>
+                                        <div class="badge bg-primary">
+                                            {{ course_detail.amount|floatformat:2 }} ₽
+                                        </div>
+                                    </div>
+                                    <small class="text-muted me-3">
+                                        Тип оплаты: {% if course_detail.salary_type == 'hourly' %}Почасовая{% elif course_detail.salary_type == 'monthly' %}Фиксированная{% else %}За курс{% endif %}
+                                    </small>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" 
+                                 aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#coursesAccordion">
+                                <div class="accordion-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <strong>Курс:</strong> {{ course_detail.course.title }}<br>
+                                            <strong>Тип оплаты:</strong> 
+                                            {% if course_detail.salary_type == 'hourly' %}
+                                                Почасовая ({{ course_detail.course.hourly_rate|floatformat:2 }} ₽/час)
+                                            {% elif course_detail.salary_type == 'monthly' %}
+                                                Фиксированная
+                                            {% else %}
+                                                За курс
+                                            {% endif %}<br>
+                                            <strong>Сумма по курсу:</strong> {{ course_detail.amount|floatformat:2 }} ₽<br>
+                                            <strong>Часов по курсу:</strong> {{ course_detail.hours|floatformat:1 }}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Таблица уроков -->
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Дата</th>
+                                                    <th>Время</th>
+                                                    <th>Длительность</th>
+                                                    <th>Статус</th>
+                                                    <th>Ментор</th>
+                                                    <th>Замена</th>
+                                                    <th>Засчитано</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for lesson in course_detail.lessons %}
+                                                <tr class="{% if lesson.earned_by_mentor %}table-success{% elif lesson.status == 'cancelled' %}table-danger{% endif %}">
+                                                    <td>{{ lesson.date|date:"d.m.Y" }}</td>
+                                                    <td>{{ lesson.time }}</td>
+                                                    <td>{{ lesson.duration|floatformat:1 }}ч</td>
+                                                    <td>
+                                                        {% if lesson.status == 'completed' %}
+                                                            <span class="badge bg-success">Проведено</span>
+                                                        {% elif lesson.status == 'cancelled' %}
+                                                            <span class="badge bg-danger">Отменено</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">{{ lesson.status }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ lesson.mentor.get_full_name }}</td>
+                                                    <td>
+                                                        {% if lesson.is_substituted %}
+                                                            <span class="badge bg-warning">Да</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Нет</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if lesson.earned_by_mentor %}
+                                                            <i class="bi bi-check-circle text-success"></i> Да
+                                                        {% else %}
+                                                            <i class="bi bi-x-circle text-danger"></i> Нет
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Информация о расчете -->
+                    <div class="alert alert-info mt-4">
+                        <h5><i class="bi bi-info-circle me-2"></i>Информация о расчете</h5>
+                        <p class="mb-2">
+                            <strong>Метод расчета:</strong> {{ salary.comment }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Отмененные уроки:</strong> {{ details.cancelled_lessons }} (не учитываются в расчете)
+                        </p>
+                        <p class="mb-0">
+                            <strong>Уроки с заменой:</strong> {{ details.substituted_lessons }} (часы засчитываются заменяющему ментору)
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

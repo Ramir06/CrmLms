@@ -1,0 +1,445 @@
+{% extends "codecoins/mentor/base.html" %}
+
+{% block extra_css %}
+<style>
+.mass-accrual-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.student-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #7367F0;
+    transition: all 0.3s ease;
+}
+
+.student-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.student-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.student-name {
+    font-weight: 600;
+    color: #2C2C2C;
+    font-size: 1.1rem;
+}
+
+.student-meta {
+    color: #6E6B7B;
+    font-size: 0.9rem;
+}
+
+.scale-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.scale-option {
+    background: #F8F9FA;
+    border: 2px solid #E9ECEF;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.scale-option:hover {
+    border-color: #7367F0;
+    background: rgba(115, 103, 240, 0.05);
+}
+
+.scale-option.selected {
+    border-color: #7367F0;
+    background: linear-gradient(135deg, rgba(115, 103, 240, 0.1), rgba(115, 103, 240, 0.05));
+}
+
+.scale-value {
+    font-weight: 600;
+    color: #7367F0;
+}
+
+.scale-value.negative {
+    color: #EA5455;
+}
+
+.description-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #E9ECEF;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.description-input:focus {
+    outline: none;
+    border-color: #7367F0;
+    box-shadow: 0 0 0 0.2rem rgba(115, 103, 240, 0.25);
+}
+
+.batch-info {
+    background: linear-gradient(135deg, rgba(115, 103, 240, 0.05), rgba(115, 103, 240, 0.02));
+    border: 1px solid rgba(115, 103, 240, 0.2);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.batch-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.batch-date {
+    font-weight: 600;
+    color: #7367F0;
+}
+
+.batch-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.batch-status.draft {
+    background: #FFE4B5;
+    color: #856404;
+}
+
+.batch-status.ready {
+    background: #D4EDDA;
+    color: #155724;
+}
+
+.students-grid {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.students-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.students-grid::-webkit-scrollbar-track {
+    background: #F8F9FA;
+    border-radius: 3px;
+}
+
+.students-grid::-webkit-scrollbar-thumb {
+    background: #CBD5E0;
+    border-radius: 3px;
+}
+
+.students-grid::-webkit-scrollbar-thumb:hover {
+    background: #A0AEC0;
+}
+
+.form-control:focus {
+    border-color: #7367F0;
+    box-shadow: 0 0 0 0.2rem rgba(115, 103, 240, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #6458f0, #8e7be8);
+    border: none;
+}
+
+.btn-secondary {
+    background: #6E6B7B;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: #5A575F;
+    border: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28C76F, #48BB78);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #20B867, #38A169);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #FF9F43, #FDBA4C);
+    border: none;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #FF8F23, #FDB03C);
+    border: none;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(91, 192, 235, 0.1), rgba(91, 192, 235, 0.05));
+    border: 1px solid rgba(91, 192, 235, 0.3);
+    color: #0C5460;
+}
+
+.progress-info {
+    background: #F8F9FA;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.progress-stat {
+    flex: 1;
+}
+
+.progress-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #7367F0;
+}
+
+.progress-label {
+    font-size: 0.85rem;
+    color: #6E6B7B;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block title %}Массовое начисление - Кодкойны{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Массовое начисление кодкойнов</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'codecoins_mentor:mentor_course_codecoins' course.id %}">Кодкойны</a></li>
+                    <li class="breadcrumb-item active">Массовое начисление</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <!-- Информация о пакете -->
+                <div class="batch-info">
+                    <div class="batch-meta">
+                        <div>
+                            <h4 class="mb-1">
+                                <i class="bi bi-calendar3 me-2"></i>{{ batch.lesson_date|date:"d.m.Y" }}
+                            </h4>
+                            {% if batch.comment %}
+                                <p class="mb-0 text-muted">{{ batch.comment }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="batch-status {% if batch.items.exists %}ready{% else %}draft{% endif %}">
+                            {% if batch.items.exists %}Готов к применению{% else %}Черновик{% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="progress-info">
+                        <div class="progress-stats">
+                            <div class="progress-stat">
+                                <div class="progress-number">{{ batch.items.count }}</div>
+                                <div class="progress-label">Студентов в пакете</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-number">{{ total_students }}</div>
+                                <div class="progress-label">Всего студентов</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-number">
+    {% if total_students > 0 %}
+        {% widthratio batch.items.count total_students 100 %}%
+    {% else %}
+        0%
+    {% endif %}
+</div>
+                                <div class="progress-label">Заполнено</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mass-accrual-form">
+                    <form method="post" id="massAccrualForm">
+                        {% csrf_token %}
+                        
+                        <!-- Студенты -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h4 class="mb-3">
+                                    <i class="bi bi-people me-2"></i>Студенты курса
+                                </h4>
+                                
+                                {% if students %}
+                                    <div class="students-grid">
+                                        {% for student in students %}
+                                            {% with item=batch.items.filter|first %}
+                                            <div class="student-item">
+                                                <div class="student-header">
+                                                    <div>
+                                                        <div class="student-name">{{ student.full_name }}</div>
+                                                        <div class="student-meta">{{ student.phone }}</div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        {% if item %}
+                                                            <span class="badge bg-success">Добавлен в пакет</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Не в пакете</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="scale-selector">
+                                                    {% for scale in scales %}
+                                                    <div class="scale-option {% if item and item.scale_id == scale.id %}selected{% endif %}" 
+                                                         data-student="{{ student.id }}" data-scale="{{ scale.id }}">
+                                                        <div class="scale-value {% if scale.value < 0 %}negative{% endif %}">
+                                                            {% if scale.value > 0 %}+{% endif %}{{ scale.value }}
+                                                        </div>
+                                                        <div>{{ scale.title }}</div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                                
+                                                <input type="text" 
+                                                       class="description-input" 
+                                                       name="description_{{ student.id }}"
+                                                       placeholder="Комментарий (опционально)"
+                                                       {% if item %}value="{{ item.description }}"{% endif %}>
+                                                
+                                                <input type="hidden" name="student_{{ student.id }}" value="{{ student.id }}">
+                                            </div>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center text-muted py-5">
+                                        <i class="bi bi-people" style="font-size: 4rem;"></i>
+                                        <h4 class="mt-3">Студенты не найдены</h4>
+                                        <p>На этом курсе нет активных студентов</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Кнопки действий -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <a href="{% url 'codecoins_mentor:mentor_course_codecoins' course.id %}" class="btn btn-secondary">
+                                            <i class="bi bi-arrow-left me-2"></i>Назад
+                                        </a>
+                                        {% if batch.items.exists %}
+                                            <button type="submit" name="action" value="save" class="btn btn-warning">
+                                                <i class="bi bi-save me-2"></i>Сохранить изменения
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <button type="submit" name="action" value="apply" class="btn btn-success">
+                                            <i class="bi bi-check-circle me-2"></i>Применить начисления
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scaleOptions = document.querySelectorAll('.scale-option');
+    
+    scaleOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const studentId = this.dataset.student;
+            const scaleId = this.dataset.scale;
+            
+            // Убираем выделение с других опций этого студента
+            document.querySelectorAll(`.scale-option[data-student="${studentId}"]`).forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Выделяем текущую опцию
+            this.classList.add('selected');
+        });
+    });
+    
+    // Предотвращаем отправку формы без выбора шкалы
+    const form = document.getElementById('massAccrualForm');
+    form.addEventListener('submit', function(e) {
+        const action = e.submitter.value;
+        
+        if (action === 'apply') {
+            const students = document.querySelectorAll('.student-item');
+            let hasSelections = true;
+            
+            students.forEach(student => {
+                const selected = student.querySelectorAll('.scale-option.selected');
+                if (selected.length === 0) {
+                    hasSelections = false;
+                }
+            });
+            
+            if (!hasSelections) {
+                e.preventDefault();
+                alert('Пожалуйста, выберите шкалу начисления для каждого студента');
+                return false;
+            }
+            
+            if (!confirm('Применить начисления кодкойнов? Это действие нельзя будет отменить.')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

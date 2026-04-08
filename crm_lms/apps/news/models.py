@@ -8,6 +8,7 @@ class News(TimeStampedModel):
         ('all', 'Все'),
         ('admins', 'Администраторы'),
         ('mentors', 'Менторы'),
+        ('students', 'Студенты'),
     ]
 
     title = models.CharField(max_length=300, verbose_name='Заголовок')
@@ -19,6 +20,10 @@ class News(TimeStampedModel):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
         related_name='created_news', verbose_name='Автор'
+    )
+    organization = models.ForeignKey(
+        'organizations.Organization', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name='Организация'
     )
 
     class Meta:

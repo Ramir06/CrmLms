@@ -1,0 +1,386 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block page_title %}История действий{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stats-card h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.stats-card p {
+    margin: 5px 0 0 0;
+    opacity: 0.9;
+}
+
+.filter-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.action-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-table th {
+    background: #495057;
+    color: white;
+    border: none;
+    padding: 12px 15px;
+    font-weight: 500;
+}
+
+.action-table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.action-type-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.action-type-create { background: #d4edda; color: #155724; }
+.action-type-update { background: #cce5ff; color: #004085; }
+.action-type-delete { background: #f8d7da; color: #721c24; }
+.action-type-login { background: #d1ecf1; color: #0c5460; }
+.action-type-logout { background: #e2e3e5; color: #383d41; }
+.action-type-view { background: #fff3cd; color: #856404; }
+.action-type-export { background: #d4edda; color: #155724; }
+.action-type-import { background: #cce5ff; color: #004085; }
+.action-type-other { background: #e2e3e5; color: #383d41; }
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.pagination {
+    margin-top: 20px;
+}
+
+.top-users-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.top-users-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.top-users-list li:last-child {
+    border-bottom: none;
+}
+
+.user-count {
+    background: #007bff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок страницы -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">
+                <i class="bi bi-clock-history me-2"></i>
+                История действий
+            </h2>
+            <p class="text-muted">Полный лог всех действий пользователей в системе</p>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>{{ stats.total_actions }}</h3>
+                <p>Всего действий</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>{{ stats.actions_last_24h }}</h3>
+                <p>За 24 часа</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>{{ stats.actions_last_7d }}</h3>
+                <p>За 7 дней</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>{{ stats.actions_last_30d }}</h3>
+                <p>За 30 дней</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Фильтры -->
+        <div class="col-md-3">
+            <div class="filter-section">
+                <h5 class="mb-3">
+                    <i class="bi bi-funnel me-2"></i>
+                    Фильтры
+                </h5>
+                <form method="GET" id="filter-form">
+                    <!-- Поиск -->
+                    <div class="mb-3">
+                        <label for="search" class="form-label">Поиск</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ filters.search }}" placeholder="Поиск по действию...">
+                    </div>
+
+                    <!-- Тип действия -->
+                    <div class="mb-3">
+                        <label for="action_type" class="form-label">Тип действия</label>
+                        <select class="form-select" id="action_type" name="action_type">
+                            <option value="">Все типы</option>
+                            {% for type_value, type_label in action_types %}
+                            <option value="{{ type_value }}" {% if filters.action_type == type_value %}selected{% endif %}>
+                                {{ type_label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Пользователь -->
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">Пользователь</label>
+                        <select class="form-select" id="user_id" name="user_id">
+                            <option value="">Все пользователи</option>
+                            {% for user in users %}
+                            <option value="{{ user.user_id }}" {% if filters.user_id == user.user_id|stringformat:"s" %}selected{% endif %}>
+                                {{ user.user__full_name|default:user.user__username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Организация -->
+                    <div class="mb-3">
+                        <label for="organization_id" class="form-label">Организация</label>
+                        <select class="form-select" id="organization_id" name="organization_id">
+                            <option value="">Все организации</option>
+                            {% for org in organizations %}
+                            <option value="{{ org.id }}" {% if filters.organization_id == org.id|stringformat:"s" %}selected{% endif %}>
+                                {{ org.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Дата от -->
+                    <div class="mb-3">
+                        <label for="date_from" class="form-label">Дата от</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" 
+                               value="{{ filters.date_from }}">
+                    </div>
+
+                    <!-- Дата до -->
+                    <div class="mb-3">
+                        <label for="date_to" class="form-label">Дата до</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" 
+                               value="{{ filters.date_to }}">
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-2"></i>
+                            Применить фильтры
+                        </button>
+                        <a href="{% url 'core:action_history' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            Сбросить
+                        </a>
+                        <a href="{% url 'core:action_history_export' %}" class="btn btn-success">
+                            <i class="bi bi-download me-2"></i>
+                            Экспорт CSV
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Топ пользователей -->
+            {% if stats.top_users %}
+            <div class="filter-section mt-3">
+                <h5 class="mb-3">
+                    <i class="bi bi-trophy me-2"></i>
+                    Самые активные
+                </h5>
+                <ul class="top-users-list">
+                    {% for user in stats.top_users %}
+                    <li>
+                        <span>{{ user.user__full_name|default:user.user__username }}</span>
+                        <span class="user-count">{{ user.count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Таблица действий -->
+        <div class="col-md-9">
+            <div class="action-table">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Время</th>
+                                <th>Автор</th>
+                                <th>Действие</th>
+                                <th>Тип</th>
+                                <th>Филиал</th>
+                                <th>IP-адрес</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in actions %}
+                            <tr>
+                                <td>
+                                    <small>{{ action.created_at|date:"d.m.Y H:i:s" }}</small>
+                                </td>
+                                <td>
+                                    {% if action.user %}
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ action.user.avatar_url }}" alt="Avatar" class="user-avatar">
+                                            <div>
+                                                <div class="fw-bold">{{ action.user.get_display_name }}</div>
+                                                <small class="text-muted">{{ action.user.get_role_display }}</small>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">Аноним</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ action.action }}</div>
+                                    {% if action.description %}
+                                    <small class="text-muted">{{ action.description|truncatechars:100 }}</small>
+                                    {% endif %}
+                                    {% if action.object_type %}
+                                    <br><small class="text-info">{{ action.object_type }}: {{ action.object_repr|truncatechars:50 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="action-type-badge action-type-{{ action.action_type }}">
+                                        {{ action.get_action_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if action.organization %}
+                                        {{ action.organization.name }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code class="small">{{ action.ip_address|default:"-" }}</code>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="bi bi-inbox display-4 text-muted"></i>
+                                    <p class="text-muted mt-2">Действия не найдены</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Пагинация -->
+            {% if is_paginated %}
+            <nav aria-label="Навигация по страницам">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">«</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">»</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Автоматическая отправка формы при изменении select
+document.querySelectorAll('#filter-form select').forEach(select => {
+    select.addEventListener('change', function() {
+        if (this.value !== '') {
+            document.getElementById('filter-form').submit();
+        }
+    });
+});
+
+// Быстрый поиск при вводе (с задержкой)
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        if (this.value.length >= 2 || this.value.length === 0) {
+            document.getElementById('filter-form').submit();
+        }
+    }, 500);
+});
+</script>
+{% endblock %}

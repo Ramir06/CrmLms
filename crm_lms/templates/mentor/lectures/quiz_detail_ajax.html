@@ -1,0 +1,106 @@
+<div class="lec-detail-card">
+    <div class="lec-detail-hdr">
+        <h5><i class="bi bi-patch-question me-2"></i>{{ quiz.title }}</h5>
+        <div class="d-flex gap-2">
+            <a href="{% url 'quizzes:detail' course_id=course.pk quiz_id=quiz.pk %}" 
+               class="btn btn-sm btn-outline-primary" target="_blank">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Открыть
+            </a>
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleVis('quiz', {{ quiz.pk }}, this)">
+                <i class="bi bi-eye{% if not quiz.is_active %}-slash{% endif %}"></i>
+            </button>
+        </div>
+    </div>
+    <div class="lec-detail-body">
+        
+        {% if quiz.description %}
+        <div class="mb-4">
+            <h6><i class="bi bi-file-text me-2"></i>Описание</h6>
+            <div>{{ quiz.description|safe }}</div>
+        </div>
+        {% endif %}
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h6><i class="bi bi-list-ol me-2"></i>Количество вопросов</h6>
+                <p class="fw-bold text-primary">{{ quiz.questions.count }}</p>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="bi bi-clock me-2"></i>Время на прохождение</h6>
+                <p>
+                    {% if quiz.time_limit %}
+                        {{ quiz.time_limit }} минут
+                    {% else %}
+                        <span class="text-muted">Без ограничений</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        {% if quiz.pass_score %}
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h6><i class="bi bi-trophy me-2"></i>Проходной балл</h6>
+                <p class="fw-bold text-success">{{ quiz.pass_score }}%</p>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="bi bi-star me-2"></i>Общий балл</h6>
+                <p class="fw-bold text-primary">{{ quiz.total_points }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="mb-4">
+            <h6><i class="bi bi-question-circle me-2"></i>Типы вопросов</h6>
+            <div class="d-flex flex-wrap gap-2">
+                {% for question_type in quiz.questions.values_list('question_type', flat=True).distinct %}
+                    <span class="badge bg-secondary">
+                        {% if question_type == 'single_choice' %}Одиночный выбор
+                        {% elif question_type == 'multiple_choice' %}Множественный выбор
+                        {% elif question_type == 'text' %}Текстовый ответ
+                        {% elif question_type == 'true_false' %}Да/Нет
+                        {% else %}{{ question_type }}
+                        {% endif %}
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <h6><i class="bi bi-people me-2"></i>Статистика прохождения</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="fw-bold text-primary">{{ quiz.attempts.count }}</div>
+                        <small class="text-muted">Всего попыток</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="fw-bold text-success">{{ quiz.attempts.filter(is_submitted=True).count }}</div>
+                        <small class="text-muted">Завершено</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="fw-bold text-info">{{ quiz.attempts.count }}</div>
+                        <small class="text-muted">Уникальных студентов</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div>
+                <a href="{% url 'quizzes:result' course_id=course.pk quiz_id=quiz.pk %}" 
+                   class="btn btn-sm btn-primary" title="Результаты">
+                    <i class="bi bi-chart-bar"></i>
+                </a>
+                <a href="{% url 'quizzes:edit' course_id=course.pk quiz_id=quiz.pk %}" 
+                   class="btn btn-sm btn-outline-primary" title="Изменить">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

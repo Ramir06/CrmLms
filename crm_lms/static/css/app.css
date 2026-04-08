@@ -102,8 +102,6 @@ body::after {
   background: transparent;
 }
 
-/* ===== VUEXY LAYOUT ===== */
-
 /* ===== SIDEBAR (main-menu) ===== */
 .main-menu {
   position: fixed;
@@ -222,7 +220,7 @@ li.navigation-header {
   align-items: center;
   padding: 10px 15px;
   color: var(--text-body);
-  font-size: 0.85rem;
+  font-size: 16px;
   font-weight: 400;
   text-decoration: none;
   border-radius: 5px;
@@ -240,6 +238,7 @@ li.navigation-header {
   background: var(--primary);
   color: #fff !important;
   font-weight: 500;
+  font-size: 16px;
   box-shadow: 0 0 10px 1px rgba(115, 103, 240, 0.7);
 }
 .navigation-main .nav-item.active > a i {
@@ -302,15 +301,24 @@ ul.menu-content .nav-item > a {
 }
 
 .header-navbar.floating-nav {
-  position: fixed;
-  top: 0;
-  left: var(--sidebar-width);
-  right: 0;
-  z-index: 1030;
-  margin: 1.3rem 2rem 0;
+  position: fixed !important;
+  top: 20px !important;
+  right: 32px !important;
+  left: auto !important;
+  bottom: auto !important;
+  z-index: 9999 !important;
+  margin: 0 !important;
   border-radius: 0.428rem;
   box-shadow: 0 4px 24px 0 rgba(34, 41, 47, 0.1);
-  transition: left 0.25s ease, margin 0.25s ease;
+  transition: all 0.25s ease;
+  max-width: calc(100% - var(--sidebar-width) - 4rem);
+  width: auto;
+}
+
+/* Когда сайдбар скрыт на мобильных */
+.main-menu:not(.menu-open) ~ .app-content .header-navbar.floating-nav,
+body:not(.sidebar-visible) .header-navbar.floating-nav {
+  max-width: calc(100% - 4rem);
 }
 
 .navbar-container {
@@ -320,6 +328,7 @@ ul.menu-content .nav-item > a {
   height: 100%;
   padding: 0 1rem;
 }
+
 .bookmark-wrapper {
   display: flex;
   align-items: center;
@@ -439,9 +448,9 @@ ul.menu-content .nav-item > a {
 
 /* ===== FOOTER ===== */
 .footer {
-  padding: 0.8rem 1.5rem;
-  background: #fff;
-  border-top: 1px solid var(--border-color);
+  padding: 1rem 2rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
   font-size: 12px;
   color: var(--text-muted);
   margin-left: var(--sidebar-width);
@@ -815,8 +824,7 @@ ul.menu-content .nav-item > a {
   font-size: 24px;
 }
 .avatar img {
-  width: 100%;
-  height: 100%;
+  
   border-radius: 50%;
   object-fit: cover;
 }
@@ -998,49 +1006,34 @@ ul.menu-content .nav-item > a {
 
 /* ===== Lessons Calendar ===== */
 .lessons-calendar {
-  max-width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-  border-bottom: 1px solid #dadfe9;
-  border-left: 1px solid #dadfe9;
+  border: 1px solid #dadfe9;
+  border-radius: 6px;
   background: #fff;
   border-radius: 0 0 6px 6px;
   overflow: hidden;
 }
 
-.lessons-calendar .day {
-  border-top: 1px solid #dadfe9;
-  border-right: 1px solid #dadfe9;
-  padding: 6px;
-  min-height: 90px;
-}
-
-.lessons-calendar .day.bold {
-  background: #eeedf7;
-}
-
-.lessons-calendar .day-header {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-dark);
-  padding: 4px 6px;
-  background: #f3f2f7;
-  text-align: center;
-  border-right: 1px solid #dadfe9;
-  border-bottom: 1px solid #dadfe9;
+.lessons-calendar td {
+  padding: 4px !important;
+  vertical-align: top !important;
+  width: 14.28% !important;
+  height: 100px !important;
 }
 
 .lessons-calendar .lesson {
   margin-top: 4px;
   position: relative;
+  width: 100% !important;
+  min-height: 40px;
+  display: block !important;
 }
 .lessons-calendar .lesson .lesson-time {
-  background: var(--primary);
+  background: #b094d5;
   border-radius: 4px 4px 0 0;
   padding: 2px 6px;
   color: #fff;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: bold;
 }
 .lessons-calendar .lesson .lesson-title {
   background: rgba(115, 103, 240, 0.75);
@@ -1055,6 +1048,12 @@ ul.menu-content .nav-item > a {
 }
 .lessons-calendar .lesson.past .lesson-title {
   background: #ccc7c6;
+}
+.lessons-calendar .lesson.completed .lesson-time {
+  background: #8c8c8c;
+}
+.lessons-calendar .lesson.completed .lesson-title {
+  background: #d4d4d4;
 }
 .lessons-calendar .lesson.canceled .lesson-time {
   background: var(--danger);
@@ -1172,8 +1171,11 @@ ul.menu-content .nav-item > a {
     box-shadow: 0 0 15px 0 rgba(34, 41, 47, 0.1);
   }
   .header-navbar.floating-nav {
-    left: 0 !important;
-    margin: 1.3rem 1rem 0;
+    top: 20px !important;
+    right: 32px !important;
+    left: auto !important;
+    bottom: auto !important;
+    max-width: calc(100% - 2rem) !important;
   }
   .app-content.content {
     margin-left: 0 !important;
@@ -1191,7 +1193,12 @@ ul.menu-content .nav-item > a {
     padding: 0 1rem 1rem;
   }
   .header-navbar.floating-nav {
-    margin: 0.5rem 0.5rem 0;
+    top: 20px !important;
+    right: 32px !important;
+    left: auto !important;
+    bottom: auto !important;
+    max-width: calc(100% - 1rem) !important;
+    margin: 0 !important;
   }
   .page-header {
     flex-direction: column;
@@ -1474,4 +1481,67 @@ ul.menu-content .nav-item > a {
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
+}
+
+/* ===== NAVBAR INTERACTION FIX ===== */
+.header-navbar,
+.header-navbar *,
+nav.navbar,
+nav.navbar *,
+#appNavbar,
+#appNavbar * {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* ===== ULTIMATE NAVBAR POSITION FIX ===== */
+#appNavbar,
+.header-navbar.floating-nav,
+nav.header-navbar.floating-nav,
+nav#appNavbar.header-navbar.floating-nav {
+  position: fixed !important;
+  top: 20px !important;
+  right: 32px !important;
+  left: auto !important;
+  bottom: auto !important;
+  z-index: 999999 !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+  transform: none !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Override any possible bottom positioning */
+[class*="navbar"][class*="floating"],
+[class*="navbar"][class*="fixed"],
+[class*="navbar"][class*="sticky"] {
+  bottom: auto !important;
+  left: auto !important;
+}
+
+/* Force all navbar elements to be clickable */
+#appNavbar *,
+#appNavbar > *,
+#appNavbar .navbar-container,
+#appNavbar .navbar-container *,
+#appNavbar .nav,
+#appNavbar .nav *,
+#appNavbar .dropdown,
+#appNavbar .dropdown *,
+#appNavbar button,
+#appNavbar a {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: inherit !important;
+}
+
+/* Emergency override for any inline styles or JavaScript injections */
+html body #appNavbar.header-navbar.floating-nav,
+html body nav#appNavbar.header-navbar.floating-nav {
+  top: 20px !important;
+  right: 32px !important;
+  bottom: auto !important;
+  left: auto !important;
 }

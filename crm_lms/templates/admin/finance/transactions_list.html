@@ -1,0 +1,491 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.transactions-header {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-bottom: 1.5rem;
+}
+
+.filters-section {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.stats-row {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.transactions-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.transaction-row {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.transaction-row:hover {
+    background-color: #f8fafc;
+}
+
+.transaction-row:last-child {
+    border-bottom: none;
+}
+
+.type-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.type-income {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.type-expense {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.type-transfer {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.amount-cell {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.amount-income {
+    color: #10b981;
+}
+
+.amount-expense {
+    color: #ef4444;
+}
+
+.amount-transfer {
+    color: #3b82f6;
+}
+
+.auto-badge {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.875rem;
+}
+
+.edit-btn {
+    background: #3b82f6;
+    color: white;
+}
+
+.edit-btn:hover {
+    background: #2563eb;
+}
+
+.delete-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
+
+.pagination-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-top: 1.5rem;
+}
+
+.floating-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 1000;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .filters-section {
+        padding: 1rem;
+    }
+    
+    .stats-row {
+        padding: 1rem;
+    }
+    
+    .stat-item {
+        margin-bottom: 1rem;
+    }
+    
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    .actions-cell {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Заголовок -->
+    <div class="transactions-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="mb-2">📋 Транзакции</h1>
+                <p class="text-muted mb-0">История всех финансовых операций</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <a href="{% url 'finance:dashboard' %}" class="btn btn-outline-secondary">
+                        🏠 Дашборд
+                    </a>
+                    <a href="{% url 'finance:export' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-success">
+                        📊 Экспорт в Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="filters-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Тип</label>
+                <select name="type" class="form-select">
+                    <option value="">Все типы</option>
+                    <option value="income" {% if type_filter == 'income' %}selected{% endif %}>Доход</option>
+                    <option value="expense" {% if type_filter == 'expense' %}selected{% endif %}>Расход</option>
+                    <option value="transfer" {% if type_filter == 'transfer' %}selected{% endif %}>Перевод</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Филиал</label>
+                <select name="branch" class="form-select">
+                    <option value="">Все филиалы</option>
+                    {% for branch in branches %}
+                    <option value="{{ branch }}" {% if branch_filter == branch %}selected{% endif %}>
+                        {{ branch }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Счёт</label>
+                <select name="account" class="form-select">
+                    <option value="">Все счета</option>
+                    {% for account in accounts %}
+                    <option value="{{ account.pk }}" {% if account_filter == account.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ account.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Категория</label>
+                <select name="category" class="form-select">
+                    <option value="">Все категории</option>
+                    {% for category in categories %}
+                    <option value="{{ category.pk }}" {% if category_filter == category.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">С</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">По</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Поиск</label>
+                <input type="text" name="search" class="form-control" placeholder="Описание..." value="{{ search }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    🔍 Применить фильтры
+                </button>
+                <a href="{% url 'finance:list' %}" class="btn btn-outline-secondary">
+                    ❌ Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Статистика -->
+    <div class="stats-row">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value text-success">{{ total_income|floatformat:0 }} ₽</div>
+                    <div class="stat-label">Общий доход</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value text-danger">{{ total_expense|floatformat:0 }} ₽</div>
+                    <div class="stat-label">Общий расход</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value {% if balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ balance|floatformat:0 }} ₽
+                    </div>
+                    <div class="stat-label">Баланс</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value">{{ page_obj.paginator.count }}</div>
+                    <div class="stat-label">Транзакций</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица транзакций -->
+    <div class="transactions-table">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Дата</th>
+                        <th>Тип</th>
+                        <th>Сумма</th>
+                        <th>Филиал</th>
+                        <th>Счёт</th>
+                        <th>Категория</th>
+                        <th>Описание</th>
+                        <th>Автор</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in page_obj %}
+                    <tr class="transaction-row" onclick="window.location.href='{% url 'finance:edit' transaction.pk %}'">
+                        <td>{{ transaction.transaction_date|date:"d.m.Y" }}</td>
+                        <td>
+                            <span class="type-badge type-{{ transaction.type }}">
+                                {% if transaction.type == 'income' %}📈{% elif transaction.type == 'expense' %}📉{% else %}🔄{% endif %}
+                                {{ transaction.get_type_display }}
+                            </span>
+                            {% if transaction.auto_generated %}
+                            <span class="auto-badge">Авто</span>
+                            {% endif %}
+                        </td>
+                        <td class="amount-cell amount-{{ transaction.type }}">
+                            {% if transaction.type == 'income' %}+{% elif transaction.type == 'expense' %}-{% endif %}
+                            {{ transaction.amount|floatformat:0 }} ₽
+                        </td>
+                        <td>{{ transaction.branch|default:"—" }}</td>
+                        <td>{{ transaction.account.name|default:"—" }}</td>
+                        <td>{{ transaction.category.name|default:"—" }}</td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 200px;" title="{{ transaction.description }}">
+                                {{ transaction.description|default:"—" }}
+                            </div>
+                        </td>
+                        <td>{{ transaction.created_by.get_full_name|default:"—" }}</td>
+                        <td class="actions-cell" onclick="event.stopPropagation()">
+                            {% if not transaction.auto_generated %}
+                            <a href="{% url 'finance:edit' transaction.pk %}" class="action-btn edit-btn">
+                                ✏️
+                            </a>
+                            <button class="action-btn delete-btn" onclick="deleteTransaction({{ transaction.pk }})">
+                                🗑️
+                            </button>
+                            {% else %}
+                            <span class="text-muted small">Авто</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted">
+                                <p class="mb-3">📭 Транзакций не найдено</p>
+                                <a href="{% url 'finance:create' %}" class="btn btn-primary">
+                                    Добавить транзакцию
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Пагинация -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-container">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">⟨</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">←</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">→</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">⟩</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Плавающая кнопка добавления -->
+<a href="{% url 'finance:create' %}" class="floating-btn" title="Добавить транзакцию">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteTransaction(pk) {
+    if (confirm('Вы уверены, что хотите удалить эту транзакцию?')) {
+        fetch(`/finance/transactions/${pk}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Ошибка при удалении');
+            }
+        })
+        .catch(error => {
+            alert('Ошибка при удалении');
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

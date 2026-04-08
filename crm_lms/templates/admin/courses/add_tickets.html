@@ -1,0 +1,92 @@
+{% extends "base/admin_base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Добавить талоны - {{ cs.student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'courses:detail' pk=cs.course.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        <div>
+            <h4 class="page-title mb-0">Добавить талоны</h4>
+            <p class="text-muted mb-0">{{ cs.student.full_name }} - {{ cs.course.title }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-ticket-perforated me-2"></i>
+                    Добавление талонов
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                            {{ form.quantity.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.quantity|add_class:"form-control" }}
+                        {% if form.quantity.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.quantity.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.price_per_ticket.id_for_label }}" class="form-label">
+                            {{ form.price_per_ticket.label }}
+                        </label>
+                        {{ form.price_per_ticket|add_class:"form-control" }}
+                        {% if form.price_per_ticket.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.price_per_ticket.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.comment.id_for_label }}" class="form-label">
+                            {{ form.comment.label }}
+                        </label>
+                        {{ form.comment|add_class:"form-control" }}
+                        {% if form.comment.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.comment.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-2"></i>Добавить талоны
+                        </button>
+                        <a href="{% url 'courses:detail' pk=cs.course.pk %}" class="btn btn-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if remaining_tickets %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-muted">Текущий баланс:</span>
+                    <span class="badge bg-primary">{{ remaining_tickets }} талонов</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,24 +1,28 @@
 <style>
 .lec-layout{min-height:calc(100vh - 200px)}
-.lec-left-col{background:#f8f8f8}
-.lec-right-col{border-left:1px solid #ebe9f1;background:#fff}
+.lec-left-col{background:#fafafa}
+.lec-right-col{border-left:1px solid #e5e5e5;background:#fff}
 .lec-content-area{padding:1.5rem}
 
-/* Sidebar */
-.lec-sidebar{}
-.lec-sidebar-hdr{border-bottom:1px solid #ebe9f1;background:#fafafc}
+/* Темная тема для лекций ментора */
+.dark-layout .lec-left-col{background:#1a1a2e}
+.dark-layout .lec-right-col{border-left:1px solid #444;background:#283046}
+
+/* Sidebar - минималистичный стиль */
+.lec-sidebar{background:transparent}
+.lec-sidebar-hdr{border-bottom:1px solid #e5e5e5;background:transparent}
 .lec-sidebar-body{overflow-y:auto;max-height:calc(100vh - 280px)}
 
-.sb-section{border-bottom:1px solid #f3f2f7}
-.sb-sec-hdr{display:flex;align-items:center;padding:.55rem .75rem;cursor:pointer;user-select:none;transition:background .15s}
-.sb-sec-hdr:hover{background:#f5f3ff}
-.sb-sec-title{font-weight:600;font-size:.8rem;color:#5e5873}
-.sb-caret{font-size:.6rem;color:#b9b9c3;transition:transform .2s;margin-right:2px}
+.sb-section{border-bottom:1px solid #e5e5e5}
+.sb-sec-hdr{display:flex;align-items:center;padding:.55rem .75rem;cursor:pointer;user-select:none;transition:background .15s;background:transparent}
+.sb-sec-hdr:hover{background:#f5f5f5}
+.sb-sec-title{font-weight:400;font-size:.8rem;color:#333}
+.sb-caret{font-size:.6rem;color:#999;transition:transform .2s;margin-right:2px}
 .sb-sec-hdr.collapsed .sb-caret{transform:rotate(-90deg)}
 
-.sb-item{display:flex;align-items:center;padding:.4rem .75rem .4rem 2rem;text-decoration:none;color:#6e6b7b;font-size:.8rem;transition:all .15s;border-left:2px solid transparent;gap:6px}
-.sb-item:hover{background:#f5f3ff;color:#5e5873}
-.sb-item.active{background:#ece8ff;color:#7367f0;border-left-color:#7367f0;font-weight:600}
+.sb-item{display:flex;align-items:center;padding:.4rem .75rem .4rem 2rem;text-decoration:none;color:#666;font-size:.8rem;transition:all .15s;border-left:2px solid transparent;gap:6px;background:transparent}
+.sb-item:hover{background:#f5f5f5;color:#333}
+.sb-item.active{background:#f0f0f0;color:#333;border-left-color:#666;font-weight:400}
 .sb-item .sb-item-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -26,17 +30,182 @@
 .sb-dot.task{background:#ff9f43}
 .sb-dot.quiz{background:#00cfe8}
 
-.sb-vis-btn{border:none;background:none;color:#b9b9c3;font-size:.7rem;padding:2px 4px;cursor:pointer;border-radius:4px;transition:all .15s;flex-shrink:0;opacity:0}
+.sb-vis-btn{border:none;background:none;color:#999;font-size:.7rem;padding:2px 4px;cursor:pointer;border-radius:0;transition:all .15s;flex-shrink:0;opacity:0}
 .sb-item:hover .sb-vis-btn{opacity:1}
-.sb-vis-btn:hover{background:#ebe9f1;color:#7367f0}
-.sb-vis-btn.off{color:#ea5455}
-.sb-vis-btn.off i{color:#ea5455}
+.sb-vis-btn:hover{background:#f5f5f5;color:#333}
+.sb-vis-btn.off{color:#999}
+.sb-vis-btn.off i{color:#999}
 
-.sb-empty{padding:.5rem 2rem;font-size:.75rem;color:#b9b9c3;font-style:italic}
+.sb-empty{padding:.5rem 2rem;font-size:.75rem;color:#999;font-style:italic}
 
-/* Right content card */
-.lec-detail-card{background:#fff;border-radius:.428rem;border:1px solid #ebe9f1;overflow:hidden}
-.lec-detail-hdr{padding:1rem 1.25rem;border-bottom:1px solid #ebe9f1;display:flex;align-items:center;justify-content:space-between}
-.lec-detail-hdr h5{margin:0;font-weight:600;color:#5e5873;font-size:1rem}
-.lec-detail-body{padding:1.25rem}
+/* Темная тема для sidebar */
+.dark-layout .lec-sidebar{background:#283046}
+.dark-layout .lec-sidebar-hdr{border-bottom:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);background:#242B3D}
+.dark-layout .sb-section{border-bottom:none;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.dark-layout .sb-sec-hdr:hover{background:#242B3D}
+.dark-layout .sb-sec-title{color:#D0D2D6}
+.dark-layout .sb-caret{color:#B4B7BD}
+.dark-layout .sb-item{color:#B4B7BD}
+.dark-layout .sb-item:hover{background:#242B3D;color:#D0D2D6}
+.dark-layout .sb-item.active{background:#7367F0;color:#fff}
+.dark-layout .sb-vis-btn{color:#B4B7BD}
+.dark-layout .sb-vis-btn:hover{background:#242B3D;color:#7367F0}
+.dark-layout .sb-empty{color:#676D7D}
+
+/* Dropdown fixes - минималистичный стиль */
+.sb-section .dropdown {
+    position: relative;
+}
+
+.sb-section .dropdown-menu {
+    min-width: 150px;
+    font-size: 0.8rem;
+    border: 1px solid #e5e5e5;
+    box-shadow: none;
+    z-index: 1000;
+    border-radius: 0;
+}
+
+.sb-section .dropdown-menu .dropdown-item {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    color: #333;
+    border-radius: 0;
+}
+
+.sb-section .dropdown-menu .dropdown-item:hover {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.sb-section .dropdown-menu .dropdown-item i {
+    margin-right: 0.5rem;
+}
+
+/* Темная тема для dropdown */
+.dark-layout .sb-section .dropdown-menu {
+    background: #283046;
+    border: 1px solid #444;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.dark-layout .sb-section .dropdown-menu .dropdown-item {
+    color: #B4B7BD;
+}
+
+.dark-layout .sb-section .dropdown-menu .dropdown-item:hover {
+    background: #242B3D;
+    color: #D0D2D6;
+}
+
+/* Right content card - минималистичный стиль */
+.lec-detail-card{background:transparent;border:none;border-radius:0;overflow:hidden}
+.lec-detail-hdr{padding:0;border:none;display:flex;align-items:center;justify-content:space-between}
+.lec-detail-hdr h5{margin:0;font-weight:400;color:#333;font-size:1rem}
+.lec-detail-body{padding:0}
+
+/* Темная тема для content card */
+.dark-layout .lec-detail-card{background:transparent;border:none;box-shadow:none}
+.dark-layout .lec-detail-hdr{border:none}
+.dark-layout .lec-detail-hdr h5{color:#D0D2D6}
+
+/* Дополнительные минималистичные стили */
+.lec-detail-card .card{background:transparent;border:none;border-radius:0}
+.lec-detail-card .card-body{padding:0}
+.lec-detail-card .card-header{background:transparent;border:none;border-radius:0;padding:0}
+
+.lecture-asset-box{background:transparent;border:none;border-radius:0;padding:0}
+.lecture-asset-icon{color:#666}
+.lecture-asset-title{color:#333;font-weight:400}
+.lecture-asset-name{color:#666}
+
+.lecture-video-box{background:transparent}
+.lecture-video-box h6{color:#333;font-weight:400}
+
+.dark-layout .lecture-asset-box{background:transparent;border:none}
+.dark-layout .lecture-asset-icon{color:#999}
+.dark-layout .lecture-asset-title{color:#D0D2D6}
+.dark-layout .lecture-asset-name{color:#B4B7BD}
+.dark-layout .lecture-video-box h6{color:#D0D2D6}
+
+/* Убираем закругления у всех кнопок в материалах */
+.lec-detail-card .btn{border-radius:0}
+.lec-detail-card .btn-sm{border-radius:0}
+.lecture-editor-card .btn{border-radius:0}
+.lecture-editor-card .btn-sm{border-radius:0}
+
+/* Убираем все отступы mb-4 и другие отступы */
+.mb-4 {
+    margin-bottom: 0 !important;
+}
+
+.mb-2 {
+    margin-bottom: 0 !important;
+}
+
+.mb-3 {
+    margin-bottom: 0 !important;
+}
+
+.p-4 {
+    padding: 0 !important;
+}
+
+.py-5 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Дополнительные стили для чистого контента материалов */
+.lecture-content-view {
+    margin: 0 !important;
+}
+
+.lecture-content-view > * {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.lecture-content-view h1,
+.lecture-content-view h2,
+.lecture-content-view h3,
+.lecture-content-view h4,
+.lecture-content-view h5,
+.lecture-content-view h6 {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.lecture-content-view p {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.lecture-content-view hr {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.lecture-content-view pre {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.lecture-content-view code {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Убираем все вложенные div'ы и дублирование */
+.lecture-content-view div {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.lec-detail-body > div {
+    margin: 0 !important;
+    padding: 0 !important;
+}
 </style>

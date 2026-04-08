@@ -1,0 +1,100 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">{{ page_title }}</h4>
+    <div class="page-actions">
+        <a href="{% url 'organizations:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Назад
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="id_name" class="form-label">Название организации *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger small">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_slug" class="form-label">URL идентификатор *</label>
+                                {{ form.slug }}
+                                <div class="form-text">Будет использоваться в URL. Только латинские буквы, цифры и дефисы.</div>
+                                {% if form.slug.errors %}
+                                <div class="text-danger small">{{ form.slug.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_description" class="form-label">Описание</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_logo" class="form-label">Логотип</label>
+                                {{ form.logo }}
+                                {% if form.logo.errors %}
+                                <div class="text-danger small">{{ form.logo.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Рекомендуемый размер: 200x200px</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="id_is_active">
+                                        Активна
+                                    </label>
+                                </div>
+                                {% if form.is_active.errors %}
+                                <div class="text-danger small">{{ form.is_active.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'organizations:list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i>Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Создать организацию
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('id_name').addEventListener('input', function() {
+    const name = this.value;
+    const slug = name.toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    
+    document.getElementById('id_slug').value = slug;
+});
+</script>
+{% endblock %}

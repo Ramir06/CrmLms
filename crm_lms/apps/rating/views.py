@@ -56,6 +56,7 @@ def rating_table(request, course_id):
 
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'assignments': assignments,
         'grades_matrix': grades_matrix,
         'page_title': 'Оценки',

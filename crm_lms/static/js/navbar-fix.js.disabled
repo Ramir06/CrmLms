@@ -1,0 +1,111 @@
+// Force navbar position - ULTRA AGGRESSIVE FIX
+function fixNavbarPosition() {
+    console.log('Fixing navbar position...');
+    
+    // Find all possible navbar elements
+    const navbars = [
+        document.querySelector('.header-navbar'),
+        document.querySelector('nav.navbar'),
+        document.querySelector('nav.header-navbar'),
+        document.querySelector('.navbar'),
+        document.querySelector('nav[class*="navbar"]'),
+        document.querySelector('#appNavbar')
+    ].filter(Boolean);
+    
+    navbars.forEach((navbar, index) => {
+        console.log(`Fixing navbar ${index}:`, navbar, 'Current styles:', navbar.style.cssText);
+        
+        // Remove all position classes first
+        navbar.className = navbar.className.replace(/position-\w+/g, '');
+        
+        // ONLY set position properties, preserve everything else
+        navbar.style.setProperty('position', 'fixed', 'important');
+        navbar.style.setProperty('top', '0px', 'important');
+        navbar.style.setProperty('right', '0px', 'important');
+        navbar.style.setProperty('left', 'auto', 'important');
+        navbar.style.setProperty('bottom', 'auto', 'important');
+        navbar.style.setProperty('z-index', '9999', 'important');
+        navbar.style.setProperty('pointer-events', 'auto', 'important');
+        
+        console.log(`After fixing navbar ${index}:`, navbar.style.cssText);
+        
+        // Also try to move it with direct DOM manipulation
+        if (navbar.parentElement) {
+            navbar.parentElement.style.position = 'relative';
+        }
+        
+        // RADICAL FIX: Move navbar to top of body
+        if (navbar.parentElement && navbar.parentElement.tagName !== 'BODY') {
+            console.log('Moving navbar to top of body');
+            document.body.insertBefore(navbar, document.body.firstChild);
+        }
+    });
+    
+    // Also try to create a style tag and inject it
+    const style = document.createElement('style');
+    style.textContent = `
+        .header-navbar, nav.navbar, #appNavbar {
+            position: fixed !important;
+            top: 0px !important;
+            right: 0px !important;
+            left: auto !important;
+            bottom: auto !important;
+            z-index: 99999 !important;
+            margin-top: 0px !important;
+            margin-bottom: 0px !important;
+            transform: none !important;
+        }
+        
+        /* Extra aggressive rules */
+        body > .header-navbar,
+        body > nav.navbar,
+        body > #appNavbar {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: auto !important;
+            bottom: auto !important;
+            z-index: 9999 !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Ensure all navbar buttons are clickable */
+        .header-navbar *,
+        nav.navbar *,
+        #appNavbar * {
+            pointer-events: auto !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Run immediately
+fixNavbarPosition();
+
+// Run on DOM load
+document.addEventListener('DOMContentLoaded', fixNavbarPosition);
+
+// Run multiple times to catch late-loading elements
+setTimeout(fixNavbarPosition, 100);
+setTimeout(fixNavbarPosition, 500);
+setTimeout(fixNavbarPosition, 1000);
+
+// Also run on window resize
+window.addEventListener('resize', fixNavbarPosition);
+
+// Override any style changes
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+            fixNavbarPosition();
+        }
+    });
+});
+
+// Start observing all navbars
+document.addEventListener('DOMContentLoaded', function() {
+    const navbars = document.querySelectorAll('.header-navbar, nav.navbar, nav[class*="navbar"]');
+    navbars.forEach(navbar => {
+        observer.observe(navbar, { attributes: true, attributeFilter: ['style', 'class'] });
+    });
+});

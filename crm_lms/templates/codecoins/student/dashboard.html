@@ -1,0 +1,237 @@
+{% extends "codecoins/student/base.html" %}
+
+{% block title %}Кодкойны{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10 col-sm-12">
+            
+            <!-- Balance Card -->
+            <div class="codecoins-balance-card">
+                <div class="codecoins-balance-header">
+                    <i class="bi bi-coin" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                </div>
+                <div class="codecoins-balance-amount">
+                    {{ balance }}
+                </div>
+                <div class="codecoins-balance-label">кодкойнов на балансе</div>
+                
+                <div class="withdrawal-status {{ 'withdrawal-open' if setting.is_open else 'withdrawal-closed' }}">
+                    {% if setting.is_open %}
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-unlock-fill me-2"></i>
+                            <span>Вывод сейчас открыт</span>
+                        </div>
+                        {% if withdrawal_form %}
+                            <button class="btn btn-withdraw mt-3" data-bs-toggle="modal" data-bs-target="#withdrawalModal">
+                                <i class="bi bi-arrow-right-circle me-2"></i>Вывести кодкойны
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-lock-fill me-2"></i>
+                            <span>
+                                {% if setting.next_open_at %}
+                                    Вывод откроется {{ setting.next_open_at|date:"d.m.Y H:i" }}
+                                {% else %}
+                                    Вывод временно закрыт
+                                {% endif %}
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Transaction History and Withdrawal History -->
+            <div class="row">
+                <!-- Transaction History -->
+                <div class="col-lg-6 col-12 mb-3">
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="section-icon">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                                <h5 class="section-title">История начислений</h5>
+                            </div>
+                            <a href="{% url 'codecoins_student:student_transactions' %}" class="btn btn-sm btn-outline-primary">
+                                Все
+                            </a>
+                        </div>
+                        
+                        {% if transactions %}
+                            {% for trans in transactions %}
+                            <div class="transaction-item transaction-{% if trans.is_income %}income{% else %}expense{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="transaction-description">{{ trans.description }}</div>
+                                        <div class="transaction-meta">
+                                            {% if trans.course %}{{ trans.course.title }} • {% endif %}
+                                            {{ trans.created_at|date:"d.m.Y H:i" }}
+                                        </div>
+                                    </div>
+                                    <div class="transaction-amount {% if trans.is_income %}positive{% else %}negative{% endif %}">
+                                        {% if trans.is_income %}+{% endif %}{{ trans.amount }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>Начислений пока нет</p>
+                                <small>Участвуйте в уроках и выполняйте задания для получения кодкойнов</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Withdrawal History -->
+                <div class="col-lg-6 col-12 mb-3">
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="section-icon">
+                                    <i class="bi bi-arrow-right-circle"></i>
+                                </div>
+                                <h5 class="section-title">Мои заявки на вывод</h5>
+                            </div>
+                            <a href="{% url 'codecoins_student:student_withdrawals' %}" class="btn btn-sm btn-outline-primary">
+                                Все
+                            </a>
+                        </div>
+                        
+                        {% if withdrawals %}
+                            {% for req in withdrawals %}
+                            <div class="withdrawal-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="withdrawal-meta">
+                                            {{ req.get_payout_method_display }} • {{ req.phone_number }}
+                                        </div>
+                                        <div class="transaction-meta">
+                                            {{ req.created_at|date:"d.m.Y H:i" }}
+                                        </div>
+                                        {% if req.rejection_reason %}
+                                            <div class="text-danger small mt-1">
+                                                <i class="bi bi-info-circle"></i> {{ req.rejection_reason }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="withdrawal-amount">{{ req.amount }}</div>
+                                        {% if req.status == 'pending' %}
+                                            <span class="badge badge-pending">На рассмотрении</span>
+                                        {% elif req.status == 'approved' %}
+                                            <span class="badge badge-approved">Подтверждена</span>
+                                        {% elif req.status == 'rejected' %}
+                                            <span class="badge badge-rejected">Отклонена</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>Заявок пока нет</p>
+                                <small>Накопи кодкойны и выводи на телефон!</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно вывода -->
+{% if withdrawal_form %}
+<div class="modal fade" id="withdrawalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-arrow-right-circle me-2"></i>Вывести кодкойны
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'codecoins_student:student_create_withdrawal_request' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Доступно к выводу:</strong> {{ balance }} кодкойнов<br>
+                        <strong>Минимальная сумма:</strong> 100 кодкойнов
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ withdrawal_form.amount.label_tag }}
+                        {{ withdrawal_form.amount }}
+                        {% if withdrawal_form.amount.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ withdrawal_form.amount.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Минимум: 100 кодкойнов</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ withdrawal_form.payout_method.label_tag }}
+                        {{ withdrawal_form.payout_method }}
+                        {% if withdrawal_form.payout_method.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ withdrawal_form.payout_method.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ withdrawal_form.phone_number.label_tag }}
+                        {{ withdrawal_form.phone_number }}
+                        {% if withdrawal_form.phone_number.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ withdrawal_form.phone_number.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Формат: 0990123456</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ withdrawal_form.comment.label_tag }}
+                        {{ withdrawal_form.comment }}
+                        {% if withdrawal_form.comment.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ withdrawal_form.comment.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Необязательно</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-2"></i>Отправить заявку
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Автоматическое обновление баланса каждые 30 секунд
+setInterval(() => {
+    fetch('{% url "codecoins_student:ajax_student_balance" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.balance !== undefined) {
+                document.querySelector('.codecoins-balance-amount').textContent = data.balance;
+            }
+        })
+        .catch(error => console.log('Ошибка обновления баланса:', error));
+}, 30000);
+</script>
+{% endblock %}

@@ -16,9 +16,10 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">{{ form.email.label }}</label>
-                            {{ form.email }}
-                            {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors.0 }}</div>{% endif %}
+                            <label class="form-label fw-medium">{{ form.username.label }}</label>
+                            {{ form.username }}
+                            {% if form.username.help_text %}<div class="text-muted small mt-1">{{ form.username.help_text }}</div>{% endif %}
+                            {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-medium">{{ form.password.label }}</label>
@@ -33,11 +34,21 @@
                 <div class="card-header"><h6 class="card-title mb-0"><i class="bi bi-person me-1"></i>Данные студента</h6></div>
                 <div class="card-body">
                     <div class="row g-3">
+                        <!-- Email поле (опциональное) -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.help_text %}<div class="text-muted small mt-1">{{ form.email.help_text }}</div>{% endif %}
+                            {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors.0 }}</div>{% endif %}
+                        </div>
+                        
+                        <!-- Остальные поля -->
                         {% for field in form %}
-                            {% if field.name != 'email' and field.name != 'password' %}
+                            {% if field.name != 'username' and field.name != 'email' and field.name != 'password' %}
                             <div class="col-md-{% if field.name == 'note' %}12{% else %}6{% endif %}">
                                 <label class="form-label fw-medium">{{ field.label }}</label>
                                 {{ field }}
+                                {% if field.help_text %}<div class="text-muted small mt-1">{{ field.help_text }}</div>{% endif %}
                                 {% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}
                             </div>
                             {% endif %}

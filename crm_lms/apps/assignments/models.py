@@ -12,6 +12,10 @@ class Assignment(TimeStampedModel):
         'courses.Course', on_delete=models.CASCADE,
         related_name='assignments', verbose_name='Курс'
     )
+    quiz = models.OneToOneField(
+        'quizzes.Quiz', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='assignment', verbose_name='Связанный тест'
+    )
     title = models.CharField(max_length=200, verbose_name='Название задания')
     description = models.TextField(blank=True, verbose_name='Описание')
     max_score = models.PositiveSmallIntegerField(default=100, verbose_name='Макс. балл')
@@ -27,6 +31,27 @@ class Assignment(TimeStampedModel):
 
     def __str__(self):
         return f'{self.course.title} — {self.title}'
+    
+    def get_quiz_score(self, student):
+        """Получает результат студента по связанному тесту"""
+        if not self.quiz:
+            return None
+        
+        from apps.courses.models import CourseStudent
+        try:
+            course_student = CourseStudent.objects.get(course=self.course, student=student)
+            attempt = self.quiz.attempts.filter(course_student=course_student, submitted_at__isnull=False).first()
+            if attempt:
+                return {
+                    'score': attempt.score,
+                    'max_score': attempt.max_score,
+                    'percentage': attempt.percentage,
+                    'passed': attempt.passed,
+                    'submitted_at': attempt.submitted_at
+                }
+        except CourseStudent.DoesNotExist:
+            pass
+        return None
 
 
 class AssignmentSubmission(TimeStampedModel):
@@ -73,6 +98,16 @@ class AssignmentGrade(TimeStampedModel):
         related_name='checked_grades', verbose_name='Проверил'
     )
     checked_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата проверки')
+    
+    # AI-оценка поля
+    ai_graded = models.BooleanField(default=False, verbose_name='Проверено ИИ')
+    ai_confidence = models.IntegerField(null=True, blank=True, verbose_name='Уверенность ИИ (%)')
+    ai_feedback = models.JSONField(null=True, blank=True, verbose_name='AI обратная связь')
+    ai_strengths = models.TextField(blank=True, verbose_name='Сильные стороны (ИИ)')
+    ai_weaknesses = models.TextField(blank=True, verbose_name='Слабые стороны (ИИ)')
+    ai_suggestions = models.TextField(blank=True, verbose_name='Рекомендации (ИИ)')
+    plagiarism_suspicious = models.BooleanField(default=False, verbose_name='Подозрение на плагиат')
+    plagiarism_reason = models.TextField(blank=True, verbose_name='Причина подозрения')
 
     class Meta:
         verbose_name = 'Оценка'

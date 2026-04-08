@@ -8,22 +8,107 @@
     <h4 class="page-title">Мой профиль</h4>
 </div>
 <div class="row g-4 justify-content-center">
-    <div class="col-lg-6">
+    <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {% for field in form %}
-                    <div class="mb-3">
-                        <label class="form-label fw-medium">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
+                <div class="row g-4">
+                    <!-- Аватар и основная информация -->
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <img src="{{ user.avatar_url }}" alt="{{ user.get_display_name }}" 
+                                 class="rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;border:3px solid #f8f9fa;">
+                            
+                            <h5 class="mb-1">{{ user.get_display_name }}</h5>
+                            <div class="text-muted small mb-3">{{ user.get_role_display }}</div>
+                            
+                            {% if user.has_custom_avatar %}
+                                <div class="alert alert-success small py-2">
+                                    <i class="bi bi-check-circle me-1"></i>Загруженный аватар
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info small py-2">
+                                    <i class="bi bi-robot me-1"></i>Автоматически сгенерированный аватар
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endfor %}
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-1"></i>Сохранить
-                    </button>
-                </form>
+                    
+                    <!-- Форма редактирования -->
+                    <div class="col-md-8">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <!-- Поля профиля -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">{{ form.first_name.label }}</label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">{{ form.last_name.label }}</label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-medium">{{ form.full_name.label }}</label>
+                                    {{ form.full_name }}
+                                    {% if form.full_name.errors %}<div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">{{ form.phone.label }}</label>
+                                    {{ form.phone }}
+                                    {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">{{ form.email.label }}</label>
+                                    <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                                    <div class="form-text">Email нельзя изменить через профиль</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Настройки аватара -->
+                            <div class="border-top pt-4 mb-4">
+                                <h6 class="fw-medium mb-3">Настройки аватара</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">{{ form.avatar.label }}</label>
+                                    {{ form.avatar }}
+                                    {% if form.avatar.errors %}<div class="text-danger small mt-1">{{ form.avatar.errors.0 }}</div>{% endif %}
+                                    {% if form.avatar.help_text %}<div class="form-text">{{ form.avatar.help_text }}</div>{% endif %}
+                                </div>
+                                
+                                {% if form.delete_avatar %}
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.delete_avatar }}
+                                        <label class="form-check-label" for="{{ form.delete_avatar.id_for_label }}">
+                                            {{ form.delete_avatar.label }}
+                                        </label>
+                                    </div>
+                                    {% if form.delete_avatar.help_text %}<div class="form-text">{{ form.delete_avatar.help_text }}</div>{% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Другие настройки -->
+                            <div class="border-top pt-4 mb-4">
+                                <h6 class="fw-medium mb-3">Другие настройки</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">{{ form.language.label }}</label>
+                                        {{ form.language }}
+                                        {% if form.language.errors %}<div class="text-danger small mt-1">{{ form.language.errors.0 }}</div>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>Сохранить изменения
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

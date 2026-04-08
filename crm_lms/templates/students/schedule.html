@@ -3,115 +3,382 @@
 {% block title %}{% trans "Расписание" %}{% endblock %}
 
 {% block breadcrumb %}
-<div class="st-breadcrumb">
-    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
-    <span class="sep">/</span>
-    <span class="current">{% trans "Расписание" %}</span>
-</div>
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">{% trans "Расписание" %}</li>
+    <li class="breadcrumb-item"><a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a></li>
+</ol>
 {% endblock %}
 
 {% block content %}
-<div class="p-4">
-    <h3 class="fw-bold mb-4" style="color:#111827">
-        <i class="bi bi-calendar-week me-2" style="color:#4f46e5"></i>{% trans "Расписание" %}
-    </h3>
-
-    <!-- Upcoming lessons -->
-    <div class="mb-5">
-        <h5 class="fw-semibold mb-3">
-            <i class="bi bi-arrow-right-circle text-primary me-1"></i>{% trans "Предстоящие занятия" %}
-        </h5>
-        {% if upcoming %}
-        <div class="row g-3">
-            {% for lesson in upcoming %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm" style="border-radius:12px;">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="badge bg-primary-subtle text-primary">{{ lesson.course.title }}</span>
-                            {% if lesson.lesson_date == today %}
-                            <span class="badge bg-success">{% trans "Сегодня" %}</span>
-                            {% endif %}
-                        </div>
-                        <h6 class="fw-semibold mb-1">{{ lesson.title|default:"—" }}</h6>
-                        <div class="text-muted small mb-2">
-                            <i class="bi bi-calendar-event me-1"></i>{{ lesson.lesson_date|date:"d.m.Y" }}
-                            <span class="mx-1">·</span>
-                            <i class="bi bi-clock me-1"></i>{{ lesson.start_time|time:"H:i" }} – {{ lesson.end_time|time:"H:i" }}
-                        </div>
-                        {% if lesson.room %}
-                        <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>{{ lesson.room }}</div>
-                        {% endif %}
-                        <div class="d-flex gap-2 mt-3">
-                            <a href="{% url 'students:lesson_detail' lesson.course_id lesson.pk %}" class="btn btn-sm btn-outline-primary flex-grow-1">
-                                {% trans "Подробнее" %}
-                            </a>
-                            {% if lesson.meet_link %}
-                            <a href="{{ lesson.meet_link }}" target="_blank" class="btn btn-sm btn-success">
-                                <i class="bi bi-camera-video"></i>
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+<div class="diary">
+    <div class="container">
+        <!-- Навигация по дням недели -->
+        <div class="days-navigation">
+            <ul class="days-list">
+                <li><a href="#" class="nav-arrow prev-week">‹</a></li>
+                {% for day_info in week_days %}
+                <li class="{% if day_info.is_today %}active current{% endif %}">
+                    <a href="?date={{ day_info.date|date:'Y-m-d' }}" class="day-link">
+                        <i>{{ day_info.day_name }}</i>
+                        {{ day_info.date|date:'d M' }}<br>
+                        <span>{{ day_info.lessons_count }} УР</span>
+                    </a>
+                </li>
+                {% endfor %}
+                <li><a href="#" class="nav-arrow next-week">›</a></li>
+            </ul>
         </div>
-        {% else %}
-        <div class="text-center py-5 bg-white rounded-3 shadow-sm">
-            <i class="bi bi-calendar-check fs-1 text-muted d-block mb-2"></i>
-            <p class="text-muted mb-0">{% trans "Нет предстоящих занятий" %}</p>
-        </div>
-        {% endif %}
-    </div>
 
-    <!-- Past lessons -->
-    {% if past %}
-    <div>
-        <h5 class="fw-semibold mb-3">
-            <i class="bi bi-clock-history text-secondary me-1"></i>{% trans "Прошедшие занятия" %}
-        </h5>
-        <div class="card border-0 shadow-sm" style="border-radius:12px;">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>{% trans "Дата" %}</th>
-                            <th>{% trans "Время" %}</th>
-                            <th>{% trans "Курс" %}</th>
-                            <th>{% trans "Тема" %}</th>
-                            <th>{% trans "Посещение" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for lesson in past %}
-                        <tr>
-                            <td class="text-nowrap">{{ lesson.lesson_date|date:"d.m.Y" }}</td>
-                            <td class="text-nowrap text-muted">{{ lesson.start_time|time:"H:i" }}</td>
-                            <td><span class="badge bg-light text-dark border">{{ lesson.course.title }}</span></td>
-                            <td>
-                                <a href="{% url 'students:lesson_detail' lesson.course_id lesson.pk %}" class="text-decoration-none">
-                                    {{ lesson.title|default:"—" }}
-                                </a>
-                            </td>
-                            <td>
-                                {% if lesson.att_status == 'present' %}
-                                <span class="badge bg-success">{% trans "Присутствовал" %}</span>
-                                {% elif lesson.att_status == 'late' %}
-                                <span class="badge bg-warning text-dark">{% trans "Опоздал" %}</span>
-                                {% elif lesson.att_status == 'absent' %}
-                                <span class="badge bg-danger">{% trans "Отсутствовал" %}</span>
-                                {% else %}
-                                <span class="badge bg-secondary">—</span>
-                                {% endif %}
-                            </td>
-                        </tr>
+        <!-- Табы -->
+        <div class="tabs-navigation">
+            <ul class="tabs-list">
+                <li><a href="?tab=schedule" class="active">Расписание</a></li>
+                <li><a href="?tab=homework">Домашнее задание</a></li>
+            </ul>
+        </div>
+
+        <!-- Список уроков на выбранный день -->
+        <div class="schedule-day">
+            <div class="lessons-container">
+                <ul class="lessons-list">
+                    {% if day_lessons %}
+                        {% for lesson in day_lessons %}
+                        <li class="lesson-item">
+                            <a href="{% url 'students:lesson_detail' lesson.course_id lesson.pk %}" class="lesson-link">
+                                <span class="lesson-content">
+                                    <span class="lesson-icon" style="background-color: {{ lesson.color|default:'#9EABC5' }};">
+                                        <span class="lesson-icon-text">{{ lesson.course.title|first|default:'У' }}</span>
+                                        <span class="lesson-time" data-start="{{ lesson.start_time|time:'H:i' }}" data-end="{{ lesson.end_time|time:'H:i' }}"></span>
+                                    </span>
+                                    <span class="lesson-details">
+                                        <span class="lesson-number">{{ forloop.counter }}.</span>
+                                        <span class="lesson-info">
+                                            <span class="lesson-title">
+                                                {{ lesson.course.title }}
+                                                {% if lesson.meet_link %}
+                                                <i class="lesson-video mdi mdi-video" data-broadcast="{{ lesson.pk }}"></i>
+                                                {% endif %}
+                                            </span>
+                                            <span class="lesson-topic">
+                                                <span>Тема:</span>
+                                                <span class="topic-text">{{ lesson.title|default:'Без темы' }}</span>
+                                            </span>
+                                            <span class="lesson-homework">
+                                                <span>Задание:</span>
+                                                <span class="homework-text">{{ lesson.homework|default:'Не задано' }}</span>
+                                            </span>
+                                            <span class="lesson-room">
+                                                <span>Кабинет:</span>
+                                                <span class="room-text">{{ lesson.room|default:'—' }}</span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
                         {% endfor %}
-                    </tbody>
-                </table>
+                    {% else %}
+                    <li class="no-lessons">
+                        <div class="no-lessons-content">
+                            <i class="bi bi-calendar-x"></i>
+                            <p>На этот день уроков нет</p>
+                        </div>
+                    </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
+
+<style>
+.diary {
+    padding: 20px;
+    background: #ffffff;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Навигация по дням */
+.days-navigation {
+    margin-bottom: 20px;
+}
+
+.days-list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    gap: 5px;
+}
+
+.days-list li {
+    display: flex;
+}
+
+.nav-arrow, .day-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #6b7280;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    min-width: 60px;
+}
+
+.nav-arrow {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.day-link:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.day-link.active {
+    background: #3b82f6;
+    color: white;
+}
+
+.day-link i {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 2px;
+}
+
+.day-link span {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Табы */
+.tabs-navigation {
+    margin-bottom: 20px;
+}
+
+.tabs-list {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tabs-list li a {
+    display: block;
+    padding: 12px 24px;
+    text-decoration: none;
+    color: #6b7280;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tabs-list li a:hover {
+    color: #374151;
+    background: #f9fafb;
+}
+
+.tabs-list li a.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+
+/* Уроки */
+.lessons-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.lesson-item {
+    margin-bottom: 10px;
+}
+
+.lesson-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.lesson-content {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.lesson-link:hover .lesson-content {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.lesson-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.lesson-icon-text {
+    font-weight: 600;
+    font-size: 18px;
+    color: white;
+}
+
+.lesson-time {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    background: #374151;
+    color: white;
+    font-size: 0.6rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    display: none;
+}
+
+.lesson-details {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.lesson-number {
+    font-weight: 600;
+    margin-right: 10px;
+    color: #374151;
+}
+
+.lesson-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.lesson-title {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+    font-size: 1rem;
+}
+
+.lesson-video {
+    margin-left: 5px;
+    color: #ef4444;
+    font-size: 0.875rem;
+}
+
+.lesson-topic, .lesson-homework, .lesson-room {
+    font-size: 0.875rem;
+    margin-bottom: 2px;
+}
+
+.lesson-topic span:first-child,
+.lesson-homework span:first-child,
+.lesson-room span:first-child {
+    color: #6b7280;
+    margin-right: 5px;
+}
+
+.topic-text, .homework-text, .room-text {
+    color: #374151;
+}
+
+.no-lessons {
+    text-align: center;
+    padding: 40px;
+}
+
+.no-lessons-content i {
+    font-size: 3rem;
+    color: #9ca3af;
+    margin-bottom: 10px;
+}
+
+.no-lessons-content p {
+    color: #6b7280;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .diary {
+        padding: 10px;
+    }
+    
+    .days-list {
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+    
+    .nav-arrow, .day-link {
+        min-width: 50px;
+        padding: 6px 8px;
+    }
+    
+    .day-link i {
+        font-size: 0.75rem;
+    }
+    
+    .day-link span {
+        font-size: 0.65rem;
+    }
+    
+    .lesson-content {
+        padding: 10px;
+    }
+    
+    .lesson-icon {
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+    }
+    
+    .lesson-icon-text {
+        font-size: 14px;
+    }
+}
+</style>
+
+<script>
+// Навигация по неделям
+document.querySelector('.prev-week').addEventListener('click', function(e) {
+    e.preventDefault();
+    const currentUrl = new URL(window.location);
+    const currentDate = new URLSearchParams(currentUrl.search).get('date') || new Date().toISOString().split('T')[0];
+    const date = new Date(currentDate);
+    date.setDate(date.getDate() - 7);
+    currentUrl.searchParams.set('date', date.toISOString().split('T')[0]);
+    window.location.href = currentUrl.toString();
+});
+
+document.querySelector('.next-week').addEventListener('click', function(e) {
+    e.preventDefault();
+    const currentUrl = new URL(window.location);
+    const currentDate = new URLSearchParams(currentUrl.search).get('date') || new Date().toISOString().split('T')[0];
+    const date = new Date(currentDate);
+    date.setDate(date.getDate() + 7);
+    currentUrl.searchParams.set('date', date.toISOString().split('T')[0]);
+    window.location.href = currentUrl.toString();
+});
+</script>
 {% endblock %}

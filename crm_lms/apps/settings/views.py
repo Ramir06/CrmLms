@@ -8,10 +8,11 @@ from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings as django_settings
 from django.contrib.auth import get_user_model
+from .models import FooterNavigationLink
 import secrets
 import string
 
-from .models import SystemSetting, SectionOrder
+from .models import SystemSetting, SectionOrder, PaymentMethod, FooterContent
 from apps.courses.models import Course
 from apps.lectures.models import Section
 from apps.core.mixins import admin_required
@@ -32,8 +33,100 @@ def generate_password(length=12):
 
 @login_required
 @user_passes_test(is_admin)
+def update_system_settings(request):
+    """Update system settings."""
+    if request.method == 'POST':
+        # Получаем настройки из формы
+        menu_position = request.POST.get('menu_position', 'left')
+        student_fields = request.POST.getlist('student_fields')
+        
+        # Сохраняем настройки в базу данных
+        SystemSetting.objects.update_or_create(
+            key='menu_position',
+            defaults={'value': menu_position, 'description': 'Положение меню в системе'}
+        )
+        
+        # Сохраняем поля формы студента как JSON
+        import json
+        SystemSetting.objects.update_or_create(
+            key='student_form_fields',
+            defaults={'value': json.dumps(student_fields), 'description': 'Поля формы создания студента'}
+        )
+        
+        # Применяем настройки немедленно (если нужно)
+        apply_system_settings()
+        
+        messages.success(request, 'Настройки системы сохранены и применены')
+        return redirect('settings:dashboard')
+    
+    return redirect('settings:dashboard')
+
+
+def apply_system_settings():
+    """Применяет системные настройки к работе системы."""
+    # Получаем настройки положения меню
+    menu_position = SystemSetting.get_value('menu_position', 'left')
+    
+    # Здесь можно добавить логику применения настроек
+    # Например, можно сохранить в кэш или глобальные переменные
+    from django.core.cache import cache
+    cache.set('menu_position', menu_position, timeout=3600)  # кэшируем на час
+    
+    # Получаем настройки полей формы
+    student_fields_json = SystemSetting.get_value('student_form_fields', '[]')
+    try:
+        import json
+        student_fields = json.loads(student_fields_json)
+        cache.set('student_form_fields', student_fields, timeout=3600)
+    except json.JSONDecodeError:
+        cache.set('student_form_fields', ['login', 'password', 'email'], timeout=3600)
+
+
+def get_student_form_fields():
+    """Возвращает список полей для формы создания студента."""
+    from django.core.cache import cache
+    
+    # Сначала пробуем получить из кэша
+    fields = cache.get('student_form_fields')
+    if fields is not None:
+        return fields
+    
+    # Если в кэше нет, получаем из базы
+    student_fields_json = SystemSetting.get_value('student_form_fields', '["login", "password", "email"]')
+    try:
+        import json
+        fields = json.loads(student_fields_json)
+    except json.JSONDecodeError:
+        fields = ['login', 'password', 'email']
+    
+    # Сохраняем в кэш
+    cache.set('student_form_fields', fields, timeout=3600)
+    return fields
+
+
+def get_menu_position():
+    """Возвращает положение меню."""
+    from django.core.cache import cache
+    
+    # Сначала пробуем получить из кэша
+    position = cache.get('menu_position')
+    if position is not None:
+        return position
+    
+    # Если в кэше нет, получаем из базы
+    position = SystemSetting.get_value('menu_position', 'left')
+    cache.set('menu_position', position, timeout=3600)
+    return position
+
+
+@login_required
+@user_passes_test(is_admin)
 def settings_dashboard(request):
     """Main settings dashboard."""
+    # Загружаем текущие настройки
+    current_menu_position = get_menu_position()
+    current_student_fields = get_student_form_fields()
+    
     # Get courses with their sections for ordering
     courses = Course.objects.all().prefetch_related('sections')
     
@@ -41,6 +134,9 @@ def settings_dashboard(request):
         'courses': courses,
         'page_title': 'Настройки системы',
         'active_menu': 'settings',
+        'current_menu_position': current_menu_position,
+        'current_student_fields': current_student_fields,
+        'current_fields_count': len(current_student_fields),
     }
     return render(request, 'admin/settings/dashboard.html', context)
 
@@ -214,5 +310,220 @@ def update_section_order(request):
             continue
     
     return JsonResponse({'ok': True})
+
+
+@login_required
+@user_passes_test(is_admin)
+def payment_methods_list(request):
+    """Список способов оплаты."""
+    payment_methods = PaymentMethod.objects.all()
+    context = {
+        'payment_methods': payment_methods,
+        'page_title': 'Способы оплаты',
+        'active_menu': 'settings',
+    }
+    return render(request, 'admin/settings/payment_methods/list.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def payment_method_create(request):
+    """Создание способа оплаты."""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        is_active = request.POST.get('is_active') == 'on'
+        sort_order = request.POST.get('sort_order', 0)
+        
+        if name:
+            PaymentMethod.objects.create(
+                name=name,
+                description=description,
+                is_active=is_active,
+                sort_order=sort_order
+            )
+            messages.success(request, 'Способ оплаты добавлен')
+        else:
+            messages.error(request, 'Название способа оплаты обязательно')
+        
+        return redirect('settings:payment_methods_list')
+    
+    return render(request, 'admin/settings/payment_methods/form.html', {
+        'page_title': 'Добавить способ оплаты',
+        'active_menu': 'settings',
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def payment_method_edit(request, pk):
+    """Редактирование способа оплаты."""
+    payment_method = get_object_or_404(PaymentMethod, pk=pk)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        is_active = request.POST.get('is_active') == 'on'
+        sort_order = request.POST.get('sort_order', 0)
+        
+        if name:
+            payment_method.name = name
+            payment_method.description = description
+            payment_method.is_active = is_active
+            payment_method.sort_order = sort_order
+            payment_method.save()
+            messages.success(request, 'Способ оплаты обновлен')
+        else:
+            messages.error(request, 'Название способа оплаты обязательно')
+        
+        return redirect('settings:payment_methods_list')
+    
+    return render(request, 'admin/settings/payment_methods/form.html', {
+        'payment_method': payment_method,
+        'page_title': 'Редактировать способ оплаты',
+        'active_menu': 'settings',
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def payment_method_delete(request, pk):
+    """Удаление способа оплаты."""
+    payment_method = get_object_or_404(PaymentMethod, pk=pk)
+    
+    if request.method == 'POST':
+        payment_method.delete()
+        messages.success(request, 'Способ оплаты удален')
+    
+    return redirect('settings:payment_methods_list')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def payment_method_toggle(request, pk):
+    """Включение/отключение способа оплаты."""
+    payment_method = get_object_or_404(PaymentMethod, pk=pk)
+    payment_method.is_active = not payment_method.is_active
+    payment_method.save()
+    
+    return JsonResponse({
+        'ok': True,
+        'is_active': payment_method.is_active
+    })
+
+
+def footer_password_check(request):
+    """Проверка пароля для доступа к футеру."""
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        stored_password = SystemSetting.get_value('footer_password', '')
+        
+        if password == stored_password:
+            request.session['footer_access'] = True
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Неверный пароль'})
+    
+    return JsonResponse({'success': False, 'error': 'Метод не разрешен'})
+
+
+@login_required
+def footer_editor(request):
+    """Редактор футера с парольной защитой."""
+    if not request.session.get('footer_access'):
+        if request.method == 'POST':
+            password = request.POST.get('password')
+            stored_password = SystemSetting.get_value('footer_password', '')
+            
+            if password == stored_password:
+                request.session['footer_access'] = True
+            else:
+                return render(request, 'admin/settings/footer_password.html', {
+                    'error': 'Неверный пароль'
+                })
+        else:
+            return render(request, 'admin/settings/footer_password.html')
+    
+    footer_content = FooterContent.objects.first()
+    if not footer_content:
+        footer_content = FooterContent.objects.create()
+    
+    nav_links = FooterNavigationLink.objects.all().order_by('order', 'title')
+    
+    if request.method == 'POST':
+        footer_content.title = request.POST.get('title', 'ОкууTrack')
+        footer_content.description = request.POST.get('description', '')
+        footer_content.public_offer = request.POST.get('public_offer', '')
+        footer_content.contact_info = request.POST.get('contact_info', '')
+        footer_content.copyright_text = request.POST.get('copyright_text', '© 2024 ОкууTrack. Все права защищены.')
+        footer_content.is_active = request.POST.get('is_active') == 'on'
+        
+        # Parse JSON fields
+        import json
+        try:
+            if request.POST.get('social_links'):
+                footer_content.social_links = json.loads(request.POST.get('social_links', '{}'))
+            if request.POST.get('additional_links'):
+                footer_content.additional_links = json.loads(request.POST.get('additional_links', '{}'))
+        except json.JSONDecodeError:
+            pass
+        
+        footer_content.save()
+        messages.success(request, 'Настройки футера успешно обновлены!')
+        return redirect('settings:footer_editor')
+    
+    context = {
+        'footer_content': footer_content,
+        'nav_links': nav_links,
+        'page_title': 'Редактор футера',
+        'active_menu': 'settings',
+    }
+    return render(request, 'admin/settings/footer_editor.html', context)
+
+
+@login_required
+@admin_required
+def footer_navigation_list(request):
+    """Список навигационных ссылок футера."""
+    nav_links = FooterNavigationLink.objects.all().order_by('order', 'title')
+    
+    context = {
+        'nav_links': nav_links,
+        'page_title': 'Навигационные ссылки футера',
+        'active_menu': 'settings',
+    }
+    return render(request, 'admin/settings/footer_navigation_list.html', context)
+
+
+@login_required
+@admin_required
+def footer_navigation_add(request):
+    """Добавление навигационной ссылки футера."""
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        slug = request.POST.get('slug')
+        content = request.POST.get('content', '')
+        order = request.POST.get('order', 0)
+        is_active = request.POST.get('is_active') == 'on'
+        
+        if title and slug:
+            nav_link = FooterNavigationLink.objects.create(
+                title=title,
+                slug=slug,
+                content=content,
+                order=order,
+                is_active=is_active
+            )
+            messages.success(request, f'Навигационная ссылка "{nav_link.title}" успешно создана!')
+            return redirect('settings:footer_navigation_list')
+        else:
+            messages.error(request, 'Заполните обязательные поля!')
+    
+    context = {
+        'page_title': 'Добавить навигационную ссылку',
+        'active_menu': 'settings',
+    }
+    return render(request, 'admin/settings/footer_navigation_form.html', context)
 
 

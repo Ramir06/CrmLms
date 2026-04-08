@@ -1,0 +1,391 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% load leads_extras %}
+
+{% block title %}Отчеты по продажам{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<link href="{% static 'css/leads.css' %}" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">CRM — Отчеты по продажам</h4>
+    <div class="page-actions d-flex flex-wrap gap-2">
+        <form method="get" class="d-flex gap-2">
+            <input type="date" name="start_date" class="form-control form-control-sm" 
+                   value="{{ filters.start_date }}">
+            <input type="date" name="end_date" class="form-control form-control-sm" 
+                   value="{{ filters.end_date }}">
+            <select name="manager" class="form-select form-select-sm">
+                <option value="">Все менеджеры</option>
+                {% for manager in managers %}
+                <option value="{{ manager.id }}" {% if filters.manager == manager.id|stringformat:"s" %}selected{% endif %}>
+                    {{ manager|get_full_name_safe }}
+                </option>
+                {% endfor %}
+            </select>
+            <select name="course" class="form-select form-select-sm">
+                <option value="">Все курсы</option>
+                {% for course in courses %}
+                <option value="{{ course.id }}" {% if filters.course == course.id|stringformat:"s" %}selected{% endif %}>
+                    {{ course.title }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-funnel me-1"></i>Применить
+            </button>
+        </form>
+        
+        <form method="get" action="{% url 'leads:export_sales_report' %}" class="d-inline">
+            <input type="hidden" name="start_date" value="{{ filters.start_date }}">
+            <input type="hidden" name="end_date" value="{{ filters.end_date }}">
+            <input type="hidden" name="manager" value="{{ filters.manager }}">
+            <input type="hidden" name="course" value="{{ filters.course }}">
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="bi bi-download me-1"></i>Скачать Excel
+            </button>
+        </form>
+        
+        <a href="{% url 'leads:kanban' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>К лидам
+        </a>
+    </div>
+</div>
+
+<!-- KPI карточки -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ sales_stats.total_payments }}</h4>
+                        <p class="card-text">Всего продаж</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-cash-stack display-4 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ sales_stats.total_amount|floatformat:0 }} ₽</h4>
+                        <p class="card-text">Общая выручка</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-currency-exchange display-4 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ sales_stats.avg_payment|floatformat:0 }} ₽</h4>
+                        <p class="card-text">Средний чек</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-calculator display-4 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ sales_stats.conversion_rate }}%</h4>
+                        <p class="card-text">Конверсия</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-graph-up-arrow display-4 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Графики и таблицы -->
+<div class="row">
+    <!-- График продаж по менеджерам -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Продажи по менеджерам</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="managerChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- График продаж по курсам -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Продажи по курсам</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="courseChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Таблица топ-менеджеров -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Топ менеджеры по продажам</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Менеджер</th>
+                                <th class="text-center">Кол-во</th>
+                                <th class="text-center">Сумма</th>
+                                <th class="text-center">Средний чек</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for manager_stat in sales_stats.manager_stats %}
+                            <tr>
+                                <td>
+                                    {% if manager_stat.created_by__username %}
+                                        {{ manager_stat.created_by__username }}
+                                    {% else %}
+                                        <em>Не указан</em>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">{{ manager_stat.count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <strong>{{ manager_stat.amount|floatformat:0 }} ₽</strong>
+                                </td>
+                                <td class="text-center">
+                                    {% if manager_stat.count > 0 %}
+                                        {{ manager_stat.amount|div:manager_stat.count|floatformat:0 }} ₽
+                                    {% else %}
+                                        0 ₽
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Таблица популярных курсов -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Популярные курсы</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Курс</th>
+                                <th class="text-center">Кол-во</th>
+                                <th class="text-center">Сумма</th>
+                                <th class="text-center">Средний чек</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course_stat in sales_stats.course_stats %}
+                            <tr>
+                                <td>
+                                    {% if course_stat.course__title %}
+                                        {{ course_stat.course__title }}
+                                    {% else %}
+                                        <em>Без курса</em>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">{{ course_stat.count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <strong>{{ course_stat.amount|floatformat:0 }} ₽</strong>
+                                </td>
+                                <td class="text-center">
+                                    {% if course_stat.count > 0 %}
+                                        {{ course_stat.amount|div:course_stat.count|floatformat:0 }} ₽
+                                    {% else %}
+                                        0 ₽
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Способы оплаты -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Способы оплаты</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <canvas id="paymentMethodChart" width="400" height="200"></canvas>
+            </div>
+            <div class="col-md-4">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Способ</th>
+                                <th class="text-center">Кол-во</th>
+                                <th class="text-center">Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for method_stat in sales_stats.method_stats %}
+                            <tr>
+                                <td>
+                                    {% if method_stat.payment_method == 'cash' %}Наличные{% endif %}
+                                    {% if method_stat.payment_method == 'card' %}Карта{% endif %}
+                                    {% if method_stat.payment_method == 'transfer' %}Перевод{% endif %}
+                                    {% if method_stat.payment_method == 'online' %}Онлайн{% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info">{{ method_stat.count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <strong>{{ method_stat.amount|floatformat:0 }} ₽</strong>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// График по менеджерам
+const managerCtx = document.getElementById('managerChart').getContext('2d');
+const managerData = {{ sales_stats.manager_stats_json|safe }};
+new Chart(managerCtx, {
+    type: 'bar',
+    data: {
+        labels: managerData.map(item => item.created_by__username || 'Не указан'),
+        datasets: [{
+            label: 'Сумма продаж (₽)',
+            data: managerData.map(item => item.amount),
+            backgroundColor: '#007bff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// График по курсам
+const courseCtx = document.getElementById('courseChart').getContext('2d');
+const courseData = {{ sales_stats.course_stats_json|safe }};
+new Chart(courseCtx, {
+    type: 'doughnut',
+    data: {
+        labels: courseData.map(item => item.course__title || 'Без курса'),
+        datasets: [{
+            data: courseData.map(item => item.amount),
+            backgroundColor: [
+                '#28a745', '#ffc107', '#dc3545', '#6c757d',
+                '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// График по способам оплаты
+const paymentMethodCtx = document.getElementById('paymentMethodChart').getContext('2d');
+const paymentMethodData = {{ sales_stats.method_stats_json|safe }};
+new Chart(paymentMethodCtx, {
+    type: 'pie',
+    data: {
+        labels: paymentMethodData.map(item => {
+            if (item.payment_method === 'cash') return 'Наличные';
+            if (item.payment_method === 'card') return 'Карта';
+            if (item.payment_method === 'transfer') return 'Перевод';
+            if (item.payment_method === 'online') return 'Онлайн';
+            return item.payment_method;
+        }),
+        datasets: [{
+            data: paymentMethodData.map(item => item.amount),
+            backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

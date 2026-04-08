@@ -4,20 +4,30 @@
 {% url 'news:mentor_list' as url_news %}
 {% url 'accounts:profile' as url_profile %}
 {% url 'salaries:mentor_view' as url_salary %}
+{% url 'codecoins_student:student_dashboard' as url_codecoins %}
+{% url 'mentors:substitute_courses' as url_substitute_courses %}
+
+<link rel="stylesheet" href="{% static 'css/modern-navigation.css' %}">
 
 <div class="main-menu menu-fixed menu-light menu-accordion menu-shadow" id="appSidebar">
     <div class="navbar-header">
         <ul class="nav navbar-nav flex-row">
             <li class="nav-item me-auto">
                 <a class="navbar-brand" href="{{ url_dashboard }}">
-                    <div class="brand-logo"><i class="bi bi-mortarboard-fill"></i></div>
-                    <h2 class="brand-text">IT Academy</h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7367f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-aperture" style="width: 2rem; height: 2rem"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>
+                    <h2 class="brand-text" style="color: #7367f0;">ОкууTrack</h2>
                 </a>
             </li>
             <li class="nav-item nav-toggle">
                 <button class="modern-nav-toggle" id="sidebarCollapseBtn" type="button">
-                    <i class="bi bi-record-circle d-none d-xl-block"></i>
-                    <i class="bi bi-x-lg d-block d-xl-none"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="d-none d-xl-block">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="d-block d-xl-none">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                 </button>
             </li>
         </ul>
@@ -27,51 +37,117 @@
 
     <div class="main-menu-content">
         <ul class="navigation navigation-main">
-            <li class="navigation-header"><span>{% trans "Меню" %}</span></li>
-            <li class="nav-item {% if 'dashboard' in request.path %}active{% endif %}">
+            <li class="navigation-header">
+                <span>Меню</span>
+            </li>
+
+            <li class="nav-item {% if 'dashboard' in request.path %}active{% endif %}" data-id="dashboard">
                 <a class="d-flex align-items-center" href="{{ url_dashboard }}">
-                    <i class="bi bi-house-door"></i><span class="menu-title text-truncate">{% trans "Главная" %}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 16px;">Главная</span>
                 </a>
             </li>
-            <li class="nav-item {% if 'calendar' in request.path %}active{% endif %}">
+
+            <li class="nav-item {% if 'calendar' in request.path %}active{% endif %}" data-id="calendar">
                 <a class="d-flex align-items-center" href="{{ url_calendar }}">
-                    <i class="bi bi-calendar3"></i><span class="menu-title text-truncate">{% trans "Расписание" %}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 16px;">Расписание</span>
                 </a>
             </li>
-            <li class="nav-item {% if 'news' in request.path %}active{% endif %}">
+
+
+            <li class="nav-item {% if 'news' in request.path %}active{% endif %}" data-id="news">
                 <a class="d-flex align-items-center" href="{{ url_news }}">
-                    <i class="bi bi-megaphone"></i><span class="menu-title text-truncate">{% trans "Объявления" %}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 16px;">Объявления</span>
                 </a>
             </li>
-            <li class="nav-item {% if 'salary' in request.path %}active{% endif %}">
-                <a class="d-flex align-items-center" href="{{ url_salary }}">
-                    <i class="bi bi-wallet2"></i><span class="menu-title text-truncate">{% trans "Зарплата" %}</span>
+
+
+            <li class="nav-item {% if 'codecoins' in request.path %}active{% endif %}" data-id="codecoins">
+                <a class="d-flex align-items-center" href="{{ url_codecoins }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 16px;">Кодкойны</span>
                 </a>
             </li>
 
             {% if my_courses %}
-            <li class="navigation-header"><span>{% trans "Мои курсы" %}</span></li>
+            <li class="navigation-header">
+                <span>Мои курсы</span>
+            </li>
             {% for course in my_courses %}
-            <li class="nav-item {% if course.pk|stringformat:'s' in request.path %}active{% endif %}">
+            <li class="nav-item {% if course.pk|stringformat:'s' in request.path %}active{% endif %}" data-id="course-{{ course.pk }}">
                 <a class="d-flex align-items-center" href="{% url 'lectures:index' course_id=course.pk %}">
-                    <i class="bi bi-book"></i>
-                    <span class="menu-title text-truncate">{{ course.title }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 19px;">{{ course.title }}</span>
                     <span class="badge bg-secondary ms-auto" style="font-size:10px;">{{ course.current_students_count }}</span>
                 </a>
             </li>
             {% endfor %}
             {% endif %}
 
-            <li class="navigation-header d-xl-none"><span>{% trans "Аккаунт" %}</span></li>
-            <li class="nav-item d-xl-none">
-                <form action="{% url 'accounts:logout' %}" method="post" style="margin:2px 12px;">
-                    {% csrf_token %}
-                    <button type="submit" class="d-flex align-items-center w-100 text-danger" style="background:none;border:none;padding:10px 15px;font-size:.85rem;border-radius:5px;">
-                        <i class="bi bi-box-arrow-right" style="margin-right:.6rem;width:1.1rem;"></i>
-                        <span>{% trans "Выйти" %}</span>
-                    </button>
-                </form>
+            <!-- Mobile logout -->
+            <li class="navigation-header d-md-none">
+                <span>Профиль</span>
+            </li>
+
+            <li class="nav-item d-md-none" data-id="logout">
+                <a class="d-flex align-items-center" href="{% url 'accounts:logout' %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 16px;">Выйти</span>
+                </a>
             </li>
         </ul>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('appSidebar');
+    const toggleBtn = document.getElementById('sidebarCollapseBtn');
+    
+    // Toggle sidebar collapse
+    toggleBtn.addEventListener('click', function() {
+        sidebar.classList.toggle('menu-collapsed');
+    });
+    
+    // Mobile menu toggle
+    if (window.innerWidth <= 991) {
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 991) {
+            sidebar.classList.remove('open');
+        }
+    });
+});
+</script>

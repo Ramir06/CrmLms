@@ -2,149 +2,681 @@
 {% load i18n %}
 {% block title %}{{ course.title }}{% endblock %}
 
+{% block student_extra_css %}
+<style>
+/* Course detail specific styles */
+.course-hero {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+}
+
+.course-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    50% { transform: translate(-30%, -30%) rotate(180deg); }
+}
+
+.course-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.course-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.course-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+}
+
+.course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.95rem;
+    opacity: 0.85;
+}
+
+.course-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.course-progress-widget {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    min-width: 150px;
+}
+
+.progress-percentage {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.progress-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.progress-bar-container {
+    margin-top: 1rem;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFD700, #FFA500);
+    border-radius: 4px;
+    transition: width var(--transition-slow);
+    animation: progress-shimmer 2s infinite;
+}
+
+/* Navigation cards */
+.nav-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.75rem 1.25rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 200ms ease;
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.nav-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-color);
+    transform: scaleX(0);
+    transition: transform 200ms ease;
+}
+
+.nav-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+}
+
+.nav-card:hover::before {
+    transform: scaleX(1);
+}
+
+.nav-card:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 100ms ease;
+}
+
+.nav-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.nav-card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    transition: color 200ms ease;
+    position: relative;
+    z-index: 1;
+}
+
+.nav-card:hover .nav-card-icon {
+    color: var(--primary-color);
+}
+
+.nav-card-icon.text-primary {
+    color: var(--primary-color);
+}
+
+.nav-card-icon.text-info {
+    color: var(--secondary-color);
+}
+
+.nav-card-icon.text-success {
+    color: var(--success-color);
+}
+
+.nav-card-icon.text-warning {
+    color: var(--warning-color);
+}
+
+.nav-card-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    transition: color 200ms ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-card:hover .nav-card-title {
+    color: var(--primary-color);
+}
+
+.nav-card-badge {
+    margin-top: 0.75rem;
+    position: relative;
+    z-index: 1;
+}
+
+.badge-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    background: var(--danger-color);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+.attendance-stat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 24px;
+    padding: 0 8px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+}
+
+.grade-stat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 24px;
+    padding: 0 6px;
+    background: var(--warning-color);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+    .nav-card {
+        transition: none;
+    }
+    
+    .nav-card:active {
+        transform: scale(0.98);
+        background: rgba(var(--primary-color), 0.04);
+    }
+    
+    .nav-card-icon {
+        transition: none;
+    }
+}
+
+/* Stats cards */
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(var(--primary-color), 0.05) 0%, transparent 70%);
+    transform: scale(0);
+    transition: transform var(--transition-slow);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card:hover::after {
+    transform: scale(1);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Materials section */
+.materials-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-title::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+.material-section {
+    background: var(--light-color);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-base);
+}
+
+.material-section:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.material-section-header {
+    background: linear-gradient(135deg, var(--light-color), white);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.material-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+    border-bottom: 1px solid rgba(var(--border-color), 0.5);
+}
+
+.material-item:last-child {
+    border-bottom: none;
+}
+
+.material-item:hover {
+    background: rgba(var(--primary-color), 0.05);
+    padding-left: 2rem;
+}
+
+.material-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: all var(--transition-fast);
+}
+
+.material-icon.video {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.material-icon.file {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+}
+
+.material-icon.text {
+    background: linear-gradient(135deg, var(--secondary-color), #0891b2);
+    color: white;
+}
+
+.material-item:hover .material-icon {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.material-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.material-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.material-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.material-arrow {
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+}
+
+.material-item:hover .material-arrow {
+    color: var(--primary-color);
+    transform: translateX(4px);
+}
+
+/* Quiz attempts table */
+.quiz-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+}
+
+.quiz-table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.quiz-table th {
+    background: linear-gradient(135deg, var(--light-color), white);
+    font-weight: 600;
+    color: var(--text-primary);
+    border: none;
+    padding: 1rem;
+}
+
+.quiz-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.quiz-table tbody tr:hover {
+    background: rgba(var(--primary-color), 0.02);
+}
+
+.quiz-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quiz-badge.passed {
+    background: linear-gradient(135deg, rgba(var(--success-color), 0.2), rgba(var(--success-color), 0.1));
+    color: var(--success-color);
+    border: 1px solid rgba(var(--success-color), 0.3);
+}
+
+.quiz-badge.failed {
+    background: linear-gradient(135deg, rgba(var(--danger-color), 0.2), rgba(var(--danger-color), 0.1));
+    color: var(--danger-color);
+    border: 1px solid rgba(var(--danger-color), 0.3);
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.empty-state-text {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .course-hero {
+        padding: 1.5rem;
+    }
+    
+    .course-title {
+        font-size: 1.5rem;
+    }
+    
+    .course-progress-widget {
+        min-width: 120px;
+        padding: 1rem;
+    }
+    
+    .progress-percentage {
+        font-size: 2rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .nav-card {
+        padding: 1.25rem;
+    }
+    
+    .materials-section,
+    .quiz-section {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
 {% block breadcrumb %}
-<div class="st-breadcrumb">
-    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
-    <span class="sep">/</span>
-    <span class="current">{{ course.title }}</span>
-</div>
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">{{ course.title }}</li>
+    <li class="breadcrumb-item"><a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a></li>
+</ol>
 {% endblock %}
 
 {% block content %}
-<div class="p-4">
-    <!-- Course Header -->
-    <div class="card mb-4" style="border-radius:12px;border:none;background:linear-gradient(135deg,{{ course.color }},{{ course.color }}dd);color:#fff;">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-start justify-content-between">
-                <div>
-                    <h2 class="mb-2 fw-bold">{{ course.title }}</h2>
-                    <p class="mb-3 opacity-90">{{ course.subject|default:"—" }}</p>
-                    <div class="d-flex flex-wrap gap-3" style="font-size:14px;opacity:.85;">
-                        <span><i class="bi bi-person-badge me-1"></i>{{ course.mentor.get_display_name }}</span>
-                        <span><i class="bi bi-calendar3 me-1"></i>{{ course.get_days_display_short }}</span>
-                        {% if course.room %}<span><i class="bi bi-geo-alt me-1"></i>{{ course.room }}</span>{% endif %}
+<div class="content-wrapper">
+    <!-- Course Hero -->
+    <div class="course-hero mb-4">
+        <div class="course-hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="course-title">{{ course.title }}</h1>
+                    <p class="course-subtitle">{{ course.subject|default:"—" }}</p>
+                    <div class="course-meta">
+                        <div class="course-meta-item">
+                            <i class="bi bi-person-badge"></i>
+                            <span>{{ course.mentor.get_display_name }}</span>
+                        </div>
+                        <div class="course-meta-item">
+                            <i class="bi bi-calendar3"></i>
+                            <span>{{ course.get_days_display_short }}</span>
+                        </div>
+                        {% if course.room %}
+                        <div class="course-meta-item">
+                            <i class="bi bi-geo-alt"></i>
+                            <span>{{ course.room }}</span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-                <div class="text-end">
-                    <div class="fs-5 fw-bold">{{ enrollment.progress_percent }}%</div>
-                    <div class="opacity-75">{% trans "Прогресс" %}</div>
+                <div class="col-lg-4">
+                    <div class="course-progress-widget ms-auto">
+                        <div class="progress-percentage">{{ enrollment.progress_percent }}%</div>
+                        <div class="progress-label">{% trans "Прогресс" %}</div>
+                        <div class="progress-bar-container" style="--progress: {{ enrollment.progress_percent }}%;">
+                            <div class="progress-bar-fill" style="width: var(--progress);"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick nav -->
+    <!-- Quick Navigation -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <a href="{% url 'students:assignments' course.pk %}" class="card text-center text-decoration-none border-0 shadow-sm h-100" style="border-radius:12px;">
-                <div class="card-body py-3">
-                    <i class="bi bi-check2-square fs-3 text-primary d-block mb-1"></i>
-                    <div class="fw-semibold small">{% trans "Задания" %}</div>
+            <a href="{% url 'students:attendance' course.pk %}" class="nav-card">
+                <div class="nav-card-content">
+                    <div class="nav-card-icon text-success">
+                        <i class="bi bi-calendar-week"></i>
+                    </div>
+                    <div class="nav-card-title">{% trans "Посещаемость" %}</div>
+                </div>
+                <div class="nav-card-badge">
+                    <span class="attendance-stat">{{ enrollment.attendance_percent }}%</span>
                 </div>
             </a>
         </div>
         <div class="col-6 col-md-3">
-            <a href="{% url 'students:quizzes' course.pk %}" class="card text-center text-decoration-none border-0 shadow-sm h-100" style="border-radius:12px;">
-                <div class="card-body py-3">
-                    <i class="bi bi-patch-question fs-3 text-info d-block mb-1"></i>
-                    <div class="fw-semibold small">{% trans "Тесты" %}</div>
+            <a href="{% url 'students:grades' course.pk %}" class="nav-card">
+                <div class="nav-card-content">
+                    <div class="nav-card-icon text-warning">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div class="nav-card-title">{% trans "Оценки" %}</div>
+                </div>
+                <div class="nav-card-badge">
+                    {% if enrollment.average_grade %}
+                        <span class="grade-stat">{{ enrollment.average_grade|floatformat:1 }}</span>
+                    {% endif %}
                 </div>
             </a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a href="{% url 'students:attendance' course.pk %}" class="card text-center text-decoration-none border-0 shadow-sm h-100" style="border-radius:12px;">
-                <div class="card-body py-3">
-                    <i class="bi bi-person-check fs-3 text-success d-block mb-1"></i>
-                    <div class="fw-semibold small">{% trans "Посещаемость" %}</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a href="{% url 'students:grades' course.pk %}" class="card text-center text-decoration-none border-0 shadow-sm h-100" style="border-radius:12px;">
-                <div class="card-body py-3">
-                    <i class="bi bi-journal-check fs-3 text-warning d-block mb-1"></i>
-                    <div class="fw-semibold small">{% trans "Оценки" %}</div>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card text-center border-0 shadow-sm" style="border-radius:12px;">
-                <div class="card-body">
-                    <div class="fs-3 fw-bold text-primary">{{ enrollment.points }}</div>
-                    <div class="text-muted small">{% trans "Баллов" %}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-0 shadow-sm" style="border-radius:12px;">
-                <div class="card-body">
-                    <div class="fs-3 fw-bold text-warning">{{ enrollment.rating|default:"—" }}</div>
-                    <div class="text-muted small">{% trans "Рейтинг" %}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-0 shadow-sm" style="border-radius:12px;">
-                <div class="card-body">
-                    <div class="fs-3 fw-bold text-info">{{ sections.count }}</div>
-                    <div class="text-muted small">{% trans "Разделов" %}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-0 shadow-sm" style="border-radius:12px;">
-                <div class="card-body">
-                    <div class="fs-3 fw-bold text-success">{{ attempts.count }}</div>
-                    <div class="text-muted small">{% trans "Тестов пройдено" %}</div>
-                </div>
-            </div>
         </div>
     </div>
 
     <!-- Course Materials -->
-    <div class="mb-4">
-        <h4 class="mb-3">{% trans "Материалы курса" %}</h4>
+    <div class="materials-section mb-4">
+        <h2 class="section-title">{% trans "Материалы курса" %}</h2>
         {% if not sections %}
-        <div class="text-center py-5 bg-white rounded-3 shadow-sm">
-            <i class="bi bi-journal-text fs-1 text-muted d-block mb-2"></i>
-            <p class="text-muted">{% trans "Материалы пока не добавлены" %}</p>
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <p class="empty-state-text">{% trans "Материалы пока не добавлены" %}</p>
         </div>
         {% else %}
         {% for section in sections %}
-        <div class="card mb-3 border-0 shadow-sm" style="border-radius:12px;overflow:hidden;">
-            <div class="card-header bg-light">
-                <h6 class="mb-0 fw-semibold">{{ section.title }}</h6>
+        <div class="material-section">
+            <div class="material-section-header">
+                {{ section.title }}
             </div>
             {% if section.materials.exists %}
-            <div class="list-group list-group-flush">
+            <div>
                 {% for material in section.materials.all %}
-                <a href="{% url 'students:material_detail' course.pk material.pk %}" 
-                   class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-                    <div class="flex-shrink-0">
+                <a href="{% url 'students:material_detail' course.pk material.pk %}" class="material-item">
+                    <div class="material-icon {% if material.type == 'video' %}video{% elif material.type == 'file' %}file{% else %}text{% endif %}">
                         {% if material.type == 'video' %}
-                        <i class="bi bi-play-circle text-danger fs-5"></i>
+                        <i class="bi bi-play-circle"></i>
                         {% elif material.type == 'file' %}
-                        <i class="bi bi-file-earmark text-primary fs-5"></i>
+                        <i class="bi bi-file-earmark"></i>
                         {% else %}
-                        <i class="bi bi-journal-text text-info fs-5"></i>
+                        <i class="bi bi-journal-text"></i>
                         {% endif %}
                     </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-medium">{{ material.title }}</div>
+                    <div class="material-content">
+                        <div class="material-title">{{ material.title }}</div>
                         {% if material.body_html %}
-                        <div class="text-muted small">{{ material.body_html|striptags|truncatechars:100 }}</div>
+                        <div class="material-description">{{ material.body_html|striptags|truncatechars:100 }}</div>
                         {% endif %}
                     </div>
-                    <i class="bi bi-chevron-right text-muted"></i>
+                    <div class="material-arrow">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
                 </a>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="card-body text-muted">
+            <div class="text-muted p-3 text-center">
                 {% trans "В этом разделе пока нет материалов" %}
             </div>
             {% endif %}
@@ -155,35 +687,33 @@
 
     <!-- Quiz Attempts -->
     {% if attempts %}
-    <div>
-        <h4 class="mb-3">{% trans "Мои тесты" %}</h4>
-        <div class="card border-0 shadow-sm" style="border-radius:12px;">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>{% trans "Тест" %}</th>
-                            <th>{% trans "Баллы" %}</th>
-                            <th>{% trans "Результат" %}</th>
-                            <th>{% trans "Дата" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for attempt in attempts %}
-                        <tr>
-                            <td class="fw-medium">{{ attempt.quiz.title }}</td>
-                            <td>{{ attempt.score }}/{{ attempt.max_score }}</td>
-                            <td>
-                                <span class="badge {% if attempt.passed %}bg-success{% else %}bg-danger{% endif %}">
-                                    {{ attempt.percentage }}% {% if attempt.passed %}{% trans "Сдан" %}{% else %}{% trans "Не сдан" %}{% endif %}
-                                </span>
-                            </td>
-                            <td class="text-muted">{{ attempt.submitted_at|date:"d.m.Y H:i" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <div class="quiz-section">
+        <h2 class="section-title">{% trans "Мои тесты" %}</h2>
+        <div class="quiz-table">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>{% trans "Тест" %}</th>
+                        <th>{% trans "Баллы" %}</th>
+                        <th>{% trans "Результат" %}</th>
+                        <th>{% trans "Дата" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                    <tr>
+                        <td class="fw-medium">{{ attempt.quiz.title }}</td>
+                        <td>{{ attempt.score }}/{{ attempt.max_score }}</td>
+                        <td>
+                            <span class="quiz-badge {% if attempt.passed %}passed{% else %}failed{% endif %}">
+                                {{ attempt.percentage }}% {% if attempt.passed %}{% trans "Сдан" %}{% else %}{% trans "Не сдан" %}{% endif %}
+                            </span>
+                        </td>
+                        <td class="text-muted">{{ attempt.submitted_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
     {% endif %}

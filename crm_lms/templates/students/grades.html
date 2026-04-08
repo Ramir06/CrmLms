@@ -3,13 +3,11 @@
 {% block title %}{% trans "Оценки" %} — {{ course.title }}{% endblock %}
 
 {% block breadcrumb %}
-<div class="st-breadcrumb">
-    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
-    <span class="sep">/</span>
-    <a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a>
-    <span class="sep">/</span>
-    <span class="current">{% trans "Оценки" %}</span>
-</div>
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">{% trans "Оценки" %}</li>
+    <li class="breadcrumb-item"><a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a></li>
+</ol>
 {% endblock %}
 
 {% block content %}
@@ -19,46 +17,6 @@
             <i class="bi bi-bar-chart-line me-2" style="color:#4f46e5"></i>{% trans "Оценки" %}
         </h3>
         <p class="mb-0" style="color:#6b7280;font-size:.875rem">{{ course.title }}</p>
-    </div>
-
-    <!-- Summary cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm" style="border-radius:12px">
-                <div class="card-body py-3 text-center">
-                    <div class="fs-4 fw-bold" style="color:#4f46e5">
-                        {% if total_max > 0 %}{{ total_earned|floatformat:0 }}/{{ total_max }}{% else %}—{% endif %}
-                    </div>
-                    <div style="font-size:.75rem;color:#6b7280">{% trans "Набрано баллов" %}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm" style="border-radius:12px">
-                <div class="card-body py-3 text-center">
-                    <div class="fs-4 fw-bold" style="color:#059669">{{ checked_count }}/{{ assignments_count }}</div>
-                    <div style="font-size:.75rem;color:#6b7280">{% trans "Проверено" %}</div>
-                </div>
-            </div>
-        </div>
-        {% if rating %}
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm" style="border-radius:12px">
-                <div class="card-body py-3 text-center">
-                    <div class="fs-4 fw-bold" style="color:#d97706">{{ rating.total_score|floatformat:0 }}</div>
-                    <div style="font-size:.75rem;color:#6b7280">{% trans "Общий балл" %}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm" style="border-radius:12px">
-                <div class="card-body py-3 text-center">
-                    <div class="fs-4 fw-bold" style="color:#0891b2">#{{ rating.rank }}</div>
-                    <div style="font-size:.75rem;color:#6b7280">{% trans "Место в рейтинге" %}</div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
 
     <!-- Assignment grades -->

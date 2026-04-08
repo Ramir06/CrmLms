@@ -1,0 +1,158 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}Редактирование комнаты{% endblock %}
+
+{% block extra_css %}
+<style>
+.room-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="room-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>Редактирование комнаты
+                </h4>
+                <p class="mb-0">Измените параметры комнаты чата</p>
+            </div>
+            <div>
+                <a href="{% url 'chat_admin:room_management' %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>К списку комнат
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'chat_admin:room_management' %}">Управление чатами</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">{{ room.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear me-2"></i>Настройки комнаты
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Название комнаты</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Подробное описание назначения комнаты</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    <strong>Активна</strong>
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Неактивные комнаты недоступны для пользователей
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>Сохранить изменения
+                            </button>
+                            <a href="{% url 'chat_admin:room_management' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Информация о комнате
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">ID:</dt>
+                        <dd class="col-sm-8">{{ room.id }}</dd>
+                        
+                        <dt class="col-sm-4">Создана:</dt>
+                        <dd class="col-sm-8">{{ room.created_at|date:"d.m.Y H:i" }}</dd>
+                        
+                        <dt class="col-sm-4">Обновлена:</dt>
+                        <dd class="col-sm-8">{{ room.updated_at|date:"d.m.Y H:i" }}</dd>
+                        
+                        <dt class="col-sm-4">Статус:</dt>
+                        <dd class="col-sm-8">
+                            {% if room.is_active %}
+                            <span class="badge bg-success">Активна</span>
+                            {% else %}
+                            <span class="badge bg-danger">Неактивна</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-link-45deg me-2"></i>Быстрые ссылки
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/chat/room/{{ room.id }}/" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-chat-dots me-2"></i>Открыть чат
+                        </a>
+                        <a href="{% url 'chat_admin:room_management' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-list me-2"></i>Все комнаты
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,16 +3,33 @@
 {% block title %}{% trans "Тесты" %} — {{ course.title }}{% endblock %}
 
 {% block breadcrumb %}
-<div class="st-breadcrumb">
-    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
-    <span class="sep">/</span>
-    <a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a>
-    <span class="sep">/</span>
-    <span class="current">{% trans "Тесты" %}</span>
-</div>
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">{% trans "Тесты" %}</li>
+    <li class="breadcrumb-item"><a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a></li>
+</ol>
 {% endblock %}
 
 {% block content %}
+{% if course %}
+<div class="course-header-bar px-3 py-2" style="margin-bottom:1rem;">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div>
+            <h6 class="mb-0 fw-semibold">{{ course.title }}</h6>
+            <small class="text-muted">
+                <span class="badge badge-sm me-1 {% if course.status == 'active' %}bg-success{% elif course.status == 'planned' %}bg-warning text-dark{% elif course.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                    {{ course.get_status_display }}
+                </span>
+                {{ course.get_days_display_short }}
+                {% if course.lesson_start_time %} · {{ course.lesson_start_time|time:"H:i" }}{% endif %}
+            </small>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <span class="badge bg-light text-dark border">{{ course.current_students_count }}/{{ course.capacity }}</span>
+        </div>
+    </div>
+</div>
+{% endif %}
 <div class="p-4">
     <div class="mb-4">
         <h3 class="fw-bold mb-1" style="color:#111827">
@@ -73,7 +90,7 @@
                         </div>
                         <div class="progress mt-1" style="height:6px;">
                             <div class="progress-bar {% if item.best.passed %}bg-success{% else %}bg-danger{% endif %}" 
-                                 style="width:{{ item.best.percentage }}%"></div>
+                                 data-width="{{ item.best.percentage }}" style="width: 0%"></div>
                         </div>
                         <div class="text-muted small mt-1">
                             {% trans "Попыток" %}: {{ item.attempts_count }}
@@ -95,4 +112,16 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set progress bar widths from data attributes
+    document.querySelectorAll('.progress-bar[data-width]').forEach(function(bar) {
+        const width = bar.getAttribute('data-width');
+        if (width) {
+            bar.style.width = width + '%';
+        }
+    });
+});
+</script>
 {% endblock %}

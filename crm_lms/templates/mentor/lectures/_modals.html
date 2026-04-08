@@ -52,12 +52,12 @@
                 <h5 class="modal-title">Скопировать программу обучения</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" id="copyCourseForm">
+            <form method="post" action="{% url 'lectures:copy_course' course_id=course.pk %}">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
-                        Будут скопированы все разделы, материалы, задания и тесты без данных студентов (решений, оценок).
+                        Будут скопированы все разделы и материалы без данных студентов.
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-medium">Выберите курс для копирования</label>

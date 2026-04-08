@@ -1,0 +1,177 @@
+{% extends "codecoins/mentor/base.html" %}
+
+{% block title %}Кодкойны - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Кодкойны - {{ course.title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{{ url_dashboard }}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'lectures:index' course.id %}">{{ course.title }}</a></li>
+                    <li class="breadcrumb-item active">Кодкойны</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Заголовок -->
+        <div class="mentor-codecoins-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-2">
+                        <i class="bi bi-coin me-2"></i>Кодкойны курса
+                    </h2>
+                    <p class="mb-0 opacity-75">
+                        Начисляйте кодкойны студентам за активность на уроках
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{% url 'codecoins_mentor:mentor_create_batch' course.id %}" class="btn btn-light btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>Новое начисление
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="stats-info">
+                    <div class="stats-row">
+                        <span class="stats-label">Студентов на курсе:</span>
+                        <span class="stats-value">{{ course_students.count }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Активных шкал:</span>
+                        <span class="stats-value">{{ scales.count }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="stats-info">
+                    <div class="stats-row">
+                        <span class="stats-label">Последнее начисление:</span>
+                        <span class="stats-value">
+                            {% if recent_batches %}
+                                {{ recent_batches.first.lesson_date|date:"d.m.Y" }}
+                            {% else %}
+                                Еще не было
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Всего начислений:</span>
+                        <span class="stats-value">{{ recent_batches.count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шкалы начислений -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-sliders"></i> Шкалы начислений
+                        </h3>
+                        <small class="text-muted">Используйте эти шкалы для массового начисления кодкойнов</small>
+                    </div>
+                    <div class="card-body">
+                        {% if scales %}
+                            <div class="row">
+                                {% for scale in scales %}
+                                <div class="col-md-6 col-lg-4 mb-2">
+                                    <div class="scale-item {% if scale.value > 0 %}scale-positive{% else %}scale-negative{% endif %}">
+                                        <div class="scale-title">{{ scale.title }}</div>
+                                        <div class="scale-value {% if scale.value > 0 %}positive{% else %}negative{% endif %}">
+                                            {% if scale.value > 0 %}+{% endif %}{{ scale.value }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-scales">
+                                <i class="bi bi-inbox"></i>
+                                <p>Шкалы начислений не настроены</p>
+                                <small>Свяжитесь с администратором для настройки шкал</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Последние начисления -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-clock-history"></i> Последние начисления
+                        </h3>
+                        <a href="{% url 'codecoins_mentor:mentor_create_batch' course.id %}" class="btn btn-primary btn-sm float-end">
+                            <i class="bi bi-plus-circle"></i> Создать новое
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_batches %}
+                            {% for batch in recent_batches %}
+                            <div class="batch-card">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="batch-date">
+                                            <i class="bi bi-calendar3 me-2"></i>{{ batch.lesson_date|date:"d.m.Y" }}
+                                        </div>
+                                        <div class="batch-meta">
+                                            {% if batch.mentor %}
+                                                Создал: {{ batch.mentor.get_display_name }}
+                                            {% endif %}
+                                            {% if batch.comment %}
+                                                • {{ batch.comment }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="batch-meta">
+                                            Начислений: {{ batch.items.count }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <a href="{% url 'codecoins_mentor:mentor_mass_accrual' course.id batch.id %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye"></i> Просмотр
+                                        </a>
+                                        {% if not batch.items.exists %}
+                                        <a href="{% url 'codecoins_mentor:mentor_mass_accrual' course.id batch.id %}" 
+                                           class="btn btn-primary btn-sm ms-2">
+                                            <i class="bi bi-pencil"></i> Редактировать
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                                <p>Начислений пока нет</p>
+                                <a href="{% url 'codecoins_mentor:mentor_create_batch' course.id %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Создать первое начисление
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

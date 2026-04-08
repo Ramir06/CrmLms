@@ -1,0 +1,105 @@
+{% extends "codecoins/admin/scales/base.html" %}
+
+{% block title %}{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шкалы - Админка{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} шкалы</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'codecoins_admin:admin_dashboard' %}">Кодкойны</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'codecoins_admin:admin_scales' %}">Шкалы</a></li>
+                    <li class="breadcrumb-item active">{% if form.instance.pk %}Редактирование{% else %}Создание{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="scale-form">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.title.label_tag }}
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.title.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.value.label_tag }}
+                                    {{ form.value }}
+                                    {% if form.value.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.value.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Положительное значение для начисления, отрицательное для списания
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.sort_order.label_tag }}
+                                    {{ form.sort_order }}
+                                    {% if form.sort_order.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.sort_order.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Порядок отображения (меньше = выше в списке)
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        {{ form.is_active }}
+                                        {{ form.is_active.label_tag }}
+                                        <small class="form-text text-muted">
+                                            Активные шкалы доступны для менторов
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'codecoins_admin:admin_scales' %}" class="btn btn-secondary">
+                                        <i class="bi bi-arrow-left me-2"></i>Назад
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle me-2"></i>{% if form.instance.pk %}Сохранить{% else %}Создать{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

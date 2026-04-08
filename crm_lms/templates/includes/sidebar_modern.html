@@ -1,0 +1,590 @@
+{% load static i18n %}
+{% url 'dashboard:index' as url_dashboard %}
+{% url 'calendar_app:mentor_calendar' as url_calendar %}
+{% url 'news:mentor_list' as url_news %}
+{% url 'accounts:profile' as url_profile %}
+{% url 'salaries:mentor_view' as url_salary %}
+{% url 'codecoins_student:student_dashboard' as url_codecoins %}
+{% url 'mentors:substitute_courses' as url_substitute_courses %}
+
+<style>
+/* Modern Navigation Styles */
+.modern-sidebar {
+    width: 260px;
+    height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1030;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-sidebar.collapsed {
+    transform: translateX(-260px);
+}
+
+/* Совместимость с существующей структурой */
+.main-menu {
+    display: none !important;
+}
+
+.app-content {
+    margin-left: 260px !important;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-sidebar.collapsed ~ .content-overlay ~ .app-content {
+    margin-left: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .app-content {
+        margin-left: 0 !important;
+    }
+}
+
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.brand-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.brand-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.sidebar-toggle {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background: #e5e7eb;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+}
+
+.nav-section {
+    margin-bottom: 1.5rem;
+}
+
+.nav-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.625rem 1rem;
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.nav-item:hover {
+    background: #f9fafb;
+    color: #1f2937;
+}
+
+.nav-item.active {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #3b82f6;
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.nav-label {
+    flex: 1;
+}
+
+.nav-badge {
+    background: #e5e7eb;
+    color: #374151;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Course Navigation */
+.course-nav {
+    margin-bottom: 0.5rem;
+}
+
+.course-header {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.course-header:hover {
+    background: #f9fafb;
+}
+
+.course-header.active {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.course-header.active .course-icon {
+    background: #3b82f6;
+    color: white;
+}
+
+.course-icon {
+    width: 20px;
+    height: 20px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+.course-info {
+    flex: 1;
+}
+
+.course-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1f2937;
+    margin-bottom: 0.125rem;
+}
+
+.course-header.active .course-title {
+    color: #3b82f6;
+}
+
+.course-mentor {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.course-badge {
+    background: #e5e7eb;
+    color: #374151;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.course-chevron {
+    width: 16px;
+    height: 16px;
+    margin-left: 0.5rem;
+    transition: transform 0.2s;
+    color: #9ca3af;
+}
+
+.course-nav.expanded .course-chevron {
+    transform: rotate(90deg);
+}
+
+.course-sections {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.course-nav.expanded .course-sections {
+    max-height: 500px;
+}
+
+.course-section {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem 0.5rem 3.5rem;
+    color: #6b7280;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-size: 0.8125rem;
+    border-left: 2px solid transparent;
+}
+
+.course-section:hover {
+    background: #f9fafb;
+    color: #374151;
+}
+
+.course-section.active {
+    background: #eff6ff;
+    color: #3b82f6;
+    border-left-color: #3b82f6;
+}
+
+.course-section-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 0.75rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .modern-sidebar {
+        transform: translateX(-260px);
+    }
+    
+    .modern-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    .sidebar-toggle {
+        display: flex;
+    }
+}
+
+/* Overlay for mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+@media (max-width: 768px) {
+    .sidebar-overlay.show {
+        display: block;
+    }
+}
+</style>
+
+<div class="modern-sidebar" id="modernSidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+        <a href="{{ url_dashboard }}" class="brand-container">
+            <div class="brand-icon">C</div>
+            <h1 class="brand-name">ОкууTrack</h1>
+        </a>
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <div class="sidebar-content">
+        <!-- Main Navigation -->
+        <div class="nav-section">
+            <div class="nav-section-title">Основное</div>
+            
+            <a href="{{ url_dashboard }}" class="nav-item {% if 'dashboard' in request.path %}active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="nav-label">Главная</span>
+            </a>
+
+            <a href="{{ url_calendar }}" class="nav-item {% if 'calendar' in request.path %}active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span class="nav-label">Расписание</span>
+            </a>
+
+            <a href="{{ url_news }}" class="nav-item {% if 'news' in request.path %}active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="nav-label">Объявления</span>
+            </a>
+
+            <a href="{{ url_salary }}" class="nav-item {% if 'salary' in request.path %}active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <span class="nav-label">Зарплата</span>
+            </a>
+
+            <a href="{{ url_codecoins }}" class="nav-item {% if 'codecoins' in request.path %}active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span class="nav-label">Кодкойны</span>
+            </a>
+
+            <a href="{{ url_substitute_courses }}" class="nav-item {% if 'substitute' in request.path %}active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="m22 21-3-3 3-3"></path>
+                    <path d="M19 18v6"></path>
+                </svg>
+                <span class="nav-label">Замены</span>
+            </a>
+        </div>
+
+        <!-- Courses Section -->
+        {% if my_courses %}
+        <div class="nav-section">
+            <div class="nav-section-title">Мои курсы</div>
+            
+            {% for course in my_courses %}
+            <div class="course-nav {% if course.pk|stringformat:'s' in request.path %}expanded{% endif %}" 
+                 data-course-id="{{ course.pk }}">
+                <div class="course-header {% if course.pk|stringformat:'s' in request.path %}active{% endif %}" 
+                     onclick="toggleCourse('{{ course.pk }}')">
+                    <div class="course-icon">📚</div>
+                    <div class="course-info">
+                        <div class="course-title">{{ course.title }}</div>
+                        <div class="course-mentor">{{ course.mentor_name|default:'Ментор' }}</div>
+                    </div>
+                    <span class="course-badge">{{ course.current_students_count|default:0 }}</span>
+                    <svg class="course-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </div>
+                
+                <div class="course-sections">
+                    <a href="{% url 'lectures:index' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'lectures' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                        Лекции
+                    </a>
+                    
+                    <a href="{% url 'assignments:matrix' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'assignments' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                        Задания
+                    </a>
+                    
+                    <a href="{% url 'lessons:calendar' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'lessons' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        Уроки
+                    </a>
+                    
+                    <a href="{% url 'attendance:table' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'attendance' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="m22 21-3-3 3-3"></path>
+                            <path d="M19 18v6"></path>
+                        </svg>
+                        Посещаемость
+                    </a>
+                    
+                    <a href="{% url 'assignments:student_stats' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'rating' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        Рейтинг
+                    </a>
+                    
+                    <a href="{% url 'reviews:list' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'reviews' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Отзывы
+                    </a>
+                    
+                    <a href="{% url 'lectures:students' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'students' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        Студенты
+                    </a>
+                    
+                    <a href="{% url 'reports:smart_report' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'smart_report' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Смарт-отчёт
+                    </a>
+                    
+                    <a href="{% url 'codecoins_mentor:mentor_course_codecoins' course_id=course.pk %}" 
+                       class="course-section {% if active_menu == 'codecoins' and course.pk|stringformat:'s' in request.path %}active{% endif %}">
+                        <svg class="course-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Кодкойны курса
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Mobile Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<script>
+function toggleCourse(courseId) {
+    const courseNav = document.querySelector(`[data-course-id="${courseId}"]`);
+    const allCourseNavs = document.querySelectorAll('.course-nav');
+    
+    // Close all other courses
+    allCourseNavs.forEach(nav => {
+        if (nav !== courseNav) {
+            nav.classList.remove('expanded');
+        }
+    });
+    
+    // Toggle current course
+    courseNav.classList.toggle('expanded');
+}
+
+// Sidebar toggle functionality
+const sidebar = document.getElementById('modernSidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+sidebarToggle.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('mobile-open');
+        sidebarOverlay.classList.toggle('show');
+    } else {
+        sidebar.classList.toggle('collapsed');
+    }
+});
+
+sidebarOverlay.addEventListener('click', () => {
+    sidebar.classList.remove('mobile-open');
+    sidebarOverlay.classList.remove('show');
+});
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+        sidebar.classList.remove('mobile-open');
+        sidebarOverlay.classList.remove('show');
+    }
+});
+
+// Auto-expand active course on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const activeCourse = document.querySelector('.course-nav.expanded');
+    if (activeCourse) {
+        // Scroll active course into view
+        setTimeout(() => {
+            activeCourse.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+});
+</script>

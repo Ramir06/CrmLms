@@ -1,0 +1,215 @@
+{% extends 'base/base.html' %}
+{% load i18n %}
+
+{% block title %}Редактор футера{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>{% trans "Редактор футера" %}</h4>
+                <a href="{% url 'settings:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> {% trans "Назад" %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                                    {{ form.title }}
+                                    {% if form.title.help_text %}
+                                    <div class="form-text text-muted">{{ form.title.help_text }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                    <textarea class="form-control ckeditor" id="{{ form.description.id_for_label }}" name="description" rows="6">{{ form.description.value|default:'' }}</textarea>
+                                    {% if form.description.help_text %}
+                                    <div class="form-text text-muted">{{ form.description.help_text }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.public_offer.id_for_label }}" class="form-label">{{ form.public_offer.label }}</label>
+                                    <textarea class="form-control ckeditor" id="{{ form.public_offer.id_for_label }}" name="public_offer" rows="6">{{ form.public_offer.value|default:'' }}</textarea>
+                                    {% if form.public_offer.help_text %}
+                                    <div class="form-text text-muted">{{ form.public_offer.help_text }}</div>
+                                    {% endif %}
+                                </div>            
+                                <div class="mb-3">
+                                    <label for="contact_info" class="form-label">{% trans "Контактная информация" %}</label>
+                                    <textarea class="form-control" id="contact_info" name="contact_info" rows="3">{{ footer_content.contact_info }}</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="copyright_text" class="form-label">{% trans "Текст копирайта" %}</label>
+                                    <input type="text" class="form-control" id="copyright_text" name="copyright_text" value="{{ footer_content.copyright_text }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if footer_content.is_active %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            {% trans "Активен" %}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="social_links" class="form-label">{% trans "Социальные сети (JSON)" %}</label>
+                                    <textarea class="form-control" id="social_links" name="social_links" rows="5">{{ footer_content.social_links|default:"{}" }}</textarea>
+                                    <small class="text-muted">Пример: {"telegram": "https://t.me/channel", "instagram": "https://instagram.com/profile"}</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="additional_links" class="form-label">{% trans "Дополнительные ссылки (JSON)" %}</label>
+                                    <textarea class="form-control" id="additional_links" name="additional_links" rows="5">{{ footer_content.additional_links|default:"{}" }}</textarea>
+                                    <small class="text-muted">Пример: {"Политика конфиденциальности": "/privacy/", "Условия использования": "/terms/"}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Навигационные ссылки -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-link-45deg"></i>
+                                            Навигационные ссылки
+                                        </h5>
+                                        <button type="button" class="btn btn-sm btn-light" data-bs-toggle="collapse" data-bs-target="#addNavLinkForm">
+                                            <i class="bi bi-plus-circle"></i>
+                                            Добавить
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Форма добавления новой ссылки -->
+                                        <div class="collapse" id="addNavLinkForm">
+                                            <form method="post" action="{% url 'settings:footer_navigation_add' %}" class="mb-4">
+                                                {% csrf_token %}
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="new_title" class="form-label">Название *</label>
+                                                            <input type="text" class="form-control" id="new_title" name="title" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="new_slug" class="form-label">Slug *</label>
+                                                            <input type="text" class="form-control" id="new_slug" name="slug" required 
+                                                                   pattern="^[a-z0-9_-]+$" 
+                                                                   title="Только латинские буквы, цифры, дефис и подчеркивание">
+                                                            <small class="text-muted">Пример: usloviya-ispolzovaniya</small>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="new_order" class="form-label">Порядок</label>
+                                                            <input type="number" class="form-control" id="new_order" name="order" value="0" min="0">
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="new_is_active" name="is_active" checked>
+                                                                <label class="form-check-label" for="new_is_active">Активна</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="mb-3">
+                                                            <label for="new_content" class="form-label">Содержимое</label>
+                                                            <textarea class="form-control ckeditor" id="new_content" name="content" rows="6"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-end">
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="bi bi-plus-circle"></i>
+                                                        Добавить ссылку
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        
+                                        <!-- Список существующих ссылок -->
+                                        {% if nav_links %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Название</th>
+                                                        <th>Slug</th>
+                                                        <th>Порядок</th>
+                                                        <th>Активна</th>
+                                                        <th>Действия</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for link in nav_links %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ link.title }}</strong>
+                                                        </td>
+                                                        <td>
+                                                            <code>{{ link.slug }}</code>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-info">{{ link.order }}</span>
+                                                        </td>
+                                                        <td>
+                                                            {% if link.is_active %}
+                                                                <span class="badge bg-success">Да</span>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Нет</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                                        onclick="editNavLink({{ link.id }})">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <!-- Здесь можно добавить кнопку удаления -->
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% else %}
+                                        <p class="text-muted text-center">
+                                            <i class="bi bi-link-45deg"></i>
+                                            Пока нет навигационных ссылок
+                                        </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> {% trans "Сохранить" %}
+                            </button>
+                            <a href="/" target="_blank" class="btn btn-outline-info">
+                                <i class="bi bi-eye"></i> {% trans "Предпросмотр" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

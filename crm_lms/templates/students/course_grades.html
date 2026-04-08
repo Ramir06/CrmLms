@@ -1,0 +1,281 @@
+{% extends "students/base.html" %}
+{% load static %}
+{% block title %}Мой рейтинг — {{ course.title }}{% endblock %}
+
+{% block student_extra_css %}
+<link rel="stylesheet" href="{% static 'css/course.css' %}">
+<style>
+.grades-table {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.grades-table table {
+    margin-bottom: 0;
+}
+
+.grades-table th {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    padding: 1rem;
+    border: none;
+}
+
+.grades-table td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.grade-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.grade-excellent {
+    background: rgba(var(--success-color), 0.1);
+    color: var(--success-color);
+}
+
+.grade-good {
+    background: rgba(var(--primary-color), 0.1);
+    color: var(--primary-color);
+}
+
+.grade-satisfactory {
+    background: rgba(var(--warning-color), 0.1);
+    color: var(--warning-color);
+}
+
+.grade-poor {
+    background: rgba(var(--danger-color), 0.1);
+    color: var(--danger-color);
+}
+
+.lec-content-area {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+}
+
+.rating-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.rating-number {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.rating-label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% if course %}
+<div class="course-header-bar px-3 py-2" style="margin-bottom:1rem;">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div>
+            <h6 class="mb-0 fw-semibold">{{ course.title }}</h6>
+            <small class="text-muted">
+                <span class="badge badge-sm me-1 {% if course.status == 'active' %}bg-success{% elif course.status == 'planned' %}bg-warning text-dark{% elif course.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                    {{ course.get_status_display }}
+                </span>
+                {{ course.get_days_display_short }}
+                {% if course.lesson_start_time %} · {{ course.lesson_start_time|time:"H:i" }}{% endif %}
+            </small>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <span class="badge bg-light text-dark border">{{ course.current_students_count }}/{{ course.capacity }}</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+<div class="d-flex lessons-container">
+    <!-- CONTENT: main area -->
+    <div class="flex-grow-1" style="flex: 1; min-width: 0; max-width: calc(100% - 400px);">
+        <div class="lec-content-area">
+            <h4 class="mb-4">Мой рейтинг — {{ course.title }}</h4>
+            
+            {% if grades %}
+            <!-- Общий рейтинг -->
+            <div class="rating-card">
+                <div class="rating-number">{{ average_grade|default:"—" }}</div>
+                <div class="rating-label">Средний балл</div>
+            </div>
+            
+            <!-- Таблица оценок -->
+            <div class="grades-table">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Задание/Тест</th>
+                            <th>Тип</th>
+                            <th>Балл</th>
+                            <th>Макс. балл</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in grades %}
+                        <tr>
+                            <td>{{ grade.submitted_at|date:"d.m.Y H:i" }}</td>
+                            <td>{{ grade.title }}</td>
+                            <td>
+                                {% if grade.type == 'assignment' %}
+                                <span class="badge bg-info">Задание</span>
+                                {% elif grade.type == 'quiz' %}
+                                <span class="badge bg-warning">Тест</span>
+                                {% else %}
+                                <span class="badge bg-secondary">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="grade-badge 
+                                    {% if grade.score >= 90 %}grade-excellent
+                                    {% elif grade.score >= 75 %}grade-good
+                                    {% elif grade.score >= 60 %}grade-satisfactory
+                                    {% else %}grade-poor{% endif %}">
+                                    {{ grade.score }}
+                                </span>
+                            </td>
+                            <td>{{ grade.max_score }}</td>
+                            <td>
+                                {% if grade.status == 'graded' %}
+                                <span class="badge bg-success">Проверено</span>
+                                {% elif grade.status == 'submitted' %}
+                                <span class="badge bg-warning">На проверке</span>
+                                {% else %}
+                                <span class="badge bg-secondary">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-award" style="font-size:3rem;color:#d6d0ff"></i>
+                <h5 class="mt-3">Нет оценок</h5>
+                <p class="text-muted">У вас пока нет оценок по этому курсу.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Правая часть: навигация по курсу -->
+    <div style="flex: 0 0 350px; min-width: 300px;">
+        <div class="card course-lectures">
+            <!-- Разделы курса -->
+            {% if sections.count %}
+            {% for section in sections %}
+            <div class="lesson-section spoiler" id="section-{{ section.pk }}">
+                <div>
+                    <div class="lesson-section-header">
+                        <div class="section-id spoiler-trigger" onclick="toggleSection('{{ section.pk }}')">
+                            <i class="bi bi-folder-fill"></i>
+                            Глава <span class="id">{{ forloop.counter }}</span>
+                        </div>
+                        <div class="section-title spoiler-trigger" onclick="toggleSection('{{ section.pk }}')">
+                            {{ section.title }}
+                            <i class="bi bi-chevron-up spoiler-caret"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="lessons-list spoiler-content" id="section-content-{{ section.pk }}">
+                    {% for lecture in section.lectures.all %}
+                    <div id="lecture-{{ lecture.pk }}" data-id="{{ lecture.pk }}">
+                        <div class="lesson-item is-lecture" data-id="{{ lecture.pk }}">
+                            <div class="lecture-id">
+                                <i class="bi bi-book"></i>
+                                Тема <span class="id">{{ forloop.counter }}</span>
+                            </div>
+                            <div style="display:flex;flex-direction: row; gap:5px">
+                                <div class="lecture-title">
+                                    {{ lecture.title|default:"Без названия" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for material in section.materials.all %}
+                    <div id="material-{{ material.pk }}" data-id="{{ material.pk }}">
+                        <div class="lesson-item" data-id="{{ material.pk }}">
+                            <div class="lecture-id">
+                                <i class="bi bi-file-earmark"></i>
+                                Материал <span class="id">{{ forloop.counter }}</span>
+                            </div>
+                            <div style="display:flex;flex-direction: row; gap:5px">
+                                <div class="lecture-title">
+                                    {{ material.title }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSection(sectionId) {
+    const content = document.getElementById(`section-content-${sectionId}`);
+    const caret = document.querySelector(`#section-${sectionId} .spoiler-caret`);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        if (caret) {
+            caret.style.transform = 'rotate(180deg)';
+        }
+    } else {
+        content.style.display = 'none';
+        if (caret) {
+            caret.style.transform = 'rotate(0deg)';
+        }
+    }
+}
+
+// Инициализация - все разделы свернуты кроме первого
+document.addEventListener('DOMContentLoaded', function() {
+    const sections = document.querySelectorAll('.lesson-section');
+    sections.forEach((section, index) => {
+        const content = section.querySelector('.spoiler-content');
+        const caret = section.querySelector('.spoiler-caret');
+        
+        if (index === 0) {
+            // Первый раздел открыт
+            if (content) content.style.display = 'block';
+            if (caret) caret.style.transform = 'rotate(180deg)';
+        } else {
+            // Остальные свернуты
+            if (content) content.style.display = 'none';
+            if (caret) caret.style.transform = 'rotate(0deg)';
+        }
+    });
+});
+</script>
+{% endblock %}

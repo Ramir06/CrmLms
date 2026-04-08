@@ -1,5 +1,6 @@
 {% extends "base/admin_base.html" %}
 {% load static %}
+{% load leads_extras %}
 {% block title %}{{ lead.full_name }}{% endblock %}
 {% block content %}
 <div class="page-header">
@@ -7,6 +8,13 @@
         <a href="{% url 'leads:kanban' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
         <h4 class="page-title mb-0">{{ lead.full_name }}</h4>
         <span class="badge bg-info">{{ lead.get_status_display }}</span>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'leads:convert_to_student' pk=lead.pk %}" 
+           class="btn btn-sm btn-success"
+           onclick="return confirm('Конвертировать лида в студента? Лид будет архивирован.')">
+            <i class="bi bi-person-plus me-1"></i>Конвертировать в студента
+        </a>
     </div>
 </div>
 <div class="row g-3">

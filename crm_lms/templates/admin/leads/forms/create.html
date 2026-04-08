@@ -1,0 +1,736 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}Создать форму{% endblock %}
+
+{% block extra_css %}
+<style>
+.field-config {
+    display: none;
+    margin-top: 10px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.field-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: move;
+}
+
+.field-item.dragging {
+    opacity: 0.5;
+}
+
+.field-item.active {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-builder {
+    min-height: 200px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.form-builder.drag-over {
+    border-color: #0d6efd;
+    background: #e7f1ff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Создать форму</h4>
+    <div class="page-actions">
+        <a href="{% url 'leads:form_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>К формам
+        </a>
+        <a href="{% url 'leads:kanban' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-x-lg me-1"></i>К лидам
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Основные настройки формы -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Основные настройки</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Название формы *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.channel.id_for_label }}" class="form-label">Канал *</label>
+                                {{ form.channel }}
+                                {% if form.channel.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.channel.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.header.id_for_label }}" class="form-label">Заголовок формы *</label>
+                        {{ form.header }}
+                        {% if form.header.errors %}
+                            <div class="invalid-feedback d-block">{{ form.header.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
+                        {{ form.description }}
+                        <div class="form-text">Краткое описание формы для клиентов</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.button_text.id_for_label }}" class="form-label">Текст кнопки</label>
+                                {{ form.button_text }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.success_text.id_for_label }}" class="form-label">Текст после отправки *</label>
+                        {{ form.success_text }}
+                        {% if form.success_text.errors %}
+                            <div class="invalid-feedback d-block">{{ form.success_text.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Форма активна
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                {{ form.prevent_duplicates }}
+                                <label class="form-check-label" for="{{ form.prevent_duplicates.id_for_label }}">
+                                    Защита от дублей
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                {{ form.auto_create_lead }}
+                                <label class="form-check-label" for="{{ form.auto_create_lead.id_for_label }}">
+                                    Автосоздание лида
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.default_status.id_for_label }}" class="form-label">Статус лида по умолчанию</label>
+                        {{ form.default_status }}
+                        <div class="form-text">Статус, который будет присвоен лидам из этой формы</div>
+                        {% if form.default_status.errors %}
+                            <div class="invalid-feedback d-block">{{ form.default_status.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Поля формы -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Поля формы</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Обязательные поля -->
+                    <div class="mb-4">
+                        <label class="form-label">Обязательные поля:</label>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           value="first_name" id="field_first_name" checked disabled>
+                                    <label class="form-check-label text-muted" for="field_first_name">
+                                        <i class="bi bi-lock-fill me-1"></i>ФИО
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           value="phone" id="field_phone" checked disabled>
+                                    <label class="form-check-label text-muted" for="field_phone">
+                                        <i class="bi bi-lock-fill me-1"></i>Телефон
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted">Эти поля обязательны и не могут быть удалены</small>
+                    </div>
+                    
+                    <!-- Дополнительные поля -->
+                    <div class="mb-3">
+                        <label class="form-label">Дополнительные поля:</label>
+                        <div class="row">
+                            {% for field_name, field_label in form.field.field.choices %}
+                                {% if field_name not in 'first_name,phone' %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input field-checkbox" type="checkbox" 
+                                               value="{{ field_name }}" id="field_{{ field_name }}"
+                                               onchange="toggleField('{{ field_name }}')">
+                                        <label class="form-check-label" for="field_{{ field_name }}">
+                                            {{ field_label }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Кнопка добавления своего поля -->
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showAddCustomFieldModal()">
+                                <i class="bi bi-plus-lg me-1"></i>Добавить свое поле...
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Конфигурация полей -->
+                    <div id="field_configs">
+                        <!-- Динамически добавляются конфигурации полей -->
+                    </div>
+                    
+                    <div class="form-builder mt-3" id="form_builder">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-ui-checks" style="font-size: 2rem;"></i>
+                            <p class="mt-2">Выберите поля выше чтобы увидеть их здесь</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Создать форму
+                </button>
+                <a href="{% url 'leads:form_list' %}" class="btn btn-secondary">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Предпросмотр формы</h6>
+            </div>
+            <div class="card-body">
+                <div id="form_preview" class="border rounded p-3 bg-light">
+                    <h5 id="preview_header" class="mb-2">Заголовок формы</h5>
+                    <p id="preview_description" class="text-muted small mb-3">Описание формы</p>
+                    <div id="preview_fields">
+                        <!-- Поля формы будут добавлены динамически -->
+                    </div>
+                    <button class="btn btn-primary btn-sm mt-3" id="preview_button">Отправить</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Справка</h6>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">
+                    <p><strong>Поля формы:</strong></p>
+                    <ul class="mb-0">
+                        <li>Выберите нужные поля галочками</li>
+                        <li>Настройте каждое поле (label, placeholder, обязательность)</li>
+                        <li>Перетащите поля для изменения порядка</li>
+                        <li>Используйте маски для телефонов (+998)</li>
+                    </ul>
+                    
+                    <p class="mt-3"><strong>Защита от дублей:</strong></p>
+                    <ul class="mb-0">
+                        <li>Проверка по телефону и email</li>
+                        <li>Предотвращает создание дублей</li>
+                    </ul>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedFields = [];
+let fieldConfigs = {};
+
+// Конфигурации полей по умолчанию
+const defaultConfigs = {
+    'first_name': { label: 'ФИО', placeholder: 'Введите ФИО', required: true, type: 'text' },
+    'last_name': { label: 'Фамилия', placeholder: 'Введите фамилию', required: false, type: 'text' },
+    'phone': { label: 'Телефон', placeholder: '+998 XX XXX-XX-XX', required: true, type: 'tel', mask: '+998 99 999-99-99' },
+    'whatsapp': { label: 'WhatsApp', placeholder: '+998 XX XXX-XX-XX', required: false, type: 'tel', mask: '+998 99 999-99-99' },
+    'telegram': { label: 'Telegram', placeholder: '@username', required: false, type: 'text' },
+    'email': { label: 'Email', placeholder: 'email@example.com', required: false, type: 'email' },
+    'age': { label: 'Возраст', placeholder: '25', required: false, type: 'number' },
+    'city': { label: 'Город', placeholder: 'Ташкент', required: false, type: 'text' },
+    'course': { label: 'Курс/направление', placeholder: 'Выберите курс', required: false, type: 'select', options: 'Python\nJavaScript\nDesign\nMarketing' },
+    'comment': { label: 'Комментарий', placeholder: 'Ваш комментарий...', required: false, type: 'textarea' },
+    'birth_date': { label: 'Дата рождения', placeholder: '', required: false, type: 'date' }
+};
+
+// Автоматически добавляем обязательные поля при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем ФИО и Телефон как выбранные поля
+    ['first_name', 'phone'].forEach(fieldName => {
+        selectedFields.push(fieldName);
+        fieldConfigs[fieldName] = {...defaultConfigs[fieldName]};
+        showFieldConfig(fieldName);
+        addFieldToPreview(fieldName);
+    });
+    
+    updateFormBuilder();
+});
+
+function toggleField(fieldName) {
+    const checkbox = document.getElementById(`field_${fieldName}`);
+    const configDiv = document.getElementById(`config_${fieldName}`);
+    
+    if (checkbox.checked) {
+        // Добавляем поле
+        selectedFields.push(fieldName);
+        fieldConfigs[fieldName] = {...defaultConfigs[fieldName]};
+        
+        // Показываем конфигурацию
+        showFieldConfig(fieldName);
+        
+        // Добавляем в предпросмотр
+        addFieldToPreview(fieldName);
+    } else {
+        // Удаляем поле
+        selectedFields = selectedFields.filter(f => f !== fieldName);
+        delete fieldConfigs[fieldName];
+        
+        // Скрываем конфигурацию
+        if (configDiv) {
+            configDiv.style.display = 'none';
+        }
+        
+        // Удаляем из предпросмотра
+        removeFieldFromPreview(fieldName);
+    }
+    
+    updateFormBuilder();
+}
+
+function showFieldConfig(fieldName) {
+    const configsDiv = document.getElementById('field_configs');
+    const config = defaultConfigs[fieldName];
+    
+    let configHtml = `
+        <div class="field-config" id="config_${fieldName}">
+            <h6 class="mb-3">${config.label} <small class="text-muted">(${fieldName})</small></h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-2">
+                        <label class="form-label">Label поля</label>
+                        <input type="text" class="form-control" id="label_${fieldName}" 
+                               value="${config.label}" onchange="updateFieldConfig('${fieldName}', 'label', this.value)">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-2">
+                        <label class="form-label">Placeholder</label>
+                        <input type="text" class="form-control" id="placeholder_${fieldName}" 
+                               value="${config.placeholder}" onchange="updateFieldConfig('${fieldName}', 'placeholder', this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="required_${fieldName}" 
+                               ${config.required ? 'checked' : ''} 
+                               onchange="updateFieldConfig('${fieldName}', 'required', this.checked)">
+                        <label class="form-check-label" for="required_${fieldName}">
+                            Обязательное поле
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-2">
+                        <label class="form-label">Маска</label>
+                        <input type="text" class="form-control" id="mask_${fieldName}" 
+                               value="${config.mask || ''}" onchange="updateFieldConfig('${fieldName}', 'mask', this.value)">
+                    </div>
+                </div>
+            </div>
+            ${config.type === 'select' ? `
+            <div class="mt-2">
+                <label class="form-label">Опции (каждая с новой строки)</label>
+                <textarea class="form-control" id="options_${fieldName}" rows="3" 
+                          onchange="updateFieldConfig('${fieldName}', 'options', this.value)">${config.options}</textarea>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    // Проверяем существует ли уже конфигурация
+    let existingConfig = document.getElementById(`config_${fieldName}`);
+    if (existingConfig) {
+        existingConfig.style.display = 'block';
+    } else {
+        configsDiv.insertAdjacentHTML('beforeend', configHtml);
+    }
+}
+
+function updateFieldConfig(fieldName, key, value) {
+    if (!fieldConfigs[fieldName]) {
+        fieldConfigs[fieldName] = {...defaultConfigs[fieldName]};
+    }
+    fieldConfigs[fieldName][key] = value;
+    
+    // Обновляем предпросмотр
+    updateFieldPreview(fieldName);
+}
+
+function addFieldToPreview(fieldName) {
+    const config = fieldConfigs[fieldName];
+    const previewFields = document.getElementById('preview_fields');
+    
+    let fieldHtml = '';
+    
+    if (config.type === 'select') {
+        fieldHtml = `
+            <div class="mb-2" id="preview_field_${fieldName}">
+                <label class="form-label small">${config.label}${config.required ? ' *' : ''}</label>
+                <select class="form-select form-select-sm">
+                    <option value="">${config.placeholder}</option>
+                    ${(config.options || '').split('\n').map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                </select>
+            </div>
+        `;
+    } else if (config.type === 'textarea') {
+        fieldHtml = `
+            <div class="mb-2" id="preview_field_${fieldName}">
+                <label class="form-label small">${config.label}${config.required ? ' *' : ''}</label>
+                <textarea class="form-control form-control-sm" rows="2" placeholder="${config.placeholder}"></textarea>
+            </div>
+        `;
+    } else {
+        fieldHtml = `
+            <div class="mb-2" id="preview_field_${fieldName}">
+                <label class="form-label small">${config.label}${config.required ? ' *' : ''}</label>
+                <input type="${config.type}" class="form-control form-control-sm" 
+                       placeholder="${config.placeholder}">
+            </div>
+        `;
+    }
+    
+    previewFields.insertAdjacentHTML('beforeend', fieldHtml);
+}
+
+function removeFieldFromPreview(fieldName) {
+    const field = document.getElementById(`preview_field_${fieldName}`);
+    if (field) {
+        field.remove();
+    }
+}
+
+function updateFieldPreview(fieldName) {
+    const config = fieldConfigs[fieldName];
+    const field = document.getElementById(`preview_field_${fieldName}`);
+    
+    if (field && config) {
+        const label = field.querySelector('label');
+        const input = field.querySelector('input, select, textarea');
+        
+        if (label) {
+            label.innerHTML = `${config.label}${config.required ? ' *' : ''}`;
+        }
+        
+        if (input) {
+            input.placeholder = config.placeholder;
+        }
+    }
+}
+
+function updateFormBuilder() {
+    const builder = document.getElementById('form_builder');
+    
+    if (selectedFields.length === 0) {
+        builder.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="bi bi-ui-checks" style="font-size: 2rem;"></i>
+                <p class="mt-2">Выберите поля выше чтобы увидеть их здесь</p>
+            </div>
+        `;
+    } else {
+        builder.innerHTML = selectedFields.map(fieldName => {
+            const config = fieldConfigs[fieldName];
+            return `
+                <div class="field-item" draggable="true" data-field="${fieldName}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${config.label}</strong>
+                            <small class="text-muted d-block">${fieldName} • ${config.type}</small>
+                        </div>
+                        <div>
+                            ${config.required ? '<span class="badge bg-danger">Обязательно</span>' : ''}
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="document.getElementById('field_${fieldName}').click();">
+                                <i class="bi bi-gear"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Добавляем drag & drop
+        initDragAndDrop();
+    }
+}
+
+function initDragAndDrop() {
+    const items = document.querySelectorAll('.field-item');
+    const builder = document.getElementById('form_builder');
+    
+    items.forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+    });
+    
+    builder.addEventListener('dragover', handleDragOver);
+    builder.addEventListener('drop', handleDrop);
+    builder.addEventListener('dragleave', handleDragLeave);
+}
+
+let draggedItem = null;
+
+function handleDragStart(e) {
+    draggedItem = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    document.getElementById('form_builder').classList.remove('drag-over');
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    
+    const builder = document.getElementById('form_builder');
+    builder.classList.add('drag-over');
+    
+    const afterElement = getDragAfterElement(builder, e.clientY);
+    if (afterElement == null) {
+        builder.appendChild(draggedItem);
+    } else {
+        builder.insertBefore(draggedItem, afterElement);
+    }
+    
+    return false;
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    return false;
+}
+
+function handleDragLeave(e) {
+    document.getElementById('form_builder').classList.remove('drag-over');
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.field-item:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Обновление предпросмотра при изменении основных полей
+document.getElementById('{{ form.header.id_for_label }}').addEventListener('input', function() {
+    document.getElementById('preview_header').textContent = this.value || 'Заголовок формы';
+});
+
+document.getElementById('{{ form.description.id_for_label }}').addEventListener('input', function() {
+    document.getElementById('preview_description').textContent = this.value || '';
+});
+
+document.getElementById('{{ form.button_text.id_for_label }}').addEventListener('input', function() {
+    document.getElementById('preview_button').textContent = this.value || 'Отправить';
+});
+
+// Функции для добавления кастомных полей
+function showAddCustomFieldModal() {
+    console.log('showAddCustomFieldModal called');
+    try {
+        const modalElement = document.getElementById('addCustomFieldModal');
+        console.log('Modal element found:', modalElement);
+        
+        // Пробуем разные способы открытия
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            console.log('Using Bootstrap Modal');
+            const modal = new bootstrap.Modal(modalElement);
+            document.getElementById('customFieldForm').reset();
+            modal.show();
+        } else if (typeof $ !== 'undefined' && $.modal) {
+            console.log('Using jQuery modal');
+            $(modalElement).modal('show');
+            document.getElementById('customFieldForm').reset();
+        } else {
+            console.log('Using manual modal show');
+            modalElement.style.display = 'block';
+            modalElement.classList.add('show');
+            document.body.classList.add('modal-open');
+            document.getElementById('customFieldForm').reset();
+        }
+        console.log('Modal should be shown now');
+    } catch (error) {
+        console.error('Error showing modal:', error);
+        alert('Ошибка открытия модального окна: ' + error.message);
+    }
+}
+
+function addCustomField() {
+    const fieldName = document.getElementById('customFieldName').value;
+    const fieldType = document.getElementById('customFieldType').value;
+    const fieldLabel = document.getElementById('customFieldLabel').value;
+    const fieldPlaceholder = document.getElementById('customFieldPlaceholder').value;
+    const fieldRequired = document.getElementById('customFieldRequired').checked;
+    
+    if (!fieldName || !fieldLabel) {
+        alert('Заполните название и label поля');
+        return;
+    }
+    
+    // Добавляем поле в selectedFields и fieldConfigs
+    selectedFields.push(fieldName);
+    fieldConfigs[fieldName] = {
+        label: fieldLabel,
+        placeholder: fieldPlaceholder,
+        required: fieldRequired,
+        type: fieldType
+    };
+    
+    // Показываем конфигурацию
+    showFieldConfig(fieldName);
+    
+    // Добавляем в предпросмотр
+    addFieldToPreview(fieldName);
+    
+    // Обновляем конструктор
+    updateFormBuilder();
+    
+    // Закрываем модальное окно
+    bootstrap.Modal.getInstance(document.getElementById('addCustomFieldModal')).hide();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<!-- Модальное окно добавления кастомного поля -->
+<div class="modal fade" id="addCustomFieldModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить свое поле</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="customFieldForm">
+                    <div class="mb-3">
+                        <label class="form-label">Название поля</label>
+                        <input type="text" class="form-control" id="customFieldName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Тип поля</label>
+                        <select class="form-select" id="customFieldType">
+                            <option value="text">Текст</option>
+                            <option value="tel">Телефон</option>
+                            <option value="email">Email</option>
+                            <option value="number">Число</option>
+                            <option value="date">Дата</option>
+                            <option value="textarea">Текстовая область</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Label поля</label>
+                        <input type="text" class="form-control" id="customFieldLabel" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Placeholder</label>
+                        <input type="text" class="form-control" id="customFieldPlaceholder">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="customFieldRequired">
+                        <label class="form-check-label" for="customFieldRequired">
+                            Обязательное поле
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" onclick="addCustomField()">Добавить поле</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -23,7 +23,7 @@
     </form>
 </div>
 <div class="row g-3 mb-3">
-    <div class="col-md-4"><div class="stat-card stat-purple"><div class="stat-icon"><i class="bi bi-wallet2"></i></div><div class="stat-value">{{ total|floatformat:0|intcomma }}</div><div class="stat-label">Итого (сум)</div></div></div>
+    <div class="col-md-4"><div class="stat-card stat-purple"><div class="stat-icon"><i class="bi bi-wallet2"></i></div><div class="stat-value">{{ total|floatformat:0|intcomma }}</div><div class="stat-label">Итого (сом)</div></div></div>
 </div>
 
 {% if calculated_salaries %}
@@ -82,7 +82,7 @@
 <div class="card">
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
-            <thead class="table-light"><tr><th>Ментор</th><th>Курс</th><th>Месяц</th><th>Сумма</th><th>Статус</th></tr></thead>
+            <thead class="table-light"><tr><th>Ментор</th><th>Курс</th><th>Месяц</th><th>Сумма</th><th>Статус</th><th>Действия</th></tr></thead>
             <tbody>
                 {% for s in accruals %}
                 <tr>
@@ -91,12 +91,155 @@
                     <td>{{ s.month|date:"M Y" }}</td>
                     <td class="fw-semibold">{{ s.amount|floatformat:0|intcomma }}</td>
                     <td><span class="badge {% if s.paid_status == 'paid' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ s.get_paid_status_display }}</span></td>
+                    <td>
+                        {% if s.paid_status != 'paid' %}
+                        <button class="btn btn-sm btn-success mark-paid-btn" 
+                                data-salary-id="{{ s.id }}" 
+                                data-mentor="{{ s.mentor.get_display_name }}"
+                                data-amount="{{ s.amount|floatformat:0|intcomma }}"
+                                title="Отметить как выплаченное">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="5" class="text-center text-muted py-4">Нет начислений</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">Нет начислений</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработка кнопок "Отметить как выплаченное"
+    const markPaidButtons = document.querySelectorAll('.mark-paid-btn');
+    
+    markPaidButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const salaryId = this.dataset.salaryId;
+            const mentorName = this.dataset.mentor;
+            const amount = this.dataset.amount;
+            
+            if (confirm(`Отметить зарплату ментора ${mentorName} (${amount}) как выплаченную?`)) {
+                // Показываем индикатор загрузки
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+                this.disabled = true;
+                
+                // Отправляем AJAX запрос
+                fetch(`/admin/salaries/${salaryId}/mark-paid/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Обновляем статус и убираем кнопку
+                        const row = this.closest('tr');
+                        const statusCell = row.cells[4]; // Ячейка со статусом
+                        const actionCell = row.cells[5]; // Ячейка с действиями
+                        
+                        // Обновляем статус
+                        statusCell.innerHTML = '<span class="badge bg-success">Выплачено</span>';
+                        
+                        // Убираем кнопку
+                        actionCell.innerHTML = '<span class="text-muted">—</span>';
+                        
+                        // Обновляем общую сумму
+                        updateTotalSalary();
+                        
+                        // Показываем уведомление
+                        showNotification(data.message, 'success');
+                    } else {
+                        // Показываем ошибку
+                        showNotification(data.error, 'danger');
+                        // Возвращаем кнопку в исходное состояние
+                        this.innerHTML = '<i class="bi bi-check-lg"></i>';
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Произошла ошибка при выполнении запроса', 'danger');
+                    // Возвращаем кнопку в исходное состояние
+                    this.innerHTML = '<i class="bi bi-check-lg"></i>';
+                    this.disabled = false;
+                });
+            }
+        });
+    });
+    
+    // Функция для получения CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Функция для показа уведомлений
+    function showNotification(message, type) {
+        // Создаем элемент уведомления
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Добавляем на страницу
+        document.body.appendChild(notification);
+        
+        // Автоматически убираем через 3 секунды
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+    
+    // Функция для обновления общей суммы
+    function updateTotalSalary() {
+        let total = 0;
+        const rows = document.querySelectorAll('table tbody tr');
+        
+        rows.forEach(row => {
+            const cells = row.cells;
+            if (cells.length >= 4) {
+                const amountText = cells[3].textContent.trim(); // Ячейка с суммой (4-я колонка)
+                const amount = parseFloat(amountText.replace(/[^\d.-]/g, ''));
+                
+                if (!isNaN(amount)) {
+                    total += amount;
+                }
+            }
+        });
+        
+        // Обновляем отображение общей суммы
+        const statValue = document.querySelector('.stat-value');
+        if (statValue) {
+            // Форматируем число с разделителями
+            statValue.textContent = total.toLocaleString('ru-RU');
+        }
+        
+        console.log('Updated total salary:', total);
+    }
+});
+</script>
+
 {% endblock %}

@@ -1,0 +1,227 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.accounts-header {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-bottom: 1.5rem;
+}
+
+.account-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-bottom: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid #3b82f6;
+}
+
+.account-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.account-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.account-balance {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.balance-positive {
+    color: #10b981;
+}
+
+.balance-negative {
+    color: #ef4444;
+}
+
+.balance-zero {
+    color: #6b7280;
+}
+
+.account-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.account-description {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state {
+    background: white;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.floating-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 1000;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .account-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .account-balance {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Заголовок -->
+    <div class="accounts-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="mb-2">🏦 Счета</h1>
+                <p class="text-muted mb-0">Управление финансовыми счетами организации</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <a href="{% url 'finance:dashboard' %}" class="btn btn-outline-secondary">
+                        🏠 Дашборд
+                    </a>
+                    <a href="{% url 'finance:list' %}" class="btn btn-outline-secondary">
+                        📋 Транзакции
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список счетов -->
+    {% for account in accounts %}
+    <div class="account-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="account-name">{{ account.name }}</div>
+                <div class="account-balance {% if account.calculated_balance > 0 %}balance-positive{% elif account.calculated_balance < 0 %}balance-negative{% else %}balance-zero{% endif %}">
+                    {% if account.calculated_balance >= 0 %}+{% endif %}{{ account.calculated_balance|floatformat:0 }} ₽
+                </div>
+                
+                {% if account.description %}
+                <div class="account-description">{{ account.description }}</div>
+                {% endif %}
+                
+                <div class="account-stats">
+                    <div class="stat-box">
+                        <div class="stat-value">{{ account.transaction_count }}</div>
+                        <div class="stat-label">Транзакций</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value text-success">{{ account.income|floatformat:0 }} ₽</div>
+                        <div class="stat-label">Доход</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value text-danger">{{ account.expense|floatformat:0 }} ₽</div>
+                        <div class="stat-label">Расход</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <a href="{% url 'finance:list' %}?account={{ account.pk }}" class="btn btn-outline-primary btn-sm">
+                        📋 Транзакции
+                    </a>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="showAccountDetails({{ account.pk }})">
+                        📊 Детали
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="mb-4">
+            <div style="font-size: 4rem;">🏦</div>
+        </div>
+        <h3 class="mb-3">Нет счетов</h3>
+        <p class="text-muted mb-4">Создайте первый счёт для начала работы с бухгалтерией</p>
+        <a href="{% url 'finance:account_create' %}" class="btn btn-primary">
+            ➕ Создать счёт
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Плавающая кнопка добавления -->
+<a href="{% url 'finance:account_create' %}" class="floating-btn" title="Добавить счёт">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showAccountDetails(accountId) {
+    // Здесь можно добавить модальное окно с детальной информацией по счёту
+    // или переход на страницу детальной статистики
+    window.location.href = `/finance/transactions/?account=${accountId}`;
+}
+</script>
+{% endblock %}

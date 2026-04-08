@@ -1,0 +1,320 @@
+{% extends "codecoins/mentor/base.html" %}
+
+{% block extra_css %}
+<style>
+.batch-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.student-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #7367F0;
+    transition: all 0.3s ease;
+}
+
+.student-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.student-card.selected {
+    border-left-color: #28C76F;
+    background: linear-gradient(135deg, rgba(40, 199, 111, 0.05), rgba(40, 199, 111, 0.02));
+}
+
+.student-name {
+    font-weight: 600;
+    color: #2C2C2C;
+    margin-bottom: 0.25rem;
+}
+
+.student-meta {
+    color: #6E6B7B;
+    font-size: 0.85rem;
+}
+
+.scale-badge {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.scale-badge.negative {
+    background: linear-gradient(135deg, #EA5455, #FF6B6B);
+}
+
+.form-control:focus {
+    border-color: #7367F0;
+    box-shadow: 0 0 0 0.2rem rgba(115, 103, 240, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #6458f0, #8e7be8);
+    border: none;
+}
+
+.btn-secondary {
+    background: #6E6B7B;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: #5A575F;
+    border: none;
+}
+
+.students-grid {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid #E9ECEF;
+    border-radius: 8px;
+}
+
+.students-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.students-grid::-webkit-scrollbar-track {
+    background: #F8F9FA;
+    border-radius: 3px;
+}
+
+.students-grid::-webkit-scrollbar-thumb {
+    background: #CBD5E0;
+    border-radius: 3px;
+}
+
+.students-grid::-webkit-scrollbar-thumb:hover {
+    background: #A0AEC0;
+}
+
+.selection-info {
+    background: linear-gradient(135deg, rgba(115, 103, 240, 0.05), rgba(115, 103, 240, 0.02));
+    border: 1px solid rgba(115, 103, 240, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.selection-count {
+    font-weight: 600;
+    color: #7367F0;
+}
+</style>
+{% endblock %}
+
+{% block title %}Создание пакета начислений - Кодкойны{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Создание пакета начислений</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'codecoins_mentor:mentor_course_codecoins' course.id %}">Кодкойны</a></li>
+                    <li class="breadcrumb-item active">Создание пакета</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="batch-form">
+                    <form method="post" id="batchForm">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.lesson_date.id_for_label }}" class="form-label">
+                                        {{ form.lesson_date.label }}
+                                    </label>
+                                    {{ form.lesson_date }}
+                                    {% if form.lesson_date.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.lesson_date.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.comment.id_for_label }}" class="form-label">
+                                        {{ form.comment.label }}
+                                    </label>
+                                    {{ form.comment }}
+                                    {% if form.comment.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.comment.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Опционально: опишите тему урока или особые моменты
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h4 class="mb-3">
+                                    <i class="bi bi-people me-2"></i>Выберите студентов
+                                </h4>
+                                
+                                <div class="selection-info">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>Выбрано студентов: <span class="selection-count" id="selectedCount">0</span></span>
+                                        <div>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllStudents()">
+                                                <i class="bi bi-check-all"></i> Выбрать всех
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                                                <i class="bi bi-x-circle"></i> Очистить
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="students-grid">
+                                    {% for student in students %}
+                                    <div class="student-card" data-student-id="{{ student.id }}">
+                                        <label class="mb-0 cursor-pointer">
+                                            <div class="d-flex align-items-center">
+                                                <input type="checkbox" name="students" value="{{ student.id }}" 
+                                                       class="form-check-input me-3 student-checkbox">
+                                                <div class="flex-grow-1">
+                                                    <div class="student-name">{{ student.full_name }}</div>
+                                                    <div class="student-meta">
+                                                        {{ student.phone }}
+                                                        {% if student.email %}• {{ student.email }}{% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h4 class="mb-3">
+                                    <i class="bi bi-sliders me-2"></i>Выберите шкалу начисления
+                                </h4>
+                                
+                                <div class="row">
+                                    {% for scale in scales %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        <label class="cursor-pointer">
+                                            <div class="student-card">
+                                                <div class="d-flex align-items-center">
+                                                    <input type="radio" name="scale" value="{{ scale.id }}" 
+                                                           class="form-check-input me-3" required>
+                                                    <div class="flex-grow-1">
+                                                        <div class="student-name">{{ scale.title }}</div>
+                                                        <div class="scale-badge {% if scale.value < 0 %}negative{% endif %}">
+                                                            {% if scale.value > 0 %}+{% endif %}{{ scale.value }} кодкойнов
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'codecoins_mentor:mentor_course_codecoins' course.id %}" class="btn btn-secondary">
+                                        <i class="bi bi-arrow-left me-2"></i>Отмена
+                                    </a>
+                                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                                        <i class="bi bi-check-circle me-2"></i>Создать пакет
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    const selectedCount = document.getElementById('selectedCount');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    function updateSelectionCount() {
+        const checked = document.querySelectorAll('.student-checkbox:checked');
+        selectedCount.textContent = checked.length;
+        
+        // Обновляем состояние карточек
+        checkboxes.forEach(checkbox => {
+            const card = checkbox.closest('.student-card');
+            if (checkbox.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+        
+        // Блокируем/разблокируем кнопку
+        submitBtn.disabled = checked.length === 0;
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectionCount);
+    });
+    
+    // Функции для кнопок
+    window.selectAllStudents = function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        updateSelectionCount();
+    };
+    
+    window.clearSelection = function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        updateSelectionCount();
+    };
+    
+    // Инициализация
+    updateSelectionCount();
+});
+</script>
+{% endblock %}

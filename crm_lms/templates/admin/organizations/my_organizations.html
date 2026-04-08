@@ -1,0 +1,100 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}Мои организации{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">Мои организации</h4>
+    {% if can_create %}
+    <div class="page-actions">
+        <a href="{% url 'organizations:create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Создать организацию
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if current_organization %}
+<div class="alert alert-info d-flex align-items-center" role="alert">
+    <i class="bi bi-info-circle me-2"></i>
+    <div>
+        <strong>Текущая организация:</strong> {{ current_organization.name }}
+        {% if current_organization and current_organization.pk %}
+        <a href="{% url 'organizations:switch' pk=current_organization.pk %}" class="btn btn-sm btn-outline-primary ms-2">
+            Переключиться
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    {% for organization in organizations %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card {% if current_organization and current_organization.pk and current_organization.pk == organization.pk %}border-primary{% endif %}">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    {% if organization.logo %}
+                    <img src="{{ organization.logo.url }}" alt="{{ organization.name }}" class="rounded me-3" width="50" height="50">
+                    {% else %}
+                    <div class="rounded bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        <i class="bi bi-building text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h5 class="card-title mb-1">{{ organization.name }}</h5>
+                        {% if current_organization and current_organization.pk and current_organization.pk == organization.pk %}
+                        <span class="badge bg-primary">Текущая</span>
+                        {% else %}
+                        <span class="badge bg-{{ organization.is_active|yesno:'success,secondary' }}">
+                            {{ organization.is_active|yesno:'Активна,Неактивна' }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if organization.description %}
+                <p class="card-text text-muted small">{{ organization.description|truncatewords:20 }}</p>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="bi bi-people me-1"></i>
+                        {{ organization.members.count }} участников
+                    </small>
+                    <div class="btn-group btn-group-sm">
+                        {% if not current_organization or not current_organization.pk or current_organization.pk != organization.pk %}
+                        <a href="{% url 'organizations:switch' pk=organization.pk %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-arrow-repeat"></i> Переключиться
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'organizations:detail' pk=organization.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if user.is_superuser %}
+                        <a href="{% url 'organizations:delete' pk=organization.pk %}" class="btn btn-danger btn-sm" 
+                           onclick="return confirm('Вы уверены, что хотите удалить организацию «{{ organization.name }}»? Это действие нельзя отменить.')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-diagram-3 display-1 text-muted"></i>
+            <h5 class="text-muted mt-3">У вас нет организаций</h5>
+            <p class="text-muted">Создайте организацию или попросите администратора добавить вас</p>
+            {% if can_create %}
+            <a href="{% url 'organizations:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Создать организацию
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

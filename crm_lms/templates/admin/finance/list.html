@@ -3,7 +3,7 @@
 {% block title %}Финансы{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h4 class="page-title">Бухгалтерия</h4>
+    <h4 class="page-title">Финансы</h4>
     <div class="page-actions">
         <a href="{% url 'finance:export' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Excel</a>
         <a href="{% url 'finance:create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
@@ -15,6 +15,12 @@
             <option value="">Все типы</option>
             <option value="income" {% if type_filter == 'income' %}selected{% endif %}>Приход</option>
             <option value="expense" {% if type_filter == 'expense' %}selected{% endif %}>Расход</option>
+        </select>
+        <select name="branch" class="form-select form-select-sm" style="width:160px">
+            <option value="">Все филиалы</option>
+            {% for branch in branches %}
+            <option value="{{ branch }}" {% if branch_filter == branch %}selected{% endif %}>{{ branch }}</option>
+            {% endfor %}
         </select>
         <input type="date" name="date_from" value="{{ request.GET.date_from }}" class="form-control form-control-sm" style="width:150px">
         <input type="date" name="date_to" value="{{ request.GET.date_to }}" class="form-control form-control-sm" style="width:150px">
@@ -29,7 +35,7 @@
 <div class="card">
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
-            <thead class="table-light"><tr><th>Тип</th><th>Категория</th><th>Описание</th><th>Сумма</th><th>Счёт</th><th>Дата</th></tr></thead>
+            <thead class="table-light"><tr><th>Тип</th><th>Категория</th><th>Описание</th><th>Сумма</th><th>Филиал</th><th>Счёт</th><th>Дата</th></tr></thead>
             <tbody>
                 {% for t in transactions %}
                 <tr>
@@ -39,11 +45,12 @@
                     <td class="fw-semibold {% if t.type == 'income' %}text-success{% else %}text-danger{% endif %}">
                         {% if t.type == 'expense' %}-{% endif %}{{ t.amount|floatformat:0|intcomma }}
                     </td>
+                    <td class="text-muted small">{{ t.branch|default:"—" }}</td>
                     <td class="text-muted small">{{ t.account.name|default:"—" }}</td>
                     <td class="text-muted small">{{ t.transaction_date|date:"d.m.Y" }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" class="text-center text-muted py-4">Нет транзакций</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">Нет транзакций</td></tr>
                 {% endfor %}
             </tbody>
         </table>

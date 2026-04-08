@@ -1,0 +1,98 @@
+{% extends "base/admin_base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title">
+                    <i class="bi bi-people me-2"></i>
+                    Мои аккаунты
+                </h4>
+                <a href="{% url 'accounts:add_account' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Добавить аккаунт
+                </a>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if accounts %}
+                    <div class="row">
+                        {% for account in accounts %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card border h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <img src="{{ account.account_user.avatar_url }}" 
+                                             alt="{{ account.account_user.get_display_name }}" 
+                                             class="rounded-circle me-3"
+                                             style="width: 50px; height: 50px; object-fit: cover;">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">{{ account.name }}</h6>
+                                            <small class="text-muted">{{ account.account_user.get_role_display }}</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Пользователь:</small>
+                                        <strong>{{ account.account_user.get_display_name }}</strong>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Логин:</small>
+                                        <strong>{{ account.account_user.username }}</strong>
+                                    </div>
+                                    
+                                    {% if account.last_used %}
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Последнее использование:</small>
+                                        <small>{{ account.last_used|date:"d.m.Y H:i" }}</small>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex gap-2">
+                                        <form method="post" action="{% url 'accounts:switch_account' account.id %}" class="flex-grow-1">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i>
+                                                Переключиться
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'accounts:remove_account' account.id %}" 
+                                              onsubmit="return confirm('Вы уверены, что хотите удалить этот аккаунт?')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-person-plus display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">У вас пока нет добавленных аккаунтов</h5>
+                        <p class="text-muted">Добавьте аккаунты для быстрого переключения между ними</p>
+                        <a href="{% url 'accounts:add_account' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Добавить первый аккаунт
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

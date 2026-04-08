@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чек об оплате #R-000027</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        .receipt {
+            max-width: 400px;
+            margin: 0 auto;
+            border: 1px solid #333;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .divider {
+            border-top: 2px dashed #333;
+            margin: 15px 0;
+        }
+        .info-row {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .receipt-number {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .items {
+            margin: 15px 0;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 10px;
+            color: #666;
+        }
+        @media print {
+            body { padding: 0; }
+            .receipt { border: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <!-- Название организации -->
+        <div class="header">
+            Кодифай Академи
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Информация о чеке -->
+        <div class="info-row receipt-number">
+            Чек #: R-000027
+        </div>
+        <div class="info-row">
+            Компания: ОССО Кодифай Академи
+        </div>
+        <div class="info-row">
+            ИНН: 123456789012
+        </div>
+        <div class="info-row">
+            
+            Налог: 5,00%
+            
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Наименование товаров -->
+        <div class="items">
+            <div style="font-weight: bold; margin-bottom: 10px;">Наименование товаров:</div>
+            
+            <div class="item">
+                <span>START Python 02 — Азамат (1 мес.)</span>
+                <span>7900,00</span>
+            </div>
+            
+            
+            <div class="item">
+                <span>Налог (5,00%)</span>
+                <span>395,00</span>
+            </div>
+            
+        </div>
+        
+        <!-- Итого -->
+        <div class="total">
+            <div class="item">
+                <span>ИТОГО:</span>
+                <span>
+                    
+                        8295,00
+                    
+                </span>
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Дополнительная информация -->
+        <div class="info-row">
+            Студент: Карина Ли
+        </div>
+        <div class="info-row">
+            Дата оплаты: 
+        </div>
+        <div class="info-row">
+            Способ оплаты: Карта
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="footer">
+            Чек сформирован: 27.03.2026 11:02<br>
+            Спасибо за оплату!
+        </div>
+    </div>
+</body>
+</html>

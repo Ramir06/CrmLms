@@ -3,6 +3,20 @@
 
 {% block title %}{{ page_title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Скрываем поля оплаты по умолчанию */
+.salary-field {
+    display: none;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <div class="d-flex align-items-center gap-2">
@@ -58,10 +72,28 @@
                         <div class="col-md-4">
                             <label class="form-label fw-medium">Длительность (мес.)</label>
                             {{ form.duration_months }}
+                            <small class="text-muted d-block">Рассчитывается автоматически</small>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-medium">Дни занятий</label>
-                            {{ form.days_of_week }}
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Дни недели</label>
+                            <div class="row">
+                                {% for choice in form.days_of_week.field.choices %}
+                                <div class="col-md-3 col-sm-4 col-6 mb-2">
+                                    <div class="form-check">
+                                        <input type="checkbox" 
+                                               class="form-check-input" 
+                                               name="{{ form.days_of_week.name }}" 
+                                               value="{{ choice.0 }}" 
+                                               id="day_{{ choice.0 }}"
+                                               {% if choice.0 in form.days_of_week.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="day_{{ choice.0 }}">
+                                            {{ choice.1 }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.days_of_week.errors %}<div class="text-danger small">{{ form.days_of_week.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-medium">Начало урока</label>
@@ -83,6 +115,23 @@
                             <label class="form-label fw-medium">Вместимость</label>
                             {{ form.capacity }}
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Тип оплаты ментора</label>
+                            {{ form.salary_type }}
+                        </div>
+                        <div class="col-md-4 salary-field" data-type="hourly">
+                            <label class="form-label fw-medium">Почасовая ставка</label>
+                            {{ form.hourly_rate }}
+                            <small class="text-muted d-block">Для почасовой оплаты</small>
+                        </div>
+                        <div class="col-md-4 salary-field" data-type="percentage">
+                            <label class="form-label fw-medium">Процент от оплат</label>
+                            {{ form.salary_percentage }}
+                            <small class="text-muted d-block">Для процентной оплаты</small>
+                        </div>
+                        <!-- Скрытые поля чтобы всегда отправлялись значения -->
+                        <input type="hidden" name="hourly_rate" value="0" id="hidden_hourly_rate">
+                        <input type="hidden" name="salary_percentage" value="0" id="hidden_salary_percentage">
                         <div class="col-12">
                             <div class="form-check form-switch mb-3">
                                 {{ form.is_unlimited }}
@@ -100,6 +149,16 @@
                             <label class="form-label fw-medium">Описание</label>
                             {{ form.description }}
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Ссылка на онлайн урок</label>
+                            {{ form.online_lesson_link }}
+                            <small class="text-muted d-block">Например: https://zoom.us/j/123456789</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Ссылка на чат</label>
+                            {{ form.chat_link }}
+                            <small class="text-muted d-block">Например: https://t.me/course_chat</small>
+                        </div>
                     </div>
                     <div class="mt-4 d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -112,4 +171,89 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    const durationInput = document.querySelector('input[name="duration_months"]');
+    const dayCheckboxes = document.querySelectorAll('input[name="days_of_week"]');
+    const salaryTypeSelect = document.querySelector('select[name="salary_type"]');
+    const hourlyRateInput = document.querySelector('input[name="hourly_rate"]');
+    const salaryPercentageInput = document.querySelector('input[name="salary_percentage"]');
+    const hiddenHourlyRate = document.getElementById('hidden_hourly_rate');
+    const hiddenSalaryPercentage = document.getElementById('hidden_salary_percentage');
+    
+    // Синхронизация видимых полей со скрытыми
+    function syncHiddenFields() {
+        if (hourlyRateInput && hiddenHourlyRate) {
+            hiddenHourlyRate.value = hourlyRateInput.value || '0';
+        }
+        if (salaryPercentageInput && hiddenSalaryPercentage) {
+            hiddenSalaryPercentage.value = salaryPercentageInput.value || '0';
+        }
+    }
+    
+    function calculateDuration() {
+        if (!startDateInput || !endDateInput || !durationInput) return;
+        
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate && endDate && startDate < endDate) {
+            const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                              (endDate.getMonth() - startDate.getMonth());
+            durationInput.value = Math.max(1, monthsDiff);
+        }
+    }
+    
+    function toggleSalaryFields(salaryType) {
+        // Скрываем все поля оплаты
+        document.querySelectorAll('.salary-field').forEach(field => {
+            field.style.display = 'none';
+        });
+        
+        // Показываем нужные поля
+        if (salaryType === 'hourly') {
+            const hourlyField = document.querySelector('.salary-field[data-type="hourly"]');
+            if (hourlyField) hourlyField.style.display = 'block';
+        } else if (salaryType === 'percentage') {
+            const percentageField = document.querySelector('.salary-field[data-type="percentage"]');
+            if (percentageField) percentageField.style.display = 'block';
+        }
+        // Для monthly и course показываем поле price (оно всегда видно)
+        
+        // Синхронизируем скрытые поля
+        syncHiddenFields();
+    }
+    
+    // Добавляем обработчики событий только если элементы существуют
+    if (startDateInput) {
+        startDateInput.addEventListener('change', calculateDuration);
+    }
+    if (endDateInput) {
+        endDateInput.addEventListener('change', calculateDuration);
+    }
+    if (salaryTypeSelect) {
+        salaryTypeSelect.addEventListener('change', function() {
+            toggleSalaryFields(this.value);
+        });
+    }
+    
+    // Синхронизация при изменении видимых полей
+    if (hourlyRateInput) {
+        hourlyRateInput.addEventListener('input', syncHiddenFields);
+    }
+    if (salaryPercentageInput) {
+        salaryPercentageInput.addEventListener('input', syncHiddenFields);
+    }
+    
+    // Инициализация при загрузке
+    calculateDuration();
+    if (salaryTypeSelect) {
+        toggleSalaryFields(salaryTypeSelect.value);
+    }
+    syncHiddenFields();
+});
+</script>
 {% endblock %}

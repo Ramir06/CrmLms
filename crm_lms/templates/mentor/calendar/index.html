@@ -14,6 +14,106 @@
 
 {% endblock %}
 
+<!-- Right drawer for lesson details -->
+<div id="drawerPanel" class="drawer-panel">
+    <div class="drawer-content">
+        <div class="drawer-header">
+            <h5 id="drawerTitle" class="mb-0">Детали урока</h5>
+            <button type="button" class="btn-close" onclick="closeDrawer()"></button>
+        </div>
+        <div id="drawerBody" class="drawer-body">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+</div>
+<div id="drawerOverlay" class="drawer-overlay" onclick="closeDrawer()"></div>
+
+<style>
+.drawer-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100%;
+    background: white;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 1050;
+}
+
+.drawer-panel.open {
+    right: 0;
+}
+
+.drawer-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.drawer-header {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+}
+
+.drawer-body {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1040;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.drawer-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+</style>
+
+<script>
+function closeDrawer() {
+    const drawer = document.getElementById('drawerPanel');
+    const overlay = document.getElementById('drawerOverlay');
+    if (drawer) drawer.classList.remove('open');
+    if (overlay) overlay.classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+function loadLessonDrawer(eventId) {
+    const drawerTitle = document.getElementById('drawerTitle');
+    const drawerBody = document.getElementById('drawerBody');
+    const drawer = document.getElementById('drawerPanel');
+    const overlay = document.getElementById('drawerOverlay');
+    if (!drawer) return;
+    if (drawerTitle) drawerTitle.textContent = 'Детали урока';
+    if (drawerBody) drawerBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+    drawer.classList.add('open');
+    if (overlay) overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Extract numeric ID from event ID (handles both "lesson_4" and "event_4" formats)
+    const numericId = eventId.replace(/^(lesson|event)_/, '');
+    fetch('/calendar/event/' + numericId + '/drawer/')
+        .then(r => r.text())
+        .then(html => { if (drawerBody) drawerBody.innerHTML = html; })
+        .catch(() => { if (drawerBody) drawerBody.innerHTML = '<p class="text-danger p-3">Ошибка загрузки</p>'; });
+}
+</script>
+
 {% block extra_js %}
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script src="{% static 'js/calendar.js' %}"></script>

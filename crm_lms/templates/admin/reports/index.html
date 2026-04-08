@@ -9,8 +9,8 @@
 <div class="row g-3 mb-4">
     <div class="col-md-3"><div class="stat-card stat-purple"><div class="stat-icon"><i class="bi bi-people"></i></div><div class="stat-value">{{ total_students }}</div><div class="stat-label">Студентов всего</div></div></div>
     <div class="col-md-3"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-cash"></i></div><div class="stat-value">{{ total_income|floatformat:0|intcomma }}</div><div class="stat-label">Доход (текущий месяц)</div></div></div>
-    <div class="col-md-3"><div class="stat-card stat-orange"><div class="stat-icon"><i class="bi bi-wallet2"></i></div><div class="stat-value">{{ total_salary|floatformat:0|intcomma }}</div><div class="stat-label">Зарплаты</div></div></div>
-    <div class="col-md-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-graph-up"></i></div><div class="stat-value">{{ total_profit|floatformat:0|intcomma }}</div><div class="stat-label">Прибыль</div></div></div>
+    <div class="col-md-3"><div class="stat-card stat-orange"><div class="stat-icon"><i class="bi bi-wallet2"></i></div><div class="stat-value">{{ total_salaries|floatformat:0|intcomma }}</div><div class="stat-label">Зарплаты</div></div></div>
+    <div class="col-md-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-graph-up"></i></div><div class="stat-value">{{ profit|floatformat:0|intcomma }}</div><div class="stat-label">Прибыль</div></div></div>
 </div>
 
 <div class="row g-3">

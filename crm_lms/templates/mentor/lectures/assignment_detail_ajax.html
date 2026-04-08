@@ -1,0 +1,45 @@
+<div id="lecture-content">
+    <div class="table-responsive">
+        <table class="table table-bordered" style="border-color: #666 !important;">
+            <tbody style="border-color: #666 !important;">
+                <tr style="border-color: #666 !important;">
+                    <td style="border-color: #666 !important;"><a href="/lms/mentor/courses/{{ course.pk }}/assignments/{{ assignment.pk }}/solutions/">Просмотреть решения</a></td>
+                    <td style="border-color: #666 !important;">Решений всего: {{ submission_count }}</td>
+                    <td style="border-color: #666 !important;">
+                            {% if pending_count <= 5 %}
+                                <span class="badge badge-purple rounded-pill">
+                                    {{ pending_count }} нужно проверить
+                                </span>
+                            {% elif pending_count <= 10 %}
+                                <span class="badge badge-orange rounded-pill">
+                                    {{ pending_count }} нужно проверить
+                                </span>
+                            {% else %}
+                                <span class="badge badge-red rounded-pill">
+                                    {{ pending_count }} нужно проверить
+                                </span>
+                            {% endif %}
+                        </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Assignment Description -->
+    {% if assignment.description %}
+    <div class="assignment-description mt-3">
+        <h6 style="color:#5e5873; font-size: 0.9rem;">Описание задания</h6>
+        <div style="color:#6e6b7b; line-height: 1.6; font-size: 0.85rem;">{{ assignment.description|safe }}</div>
+    </div>
+    {% endif %}
+
+    <div class="mt-2">
+        <div><b>Создан:</b> {{ assignment.created_at|date:"d.m.Y H:i" }}</div>
+        
+        {% if assignment.due_date %}
+            <div><b>Крайний срок сдачи:</b> {{ assignment.due_date|date:"d.m.Y" }}</div>
+        {% endif %}
+        
+        <div><b>Макс. оценка:</b> {{ assignment.max_score|default:"100" }}</div>
+    </div>
+</div>

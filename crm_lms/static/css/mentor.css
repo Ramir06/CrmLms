@@ -1,4 +1,1785 @@
+/* Стили для разделов */
+.section-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.section-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.section-duration {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 11px;
+    color: #888;
+    font-weight: 400;
+}
+
+/* Стили для иконок разделов */
+.section-controls .icons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.section-controls .fa {
+    font-size: 14px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.section-controls .fa:hover {
+    opacity: 1;
+}
+
+/* Стили для profile header */
+.profile-header {
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-img-container {
+    position: relative;
+    padding: 2rem;
+    z-index: 1;
+}
+
+.profile-img {
+    width: 80px;
+    height: 80px;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fff;
+}
+
+.profile-img img {
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-title h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #333;
+}
+
+.profile-title p {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    margin-bottom: 0;
+    color: #666;
+}
+
+.profile-header-nav {
+    position: relative;
+    text-align: center;
+    z-index: 1;
+    padding: 1rem 0;
+}
+
+.profile-header-nav .navbar {
+    padding: 0;
+    background: transparent;
+}
+
+.profile-header-nav .online-indicator {
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* Адаптивные таблицы для менторов */
+@media (max-width: 991.98px) {
+    /* Улучшения для таблиц на мобильных */
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .table {
+        font-size: 0.9rem;
+    }
+    
+    .table th {
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.75rem 0.5rem;
+        white-space: nowrap;
+    }
+    
+    .table td {
+        padding: 0.75rem 0.5rem;
+        vertical-align: middle;
+    }
+    
+    /* Стили для иконок в таблицах */
+    .table .fa, .table .fas {
+        font-size: 0.8rem;
+        margin: 0 2px;
+    }
+    
+    /* Улучшаем читаемость данных студента */
+    .online-indicator {
+        font-size: 0.75rem;
+        line-height: 1.3;
+    }
+    
+    .online-indicator .dot {
+        width: 8px;
+        height: 8px;
+    }
+}
+
+/* Карточная версия таблиц для маленьких экранов */
+@media (max-width: 767.98px) {
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Скрываем некоторые колонки на мобильных */
+    .table-hide-mobile {
+        display: none;
+    }
+    
+    /* Уменьшаем padding в таблицах */
+    .table th,
+    .table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .table th {
+        font-size: 0.8rem;
+    }
+    
+    .table td {
+        font-size: 0.85rem;
+    }
+    
+    /* Улучшаем отображение имен */
+    .table td:first-child {
+        font-weight: 500;
+        min-width: 120px;
+    }
+    
+    /* Стили для кнопок в таблицах */
+    .table .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        min-height: 32px;
+    }
+    
+    /* Бейджи в таблицах */
+    .table .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Очень маленькие экраны - карточный формат */
+@media (max-width: 575.98px) {
+    /* Преобразуем таблицу в карточки на очень маленьких экранах */
+    .mobile-card-view {
+        display: none;
+    }
+    
+    .table-responsive {
+        display: none;
+    }
+    
+    .mobile-card-view {
+        display: block;
+    }
+    
+    .student-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .student-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .student-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .student-name {
+        font-weight: 600;
+        font-size: 1rem;
+        color: #2c3e50;
+        text-decoration: none;
+    }
+    
+    .student-name:hover {
+        color: #7367f0;
+    }
+    
+    .student-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .student-card-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+    
+    .student-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .student-info-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .student-info-value {
+        font-size: 0.9rem;
+        color: #2c3e50;
+        font-weight: 400;
+    }
+    
+    .student-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #f1f3f4;
+    }
+    
+    .student-stat {
+        text-align: center;
+        flex: 1;
+    }
+    
+    .student-stat-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .student-stat-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+/* Современные стили для таблицы студентов */
+.container-xxl {
+    background-color: #F8F8F8;
+    min-height: 100vh;
+}
+
+.card {
+    border: none;
+    border-radius: 0.75rem;
+}
+
+/* Адаптивные формы для менторов */
+@media (max-width: 991.98px) {
+    /* Улучшения для форм на мобильных */
+    .form-control {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        min-height: 48px;
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-select {
+        font-size: 1rem;
+        min-height: 48px;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Улучшения для кнопок */
+    .btn {
+        font-size: 0.9rem;
+        padding: 0.75rem 1.5rem;
+        min-height: 44px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+        min-height: 36px;
+    }
+    
+    /* Карточки на мобильных */
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    /* Улучшения для breadcrumb */
+    .breadcrumb {
+        background: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .breadcrumb-item {
+        font-size: 0.85rem;
+    }
+    
+    /* Улучшения для заголовков */
+    .content-header-title {
+        font-size: 1.25rem;
+        line-height: 1.3;
+    }
+    
+    /* Улучшения для модальных окон */
+    .modal-dialog {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+    
+    .modal-content {
+        border-radius: 12px;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+}
+
+/* Дополнительные улучшения для маленьких экранов */
+@media (max-width: 767.98px) {
+    .form-control {
+        font-size: 16px; /* Предотвращает zoom на iOS */
+    }
+    
+    .btn {
+        font-size: 0.85rem;
+        padding: 0.625rem 1.25rem;
+    }
+    
+    .card-header {
+        padding: 0.75rem;
+    }
+    
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    /* Улучшения для навигационных элементов */
+    .btn-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-toolbar .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 575.98px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .card-header {
+        padding: 0.5rem;
+    }
+    
+    .card-body {
+        padding: 0.5rem;
+    }
+    
+    .breadcrumb {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.table {
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.table thead th {
+    border-bottom: 2px solid #EBE9F1;
+    font-weight: 600;
+    color: #5E5873;
+    background-color: #F8F8F8;
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+.table tbody td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #F0F0F0;
+}
+
+.table tbody tr:hover {
+    background-color: #F6F6F9;
+    transition: background-color 0.2s ease;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Стили для индикатора онлайн статуса */
+.online-indicator {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot.offline {
+    background-color: #ccc;
+}
+
+.dot.online {
+    background-color: #28C76F;
+}
+
+/* Стили для иконок статистики */
+.table .fa-book-open,
+.table .fa-eye,
+.table .fa-check,
+.table .fa-pencil-ruler,
+.table .fa-file-upload {
+    font-size: 0.75rem;
+    color: #888;
+    margin: 0 0.25rem;
+}
+
+/* Стили для кнопок */
+.btn-gradient-danger {
+    background: linear-gradient(135deg, #EA5455 0%, #E91E63 100%);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-gradient-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(234, 84, 85, 0.3);
+    color: white;
+}
+
+.btn-gradient-info {
+    background: linear-gradient(135deg, #00CFE8 0%, #2E9AFE 100%);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-gradient-info:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 207, 232, 0.3);
+    color: white;
+}
+
+/* Стили для хлебных крошек */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-item a {
+    color: #7367F0;
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: #5A5ADD;
+}
+
+.breadcrumb-item.active {
+    color: #6E6B7B;
+}
+
+/* Стили для заголовков */
+.content-header-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2E2E3A;
+    margin-bottom: 0.5rem;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2E2E3A;
+    margin-bottom: 0.5rem;
+}
+
+/* Стили для dropdown меню */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #F6F6F9;
+    color: #2E2E3A;
+}
+
+/* Стили для рейтинга */
+.coins {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.coins .num {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #7367F0;
+}
+
+.subtitle {
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .lesson-section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+    
+    .section-info {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+    }
+    
+    .section-id {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+    
+    .section-controls {
+        flex-shrink: 0;
+        gap: 4px;
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-controls .icons {
+        gap: 2px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-controls .fa {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-id {
+        max-width: 150px;
+    }
+    
+    .section-controls .icons {
+        gap: 1px;
+    }
+    
+    .section-controls .fa {
+        font-size: 11px;
+        padding: 2px;
+    }
+}
+
+/* Стили для карточек материалов и редактора */
+.lec-detail-card,
+.lecture-editor-card {
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.lec-detail-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 24px 18px;
+    border-bottom: 1px solid #f1f1f4;
+    flex-wrap: wrap;
+    background: linear-gradient(180deg, #fcfcff 0%, #ffffff 100%);
+}
+
+.lec-detail-body {
+    padding: 24px;
+}
+
+.lec-detail-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(115, 103, 240, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7367f0;
+    font-size: 20px;
+}
+
+.lec-detail-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2c2c3a;
+}
+
+.lecture-content-view {
+    background: #fff;
+    border: 1px solid #f1f1f4;
+    border-radius: 16px;
+    padding: 20px;
+    line-height: 1.75;
+    color: #444;
+}
+
+.lecture-content-view h1,
+.lecture-content-view h2,
+.lecture-content-view h3,
+.lecture-content-view h4,
+.lecture-content-view h5,
+.lecture-content-view h6 {
+    color: #2c2c3a;
+    margin-top: 1rem;
+    margin-bottom: .75rem;
+    font-weight: 700;
+}
+
+.lecture-content-view p:last-child {
+    margin-bottom: 0;
+}
+
+.lecture-asset-box,
+.lecture-link-box {
+    border: 1px solid #ececf3;
+    border-radius: 16px;
+    background: #fafaff;
+    padding: 18px;
+}
+
+.lecture-asset-box {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.lecture-asset-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(115, 103, 240, 0.12);
+    color: #7367f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.lecture-asset-info {
+    flex: 1;
+    min-width: 220px;
+}
+
+.lecture-asset-title {
+    font-weight: 600;
+    color: #2c2c3a;
+    margin-bottom: 4px;
+}
+
+.lecture-asset-name {
+    font-size: .9rem;
+    color: #6e6b7b;
+    word-break: break-word;
+}
+
+.lecture-video-box iframe {
+    border: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.lecture-edit-section {
+    border-top: 1px solid #f1f1f4;
+    padding-top: 24px;
+}
+
+.lecture-edit-form input,
+.lecture-edit-form select,
+.lecture-edit-form textarea {
+    border-radius: 12px !important;
+    border: 1px solid #d8d6de !important;
+    box-shadow: none !important;
+    padding: 0.75rem 0.95rem !important;
+}
+
+.lecture-edit-form input:focus,
+.lecture-edit-form select:focus,
+.lecture-edit-form textarea:focus {
+    border-color: #7367f0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(115, 103, 240, 0.12) !important;
+}
+
+.lecture-content-modern {
+    min-height: 240px;
+    border: 1px dashed #d9d7f3;
+    border-radius: 18px;
+    background: #fcfcff;
+    padding: 18px;
+}
+
+.modern-placeholder {
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    color: #8e8ca0;
+}
+
+.modern-placeholder .placeholder-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(115, 103, 240, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    font-size: 30px;
+    color: #7367f0;
+}
+
+#block-type-buttons .btn {
+    transition: .2s ease;
+    font-weight: 500;
+}
+
+#block-type-buttons .btn:hover {
+    transform: translateY(-1px);
+    border-color: #7367f0 !important;
+    color: #7367f0;
+    background: #f7f5ff;
+}
+
+.lecture-block,
+.lesson-draggable-item {
+    position: relative;
+    background: #fff;
+    border: 1px solid #ececf3;
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    transition: .2s ease;
+}
+
+.lecture-block:hover,
+.lesson-draggable-item:hover {
+    border-color: #d9d7f3;
+    box-shadow: 0 6px 18px rgba(115, 103, 240, 0.08);
+}
+
+.lecture-block .editor,
+.lesson-draggable-item .editor {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+}
+
+.lecture-block .editor a,
+.lesson-draggable-item .editor a {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #f7f7fb;
+    color: #6e6b7b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: .2s ease;
+}
+
+.lecture-block .editor a:hover,
+.lesson-draggable-item .editor a:hover {
+    background: #7367f0;
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .lec-detail-hdr,
+    .lec-detail-body {
+        padding: 18px;
+    }
+
+    .lecture-asset-box {
+        align-items: flex-start;
+    }
+
+    #block-type-buttons {
+        gap: 8px;
+    }
+
+    #block-type-buttons .btn {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* Переопределение стилей для lecture-id */
+.course-lectures .lessons-list .lesson-item .lecture-id {
+    display: none;
+}
+
+/* Стили для lecture-title */
+.course-lectures .lessons-list .lesson-item .lecture-title {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Стили для новой структуры элементов */
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+    width: 100%;
+}
+
+/* Стили для иконок с текстовыми метками */
+.label-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+
+.label-with-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+
+/* Цвета иконок соответствуют цветам текста */
+.label-with-icon:has(.material-label) svg {
+    color: #830000;
+}
+
+.label-with-icon:has(.assignment-label) svg {
+    color: rgb(0, 120, 179);
+}
+
+.label-with-icon:has(.quiz-label) svg {
+    color: #4caf50;
+}
+
+.item-content {
+    font-family: inherit;
+    font-size: 13px;
+    color: #333;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+}
+
+/* Стили для текстовых меток элементов */
+.material-label, .assignment-label, .quiz-label {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.material-label {
+    color: #830000;
+}
+
+.assignment-label {
+    color: rgb(0, 120, 179);
+}
+
+.quiz-label {
+    color: #4caf50;
+}
+
+/* Стили для номеров в метках */
+.material-label, .assignment-label, .quiz-label {
+    font-family: 'Inter', Arial, sans-serif !important;
+}
+
+.item-content {
+    font-family: inherit;
+    font-size: 13px;
+    color: #333;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+}
+
+.visibility-icon {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.visibility-icon:hover {
+    opacity: 1;
+}
+
+/* Стили для цветной нумерации элементов */
+.lesson-id .id {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 4px;
+}
+
+.lesson-id .orange-id {
+    background-color: #ff9800;
+    color: white;
+}
+
+.lesson-id .blue-id {
+    background-color: #2196f3;
+    color: white;
+}
+
+.lesson-id .green-id {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* Стили для глазков в названии элементов */
+.lesson-title .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+    vertical-align: middle;
+}
+
+.lesson-title .icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.lesson-title .icon i {
+    font-size: 12px;
+    margin: 0;
+}
+
+.lesson-title .icon i.is-blue {
+    color: #007bff !important;
+}
+
+.lesson-title .icon i.is-red {
+    color: #dc3545 !important;
+}
+
+/* Стили для глазков видимости в сайдбаре */
+.sb-vis-btn {
+    background: none;
+    border: none;
+    padding: 2px 4px;
+    margin-left: auto;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.sb-vis-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.sb-vis-btn.off {
+    opacity: 0.5;
+}
+
+.sb-vis-btn i {
+    font-size: 12px;
+}
+
+/* Стили для глазков видимости */
+.lesson-item .icon {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lesson-item .icon:hover {
+    transform: scale(1.1);
+}
+
+.lesson-item .icon i.fa-eye {
+    color: #007bff !important; /* Синий - видно студентам */
+}
+
+.lesson-item .icon i.fa-eye-slash {
+    color: #dc3545 !important; /* Красный - не видно студентам */
+}
+
+.lesson-item .icon i.fa-eye:hover,
+.lesson-item .icon i.fa-eye-slash:hover {
+    opacity: 0.7;
+}
+
+/* Стили для отображения деталей заданий */
+#lecture-content .card-body {
+    padding: 1.5rem;
+}
+
+#lecture-content .table-responsive {
+    margin-bottom: 1rem;
+}
+
+#lecture-content .table {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#lecture-content .table td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+#lecture-content .table a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+#lecture-content .table a:hover {
+    text-decoration: underline;
+}
+
+#lecture-content .badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+#lecture-content .mt-2 > div {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+#lecture-content .task-body {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+#lecture-content .task-body h6 {
+    margin-bottom: 0.75rem;
+    color: #495057;
+    font-weight: 600;
+}
+
 /* ===== Mentor / Course specific styles ===== */
+
+/* Стили для улучшенных dropdown меню в разделах */
+.lesson-section-header .dropdown-menu {
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.lesson-section-header .dropdown-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.lesson-section-header .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+    margin: 0.125rem 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.lesson-section-header .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+    transform: translateX(2px);
+}
+
+.lesson-section-header .dropdown-item.text-danger:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.lesson-section-header .dropdown-item i {
+    width: 16px;
+    margin-right: 0.5rem;
+}
+
+.lesson-section-header .dropdown-divider {
+    margin: 0.5rem 0;
+    border-color: #e9ecef;
+}
+
+/* Стили для иконок разделов */
+.lesson-section-header .fa-ellipsis-v {
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.lesson-section-header .fa-ellipsis-v:hover {
+    color: #495057;
+}
+
+.lessons-container .d-flex.justify-content-between {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 3rem !important;
+}
+
+.lessons-container .text-start[style*="flex: 1"] {
+    flex: 0 0 520px !important;
+    min-width: 520px !important;
+    max-width: 520px !important;
+    padding: 0 !important;
+    margin-right: 2rem !important;
+}
+.lessons-container div[style*="flex: 0 0 350px"] {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+
+    padding: 0.5rem 1rem !important;
+
+    max-height: 80vh;
+    overflow-y: auto;
+
+    flex: 0 0 450px !important;
+    min-width: 400px !important;
+
+    margin-left: 0 !important;
+}
+
+/* Дополнительные стили для гарантии */
+#contents-column {
+    margin-right: 6rem !important;
+}
+
+/* Увеличиваем область "Выберите элемент" - убран белый фон */
+#default-content {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: transparent !important;
+}
+
+/* Стили для кнопок создания элементов справа от текста "Выберите элемент" */
+#add-block-buttons-inline,
+#add-block-buttons-empty {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+#add-block-buttons-inline h6,
+#add-block-buttons-empty h6 {
+    color: #495057;
+    font-weight: 600;
+    margin: 0;
+}
+
+#block-type-buttons-inline .btn {
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+#block-type-buttons-inline .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#block-type-buttons-inline .row {
+    margin: 0;
+}
+
+#block-type-buttons-inline .col-6 {
+    padding: 0.25rem;
+}
+
+/* Стили для кнопок добавления в разделы */
+.vertical-buttons .btn {
+    text-align: left;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.vertical-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Стили для модального окна выбора раздела */
+#sectionSelectorModal .list-group-item {
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+#sectionSelectorModal .list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+}
+
+/* Улучшенные стили для блоков лекций */
+.lecture-block {
+    position: relative;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: #fff;
+    transition: all 0.3s ease;
+    cursor: move;
+}
+
+.lecture-block:hover {
+    border-color: #7367f0;
+    box-shadow: 0 4px 12px rgba(115, 103, 240, 0.15);
+    transform: translateY(-2px);
+}
+
+.lecture-block.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    box-shadow: 0 8px 24px rgba(115, 103, 240, 0.3);
+}
+
+.lecture-block .editor {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.lecture-block:hover .editor {
+    opacity: 1;
+}
+
+.editor a {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.editor a:hover {
+    background: #f8f9fa;
+    color: #495057;
+    transform: scale(1.1);
+}
+
+.editor .delete-block:hover {
+    background: #dc3545;
+    color: #fff;
+    border-color: #dc3545;
+}
+
+.editor .edit-block:hover {
+    background: #7367f0;
+    color: #fff;
+    border-color: #7367f0;
+}
+
+/* Drag & Drop визуальные подсказки */
+.lecture-block.drag-over {
+    border-color: #28c76f;
+    background: #f8fff9;
+}
+
+.lecture-block.drag-over::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #28c76f;
+    border-radius: 3px 3px 0 0;
+}
+
+/* Плейсхолдер для пустого материала */
+.lecture-content-placeholder {
+    padding: 3rem;
+    text-align: center;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    background: #f8f9fa;
+    color: #6c757d;
+    margin: 1rem 0;
+}
+
+.lecture-content-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Улучшенные кнопки типов блоков */
+#block-type-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.5rem;
+}
+
+#block-type-buttons a {
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+#block-type-buttons a:hover {
+    background: #7367f0;
+    color: #fff;
+    border-color: #7367f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(115, 103, 240, 0.25);
+}
+
+/* Анимация добавления блока */
+.lecture-block.new-block {
+    animation: slideInUp 0.4s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Удаление блока с анимацией */
+.lecture-block.removing {
+    animation: slideOutRight 0.3s ease forwards;
+}
+
+@keyframes slideOutRight {
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* Контекстное меню для блоков */
+.block-context-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+    min-width: 180px;
+    z-index: 1000;
+    display: none;
+}
+
+.block-context-menu.show {
+    display: block;
+}
+
+.block-context-menu a {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #495057;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background 0.2s ease;
+}
+
+.block-context-menu a:hover {
+    background: #f8f9fa;
+    color: #212529;
+}
+
+.block-context-menu a.danger {
+    color: #dc3545;
+}
+
+.block-context-menu a.danger:hover {
+    background: #dc3545;
+    color: #fff;
+}
+
+/* Индикатор сортировки */
+.sorting-indicator {
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7367f0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.lecture-block:hover .sorting-indicator {
+    opacity: 1;
+}
+
+/* Разделители */
+.lecture-block.divider {
+    background: transparent;
+    border: none;
+    padding: 1rem 0;
+    text-align: center;
+    cursor: default;
+}
+
+.lecture-block.divider .divider-line {
+    height: 2px;
+    background: linear-gradient(to right, transparent, #dee2e6, transparent);
+    margin: 0 auto;
+    max-width: 200px;
+}
+
+.lecture-block.divider:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: transparent;
+}
+
+/* Блоки ссылок */
+.lecture-block.link-block {
+    background: #f8f9ff;
+    border-color: #e3e8ff;
+}
+
+.lecture-block.link-block:hover {
+    border-color: #7367f0;
+    background: #f0f2ff;
+}
+
+.lecture-block.link-block .link-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: #495057;
+}
+
+.lecture-block.link-block .link-content:hover {
+    color: #7367f0;
+}
+
+.lecture-block.link-block .link-icon {
+    width: 40px;
+    height: 40px;
+    background: #7367f0;
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Блоки заголовков */
+.lecture-block.heading-block {
+    background: #fff3cd;
+    border-color: #ffc107;
+    border-left: 4px solid #ffc107;
+}
+
+.lecture-block.heading-block h1,
+.lecture-block.heading-block h2,
+.lecture-block.heading-block h3,
+.lecture-block.heading-block h4,
+.lecture-block.heading-block h5,
+.lecture-block.heading-block h6 {
+    margin: 0;
+    color: #856404;
+}
+
+/* Блоки текста */
+.lecture-block.text-block {
+    background: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+.lecture-block.text-block:hover {
+    border-color: #17a2b8;
+    background: #c7e9ea;
+}
+
+/* Блоки кода */
+.lecture-block.code-block {
+    background: #282c34;
+    border-color: #21252b;
+    color: #abb2bf;
+}
+
+.lecture-block.code-block pre {
+    margin: 0;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    color: inherit;
+}
+
+.lecture-block.code-block code {
+    background: transparent;
+    color: inherit;
+}
+
+/* Блоки изображений */
+.lecture-block.image-block {
+    padding: 0;
+    background: transparent;
+    border: 2px dashed #dee2e6;
+}
+
+.lecture-block.image-block img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+}
+
+/* Блоки видео */
+.lecture-block.video-block {
+    padding: 0;
+    background: #000;
+}
+
+.lecture-block.video-block iframe {
+    width: 100%;
+    height: 315px;
+    border: none;
+}
+
+/* Блоки файлов */
+.lecture-block.file-block {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.lecture-block.file-block .file-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.lecture-block.file-block .file-icon {
+    width: 48px;
+    height: 48px;
+    background: #6c757d;
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.lecture-block.file-block .file-info {
+    flex: 1;
+}
+
+.lecture-block.file-block .file-name {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.lecture-block.file-block .file-size {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* Темная тема для блоков */
+[data-bs-theme="dark"] .lecture-block.link-block {
+    background: #2a2d3a;
+    border-color: #434656;
+}
+
+[data-bs-theme="dark"] .lecture-block.link-block:hover {
+    background: #363a52;
+    border-color: #7367f0;
+}
+
+[data-bs-theme="dark"] .lecture-block.heading-block {
+    background: #3d3a00;
+    border-color: #ffc107;
+}
+
+[data-bs-theme="dark"] .lecture-block.heading-block h1,
+[data-bs-theme="dark"] .lecture-block.heading-block h2,
+[data-bs-theme="dark"] .lecture-block.heading-block h3,
+[data-bs-theme="dark"] .lecture-block.heading-block h4,
+[data-bs-theme="dark"] .lecture-block.heading-block h5,
+[data-bs-theme="dark"] .lecture-block.heading-block h6 {
+    color: #ffc107;
+}
+
+[data-bs-theme="dark"] .lecture-block.text-block {
+    background: #1a3d44;
+    border-color: #2c5f65;
+}
+
+[data-bs-theme="dark"] .lecture-block.code-block {
+    background: #1e1e1e;
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .lecture-block.file-block {
+    background: #2a2d3a;
+    border-color: #434656;
+}
 
 /* ===== Course sidebar header ===== */
 .course-header-bar {

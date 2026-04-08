@@ -1,0 +1,167 @@
+{% extends 'base/admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>Статусы лидов</h4>
+                <a href="{% url 'leads:lead_status_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Добавить статус
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    {% if statuses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Иконка</th>
+                                    <th>Название</th>
+                                    <th>Slug</th>
+                                    <th>Цвет</th>
+                                    <th>По умолчанию</th>
+                                    <th>Активен</th>
+                                    <th>Порядок</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status in statuses %}
+                                <tr>
+                                    <td>
+                                        {% if status.icon %}
+                                            <img src="{{ status.icon.url }}" alt="{{ status.name }}" style="max-width: 30px; max-height: 30px;">
+                                        {% else %}
+                                            <i class="bi bi-tag" style="color: {{ status.color }};"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ status.color }}; color: white;">
+                                            {{ status.name }}
+                                        </span>
+                                    </td>
+                                    <td><code>{{ status.slug }}</code></td>
+                                    <td>
+                                        <span class="color-preview" style="display: inline-block; width: 20px; height: 20px; background-color: {{ status.color }}; border: 1px solid #ddd; border-radius: 3px;"></span>
+                                        {{ status.color }}
+                                    </td>
+                                    <td>
+                                        {% if status.is_default %}
+                                            <span class="badge bg-success">Да</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Нет</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if status.is_active %}
+                                            <span class="badge bg-success">Да</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Нет</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ status.order }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'leads:lead_status_edit' status.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                    onclick="deleteStatusWithLeads('{{ status.pk }}', '{{ status.name|escapejs }}')" 
+                                                    title="Удалить статус вместе со всеми лидами">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="deleteStatus('{{ status.pk }}', '{{ status.name|escapejs }}')">>
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-tag display-4 text-muted"></i>
+                        <p class="text-muted mt-3">Статусы не найдены</p>
+                        <a href="{% url 'leads:lead_status_create' %}" class="btn btn-primary">
+                            Создать первый статус
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteStatus(pk, name) {
+    if (confirm('Вы уверены, что хотите удалить статус "' + name + '"?')) {
+        fetch('/admin/leads/settings/status/' + pk + '/delete/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Ошибка при удалении');
+            }
+        })
+        .catch(error => {
+            alert('Ошибка при отправке запроса');
+        });
+    }
+}
+
+function deleteStatusWithLeads(pk, name) {
+    if (confirm('Вы уверены, что хотите удалить статус "' + name + '" вместе со ВСЕМИ лидами? Это действие необратимо!')) {
+        fetch('/admin/leads/settings/status/' + pk + '/delete-with-leads/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Ошибка при удалении');
+            }
+        })
+        .catch(error => {
+            alert('Ошибка при отправке запроса');
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

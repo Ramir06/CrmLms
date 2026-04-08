@@ -1,0 +1,162 @@
+{% extends "base/admin_base_role_based.html" %}
+{% load static %}
+
+{% block title %}Участники организации{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header row">
+        <div class="content-header-left col-md-7 col-12">
+            <div class="breadcrumbs-top">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/">Админка</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'organizations:superadmin_organizations' %}">Организации</a></li>
+                        <li class="breadcrumb-item active">{{ organization.name }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <h2 class="content-header-title mb-0">{{ organization.name }}</h2>
+            <p class="text-muted">{{ organization.address }}</p>
+        </div>
+        <div class="content-header-right col-md-5 col-12">
+            <div class="btn-group float-md-right">
+                <a href="{% url 'organizations:superadmin_create_staff' organization.pk %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-person-plus me-1"></i>
+                    Добавить персонал
+                </a>
+                <a href="{% url 'organizations:superadmin_organizations' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Назад
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-body">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Участники организации</h4>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-info">{{ organization.members.all.count }} участников</span>
+                                <span class="badge bg-success">{{ organization.staff_access.all.count }} персонала</span>
+                            </div>
+                            <div class="btn-group">
+                                <a href="{% url 'organizations:superadmin_create_staff' organization.pk %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-person-plus me-1"></i>
+                                    Добавить персонал
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ФИО</th>
+                                        <th>Email</th>
+                                        <th>Тип</th>
+                                        <th>Роль</th>
+                                        <th>Дата присоединения</th>
+                                        <th>Статус</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member in members %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-light-primary rounded-circle me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                                    <span class="text-primary fw-bold">{{ member.user.first_name.0 }}{{ member.user.last_name.0 }}</span>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">{{ member.user.get_display_name }}</div>
+                                                    <small class="text-muted">@{{ member.user.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-truncate" style="max-width: 200px;">{{ member.user.email }}</div>
+                                        </td>
+                                        <td>
+                                            {% if member.type == 'staff' %}
+                                                <span class="badge bg-success">Персонал</span>
+                                            {% else %}
+                                                <span class="badge bg-info">Участник</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if member.user.role == 'admin' %}
+                                                <span class="badge bg-warning">Администратор</span>
+                                            {% elif member.user.role == 'manager' %}
+                                                <span class="badge bg-info">Менеджер</span>
+                                            {% elif member.user.role == 'superadmin' %}
+                                                <span class="badge bg-danger">Суперадмин</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ member.user.get_role_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ member.joined_at|date:"d.m.Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            {% if member.is_active %}
+                                                <span class="badge bg-success">Активен</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Заблокирован</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="#" class="btn btn-outline-primary btn-sm" title="Редактировать">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'organizations:superadmin_toggle_user' member.user.pk organization.pk %}" 
+                                                   class="btn btn-outline-{% if member.is_active %}danger{% else %}success{% endif%} btn-sm" 
+                                                   title="{% if member.is_active %}Заблокировать{% else %}Разблокировать{% endif %}">
+                                                    <i class="bi bi-{% if member.is_active %}x{% else %}check{% endif %}"></i>
+                                                </a>
+                                                {% if member.user != request.user %}
+                                                <form method="post" action="{% url 'accounts:add_account' %}" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="username" value="{{ member.user.username }}">
+                                                    <input type="hidden" name="name" value="{{ member.user.get_display_name }} ({{ member.user.get_role_display }})">
+                                                    <input type="hidden" name="password" value="dummy_password">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm" 
+                                                            title="Добавить в мои аккаунты"
+                                                            onclick="return confirm('Добавить {{ member.user.get_display_name }} в ваши аккаунты?')">
+                                                        <i class="bi bi-person-plus"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-5">
+                                            <i class="bi bi-people d-block fs-2 mb-2 opacity-50"></i>
+                                            <h5>Участники не найдены</h5>
+                                            <p class="text-muted">В этой организации пока нет участников</p>
+                                            <a href="{% url 'organizations:superadmin_create_staff' organization.pk %}" class="btn btn-primary">
+                                                <i class="bi bi-person-plus me-2"></i>
+                                                Добавить первого персонала
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

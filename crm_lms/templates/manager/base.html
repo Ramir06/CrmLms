@@ -1,0 +1,397 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+/* Manager-specific styles */
+.main-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background: #2c3e50;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.navbar-header {
+    padding: 20px;
+    border-bottom: 1px solid #34495e;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+}
+
+.brand-logo {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
+.brand-text {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.navigation-main {
+    padding: 20px 0;
+}
+
+.nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 4px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #bdc3c7;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background: #34495e;
+    color: white;
+}
+
+.nav-link.active {
+    background: #3498db;
+    color: white;
+}
+
+.nav-link i {
+    width: 20px;
+    margin-right: 12px;
+    font-size: 16px;
+}
+
+.nav-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: #34495e;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+    display: none;
+}
+
+.nav-submenu.show {
+    display: block;
+}
+
+.nav-submenu li {
+    margin: 0;
+}
+
+.nav-submenu .nav-link {
+    padding: 10px 20px 10px 40px;
+    font-size: 14px;
+    border-bottom: 1px solid #2c3e50;
+}
+
+.nav-submenu .nav-link:hover {
+    background: #2c3e50;
+}
+
+.nav-submenu .nav-link.active {
+    background: #3498db;
+    color: white;
+}
+
+.nav-link .bi-check-circle {
+    width: 16px;
+    font-size: 14px;
+}
+
+.nav-divider {
+    height: 1px;
+    background: #34495e;
+    margin: 20px 0;
+}
+
+.content-wrapper {
+    margin-left: 260px;
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+.content-header {
+    padding: 20px 30px;
+    background: white;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.content-header-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.breadcrumb {
+    background: none;
+    padding: 0;
+    margin-bottom: 8px;
+}
+
+.breadcrumb-item {
+    color: #6c757d;
+}
+
+.breadcrumb-item.active {
+    color: #2c3e50;
+}
+
+.content-body {
+    padding: 30px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0 15px rgba(0,0,0,0.08);
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.card-header {
+    background: white;
+    border-bottom: 1px solid #e9ecef;
+    padding: 20px 25px;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 25px;
+}
+
+.avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    font-weight: 600;
+}
+
+.alert {
+    border: none;
+    border-radius: 8px;
+    padding: 20px 25px;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge {
+    font-size: 12px;
+    padding: 6px 10px;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table td {
+    vertical-align: middle;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary {
+    border-color: #3498db;
+    color: #3498db;
+}
+
+.btn-outline-primary:hover {
+    background: #3498db;
+    border-color: #3498db;
+}
+
+@media (max-width: 768px) {
+    .main-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .main-menu.show {
+        transform: translateX(0);
+    }
+    
+    .content-wrapper {
+        margin-left: 0;
+    }
+    
+    .content-body {
+        padding: 20px 15px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- Manager Sidebar -->
+<nav class="main-menu">
+    <div class="navbar-header">
+        <a class="navbar-brand" href="{% url 'manager:dashboard' %}">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="brand-logo">
+            <span class="brand-text">ОкууTrack</span>
+        </a>
+    </div>
+    
+    <div class="navigation-main">
+        <ul class="nav">
+            <li class="nav-item">
+                <a href="{% url 'manager:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'manager' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-house-door"></i>
+                    <span class="menu-title">Дашборд</span>
+                </a>
+            </li>
+            
+            {% if current_organization %}
+            <li class="nav-item">
+                <div class="nav-link" onclick="toggleSubmenu(this)">
+                    <i class="bi bi-building"></i>
+                    <span class="menu-title">{{ current_organization.name }}</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </div>
+                <ul class="nav-submenu">
+                    <li><a href="{% url 'organizations:my_organizations' %}" class="nav-link">
+                        <i class="bi bi-list"></i>
+                        <span>Мои организации</span>
+                    </a></li>
+                    {% for org in request.user.staff_member.organizations %}
+                    <li><a href="{% url 'organizations:switch' org.pk %}" class="nav-link {% if current_organization.id == org.id %}active{% endif %}">
+                        <i class="bi bi-building"></i>
+                        <span>{{ org.name }}</span>
+                        {% if current_organization.id == org.id %}
+                        <i class="bi bi-check-circle ms-auto text-success"></i>
+                        {% endif %}
+                    </a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
+            
+            <li class="nav-item">
+                <a href="/admin/students/" class="nav-link">
+                    <i class="bi bi-people"></i>
+                    <span class="menu-title">Студенты</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="/admin/courses/" class="nav-link">
+                    <i class="bi bi-book"></i>
+                    <span class="menu-title">Курсы</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="/admin/leads/" class="nav-link">
+                    <i class="bi bi-funnel"></i>
+                    <span class="menu-title">Лиды</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="/admin/mentors/" class="nav-link">
+                    <i class="bi bi-person-badge"></i>
+                    <span class="menu-title">Менторы</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="/admin/debts/" class="nav-link">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span class="menu-title">Должники</span>
+                </a>
+            </li>
+            
+            <li class="nav-divider"></li>
+            
+            <li class="nav-item">
+                <a href="/notifications/" class="nav-link">
+                    <i class="bi bi-bell"></i>
+                    <span class="menu-title">Уведомления</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="/accounts/logout/" class="nav-link">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="menu-title">Выход</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="content-wrapper">
+    {% block manager_content %}
+    <!-- Manager content will be inserted here -->
+    {% endblock %}
+</div>
+
+<footer class="footer" style="background: #2c3e50; color: white; padding: 1rem 2rem; text-align: center; border-top: 1px solid #34495e;">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-none d-md-block">
+            <a href="/privacy-policy/" class="text-white text-decoration-none me-3">Политика конфиденциальности</a>
+            <a href="/public-offer/" class="text-white text-decoration-none">Публичная оферта</a>
+        </div>
+        <div>
+            Made with <i class="bi bi-heart-fill text-danger" style="font-size:10px;"></i> by ОкууTrack
+        </div>
+    </div>
+</footer>
+
+<script>
+function toggleSubmenu(element) {
+    const submenu = element.nextElementSibling;
+    const chevron = element.querySelector('.bi-chevron-down, .bi-chevron-up');
+    
+    if (submenu.classList.contains('show')) {
+        submenu.classList.remove('show');
+        chevron.classList.remove('bi-chevron-up');
+        chevron.classList.add('bi-chevron-down');
+    } else {
+        // Закрываем другие подменю
+        document.querySelectorAll('.nav-submenu.show').forEach(menu => {
+            menu.classList.remove('show');
+            const otherChevron = menu.previousElementSibling.querySelector('.bi-chevron-down, .bi-chevron-up');
+            otherChevron.classList.remove('bi-chevron-up');
+            otherChevron.classList.add('bi-chevron-down');
+        });
+        
+        // Открываем текущее подменю
+        submenu.classList.add('show');
+        chevron.classList.remove('bi-chevron-down');
+        chevron.classList.add('bi-chevron-up');
+    }
+}
+</script>
+{% endblock %}

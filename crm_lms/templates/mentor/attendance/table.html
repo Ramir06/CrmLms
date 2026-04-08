@@ -3,8 +3,7 @@
 {% block title %}{% trans "Посещаемость" %} — {{ course.title }}{% endblock %}
 
 {% block course_extra_css %}
-<link rel="stylesheet" href="{% static 'app-assets/fonts/font-awesome/css/font-awesome.min.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     .att-grid {
         overflow-x: auto;
@@ -78,17 +77,28 @@
     }
 
     .att-cell {
-        width: 72px;
-        min-width: 72px;
-        height: 42px;
+        width: 80px;
+        min-width: 80px;
+        height: 60px;
         position: relative;
         cursor: pointer;
+        transition: all 0.2s ease;
         background: #fff;
-        transition: background .15s ease;
+        padding: 0;
     }
 
     .att-cell:hover {
         background: #f8faff;
+    }
+
+    .att-cell.disabled {
+        cursor: not-allowed;
+        background: #f8f9fa;
+        opacity: 0.6;
+    }
+
+    .att-cell.disabled:hover {
+        background: #f8f9fa;
     }
 
     .att-pct {
@@ -179,67 +189,108 @@
         display: none;
         align-items: center;
         justify-content: center;
-        gap: 2px;
-        background: #f8f9fa;
-        border: 1px solid #dcdfe4;
-        border-radius: 6px;
-        padding: 2px;
+        gap: 1px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 0;
         z-index: 20;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+        box-shadow: none;
         white-space: nowrap;
+        max-width: 66px;
+        max-height: 36px;
     }
 
     .att-cell:hover .hover-menu {
         display: inline-flex;
     }
 
+    .att-cell.disabled .hover-menu {
+        display: none !important;
+    }
+
     .att-cell:hover .att-state {
         opacity: 0;
     }
 
+    .att-cell.disabled:hover .att-state {
+        opacity: 1;
+    }
+
     .menu-option {
-        width: 28px;
-        height: 28px;
+        width: 20px;
+        height: 32px;
         border: none;
         background: transparent;
         color: #6e6b7b;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 5px;
+        border-radius: 0;
         text-decoration: none;
-        transition: background .15s ease, color .15s ease, transform .1s ease;
+        transition: color .15s ease, transform .1s ease;
         cursor: pointer;
+        padding: 0;
+        margin: 0;
     }
 
-    .menu-option svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    .menu-option:hover {
-        background: #eef1f6;
-        color: #2f2f35;
-        text-decoration: none;
-    }
-
-    .menu-option:active {
-        transform: scale(0.96);
-    }
-
-    .menu-option.present:hover {
-        background: rgba(40, 199, 111, 0.10);
+    .menu-option.present {
         color: #28C76F;
     }
 
-    .menu-option.absent:hover {
-        background: rgba(234, 84, 85, 0.10);
+    .menu-option.absent {
         color: #EA5455;
     }
 
-    .menu-option.comment:hover {
-        background: rgba(0, 207, 232, 0.10);
+    .menu-option.comment {
         color: #00CFE8;
+    }
+
+    .menu-option svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .menu-option:hover {
+        background: transparent;
+        transform: scale(1.1);
+    }
+
+    .menu-option.present:hover {
+        color: #1fa654;
+    }
+
+    .menu-option.absent:hover {
+        color: #d63384;
+    }
+
+    .menu-option.comment:hover {
+        color: #00b8d4;
+    }
+
+    .menu-option:active {
+        transform: scale(0.95);
+    }
+
+    .marked-by-info {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        z-index: 1;
+    }
+
+    .marked-by-info:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
     }
 
     .student-meta {
@@ -297,17 +348,78 @@
         background: #fff;
         border-radius: 12px;
     }
+
+    .substitute-notice {
+        background: #e3f2fd;
+        border: 1px solid #2196f3;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 20px;
+    }
+
+    .substitute-notice h6 {
+        color: #1976d2;
+        margin-bottom: 8px;
+    }
+
+    .substitute-notice p {
+        color: #424242;
+        margin: 0;
+        font-size: 14px;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header d-flex align-items-center justify-content-between">
-    <h4 class="page-title mb-0">{% trans "Посещаемость" %}</h4>
-    {% if matrix %}
-    <button type="submit" form="att-form" class="btn btn-sm btn-primary">
-        <i class="bi bi-save me-1"></i>{% trans "Сохранить" %}
-    </button>
-    {% endif %}
+<div class="page-header">
+    <div class="text-center mb-3">
+        <h4 class="page-title mb-3">{% trans "Посещаемость" %} — {{ course.title }}</h4>
+        <div class="d-inline-flex align-items-center gap-2">
+            <a href="?week={{ prev_week }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-chevron-left"></i> Предыдущая
+            </a>
+            <span class="fw-semibold px-3">
+                Посещаемость
+            </span>
+            <a href="?week={{ next_week }}" class="btn btn-sm btn-outline-secondary">
+                Следующая <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if is_substitute_mentor %}
+<div class="substitute-notice">
+    <h6><i class="bi bi-info-circle me-2"></i>Доступ заменяющего ментора</h6>
+    <p>Вы можете отмечать посещаемость только в дни, когда вы заменяете основного ментора. Доступные дни для отметки посещаемости выделены в таблице.</p>
+</div>
+{% endif %}
+
+<!-- Легенда для иконок -->
+<div class="alert alert-light border-secondary">
+    <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Обозначения</h6>
+    <div class="row small">
+        <div class="col-md-6">
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-person-check me-2" style="color: #198754;"></i>
+                <span>Отмечено основным ментором</span>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-person-arrow-repeat me-2" style="color: #ffc107;"></i>
+                <span>Отмечено заменяющим ментором</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex align-items-center mb-2">
+                <span class="badge bg-success me-2">✓</span>
+                <span>Присутствовал</span>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+                <span class="badge bg-danger me-2">✗</span>
+                <span>Отсутствовал</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% if course.is_unlimited %}
@@ -320,7 +432,16 @@
 {% if not lessons %}
 <div class="empty-state text-center py-5">
     <i class="bi bi-person-check fs-1 text-muted"></i>
-    <h6 class="mt-3 text-muted">{% trans "Нет занятий" %}</h6>
+    <h6 class="mt-3 text-muted">
+        {% if is_substitute_mentor %}
+            {% trans "Нет доступных дней для замены" %}
+        {% else %}
+            {% trans "Нет занятий" %}
+        {% endif %}
+    </h6>
+    {% if is_substitute_mentor %}
+    <p class="text-muted small mt-2">Посещаемость будет доступна в дни проведения уроков, когда вы назначены заменяющим ментором</p>
+    {% endif %}
 </div>
 {% else %}
 <div class="card">
@@ -332,12 +453,14 @@
                     <thead>
                         <tr>
                             <th class="student-col">{% trans "Студент" %}</th>
-                            {% for lesson in lessons %}
-                            <th class="att-date-header" title="{{ lesson.title|default:'' }} — {{ lesson.lesson_date|date:'d.m.Y' }} {{ lesson.start_time|time:'H:i' }}">
-                                <input type="checkbox" class="select-all-date" data-lesson="{{ lesson.id }}" title="Выбрать всех">
-                                <span class="date-day">{{ lesson.lesson_date|date:"d" }}</span>
-                                <span class="date-month">{{ lesson.lesson_date|date:"m" }}</span>
-                            </th>
+                            {% for week_data in weeks_data %}
+                                {% for lesson in week_data.lessons %}
+                                <th class="att-date-header" title="{{ lesson.title|default:'' }} — {{ lesson.lesson_date|date:'d.m.Y' }} {{ lesson.start_time|time:'H:i' }}">
+                                    <input type="checkbox" class="select-all-date" data-lesson="{{ lesson.id }}" title="Выбрать всех">
+                                    <span class="date-day">{{ lesson.lesson_date|date:"d" }}</span>
+                                    <span class="date-month">{{ lesson.lesson_date|date:"m" }}</span>
+                                </th>
+                                {% endfor %}
                             {% endfor %}
                             <th class="att-pct">%</th>
                         </tr>
@@ -348,83 +471,88 @@
                             <td class="student-col" title="{{ row.cs.student.full_name }}">
                                 <div class="student-meta">
                                     <div>{{ row.cs.student.full_name }}</div>
-
                                     {% if course.is_unlimited and row.ticket_info %}
-                                        {% if row.ticket_info.remaining_tickets > 0 %}
-                                            <span class="ticket-badge success">{{ row.ticket_info.remaining_tickets }} т.</span>
-                                        {% elif row.ticket_info.remaining_tickets > -2 %}
-                                            <span class="ticket-badge warning">{{ row.ticket_info.remaining_tickets }} т.</span>
+                                        {% if row.ticket_info.remaining_tickets > 5 %}
+                                            <span class="ticket-badge success">{{ row.ticket_info.used_tickets }}/{{ row.ticket_info.total_tickets }}</span>
+                                        {% elif row.ticket_info.remaining_tickets > 0 %}
+                                            <span class="ticket-badge warning">{{ row.ticket_info.used_tickets }}/{{ row.ticket_info.total_tickets }}</span>
                                         {% else %}
-                                            <span class="ticket-badge danger">{{ row.ticket_info.remaining_tickets }} т.</span>
+                                            <span class="ticket-badge danger">{{ row.ticket_info.used_tickets }}/{{ row.ticket_info.total_tickets }}</span>
                                         {% endif %}
                                     {% endif %}
                                 </div>
                             </td>
 
-                            {% for cell in row.cells %}
-                            <td class="att-cell"
-                                data-val="{{ cell.status|default:'' }}"
-                                data-name="att_{{ cell.lesson_id }}_{{ row.cs.student_id }}"
-                                data-comment="{{ cell.comment|default:'' }}">
+                            {% for week_cells in row.weeks_cells %}
+                                {% for cell in week_cells.cells %}
+                                <td class="att-cell{% if not cell.can_mark %} disabled{% endif %}"
+                                    data-val="{{ cell.status|default:'' }}"
+                                    data-name="att_{{ cell.lesson_id }}_{{ row.cs.student_id }}"
+                                    data-comment="{{ cell.comment|default:'' }}"
+                                    {% if not cell.can_mark %}title="Недоступно для отметки"{% endif %}>
+                                    
+                                    <input type="hidden"
+                                           name="att_{{ cell.lesson_id }}_{{ row.cs.student_id }}"
+                                           value="{{ cell.status|default:'' }}"
+                                           {% if not cell.can_mark %}disabled{% endif %}>
 
-                                <input type="hidden"
-                                       name="att_{{ cell.lesson_id }}_{{ row.cs.student_id }}"
-                                       value="{{ cell.status|default:'' }}">
+                                    <div class="att-state">
+                                        <span class="state-icon state-empty">—</span>
+                                        <span class="state-icon state-present">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M20 6 9 17l-5-5"/>
+                                            </svg>
+                                        </span>
+                                        <span class="state-icon state-absent">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M18 6 6 18"/>
+                                                <path d="m6 6 12 12"/>
+                                            </svg>
+                                        </span>
+                                        <span class="state-icon state-comment">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+                                            </svg>
+                                        </span>
+                                    </div>
 
-                                <div class="att-state">
-                                    <span class="state-icon state-empty">—</span>
-                                    <span class="state-icon state-present">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20 6 9 17l-5-5"/>
-                                        </svg>
-                                    </span>
-                                    <span class="state-icon state-absent">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M18 6 6 18"/>
-                                            <path d="m6 6 12 12"/>
-                                        </svg>
-                                    </span>
-                                    <span class="state-icon state-comment">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
-                                        </svg>
-                                    </span>
-                                </div>
+                                    <!-- Выпадающее меню для отметки посещаемости -->
+                                    {% if cell.can_mark %}
+                                    <div class="hover-menu">
+                                        <button type="button"
+                                                class="menu-option present js-att-set"
+                                                data-value="present"
+                                                title="Есть">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M20 6 9 17l-5-5"/>
+                                            </svg>
+                                        </button>
 
-                                <div class="hover-menu">
-                                    <button type="button"
-                                            class="menu-option present js-att-set"
-                                            data-value="present"
-                                            title="Есть">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20 6 9 17l-5-5"/>
-                                        </svg>
-                                    </button>
+                                        <button type="button"
+                                                class="menu-option absent js-att-set"
+                                                data-value="absent"
+                                                title="Нету">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M18 6 6 18"/>
+                                                <path d="m6 6 12 12"/>
+                                            </svg>
+                                        </button>
 
-                                    <button type="button"
-                                            class="menu-option absent js-att-set"
-                                            data-value="absent"
-                                            title="Нету">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M18 6 6 18"/>
-                                            <path d="m6 6 12 12"/>
-                                        </svg>
-                                    </button>
-
-                                    <a href="#"
-                                       class="menu-option comment ajax-form js-att-comment"
-                                       data-place="form-fragment"
-                                       data-modal="attendance-comment-form"
-                                       data-url="/lms/mentor/ajax/course-{{ course.pk }}/attendance-{{ cell.lesson_id }}-{{ row.cs.student_id }}/comment/"
-                                       title="Комментарий">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </td>
+                                        <a href="#"
+                                           class="menu-option comment ajax-form js-att-comment"
+                                           data-place="form-fragment"
+                                           data-modal="attendance-comment-form"
+                                           data-url="/lms/mentor/ajax/course-{{ course.pk }}/attendance-{{ cell.lesson_id }}-{{ row.cs.student_id }}/comment/"
+                                           title="Комментарий">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
                             {% endfor %}
-
+                            
                             <td class="att-pct">
                                 <span class="badge {% if row.percent >= 80 %}bg-success{% elif row.percent >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
                                     {{ row.percent }}%
@@ -433,7 +561,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="{{ lessons|length|add:2 }}" class="text-center text-muted py-4">
+                            <td colspan="20" class="text-center text-muted py-4">
                                 {% trans "Нет студентов" %}
                             </td>
                         </tr>
@@ -471,22 +599,24 @@
 
 {% block extra_js %}
 <script>
-// Глобальные переменные для защиты от повторных действий
-    const actionCooldown = new Set();
-    const COOLDOWN_TIME = 3000; // 3 секунды
+// Глобальные переменные для защиты от повторных действий (объявляем только если еще не существуют)
+if (typeof actionCooldown === 'undefined') {
+    window.actionCooldown = new Set();
+    window.COOLDOWN_TIME = 3000; // 3 секунды
+}
 
-    function checkCooldown(element) {
-        const elementId = element.getAttribute('data-name') || element.outerHTML;
-        if (actionCooldown.has(elementId)) {
-            console.log('Действие в процессе, подождите...');
-            return false;
-        }
-        actionCooldown.add(elementId);
-        setTimeout(() => {
-            actionCooldown.delete(elementId);
-        }, COOLDOWN_TIME);
-        return true;
+function checkCooldown(element) {
+    const elementId = element.getAttribute('data-name') || element.outerHTML;
+    if (window.actionCooldown.has(elementId)) {
+        console.log('Действие в процессе, подождите...');
+        return false;
     }
+    window.actionCooldown.add(elementId);
+    setTimeout(() => {
+        window.actionCooldown.delete(elementId);
+    }, window.COOLDOWN_TIME);
+    return true;
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     // Инициализация существующих комментариев
@@ -535,6 +665,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const cell = this.closest('.att-cell');
+            if (cell.classList.contains('disabled')) {
+                return;
+            }
+
             const value = this.getAttribute('data-value');
             setCellValue(cell, value);
             
@@ -553,6 +687,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const cell = this.closest('.att-cell');
+            if (cell.classList.contains('disabled')) {
+                return;
+            }
+
             const currentComment = cell.getAttribute('data-comment') || '';
             
             if (currentComment) {
@@ -574,15 +712,125 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    function updateRowPercentage(cell) {
+        // Находим строку студента
+        const row = cell.closest('tr');
+        if (!row) return;
+        
+        // Находим все ячейки посещаемости в строке (кроме последней с процентами)
+        const attendanceCells = row.querySelectorAll('.att-cell:not(.disabled)');
+        let presentCount = 0;
+        let totalCount = attendanceCells.length;
+        
+        // Считаем количество present
+        attendanceCells.forEach(function(attCell) {
+            const status = attCell.getAttribute('data-val');
+            if (status === 'present') {
+                presentCount++;
+            }
+        });
+        
+        // Вычисляем процент
+        const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+        
+        // Находим ячейку с процентами и обновляем ее
+        const percentCell = row.querySelector('.att-pct .badge');
+        if (percentCell) {
+            percentCell.textContent = percentage + '%';
+            
+            // Обновляем цвет бейджа в зависимости от процента
+            percentCell.className = 'badge';
+            if (percentage >= 80) {
+                percentCell.classList.add('bg-success');
+            } else if (percentage >= 60) {
+                percentCell.classList.add('bg-warning', 'text-dark');
+            } else {
+                percentCell.classList.add('bg-danger');
+            }
+        }
+        
+        console.log(`Updated percentage: ${presentCount}/${totalCount} = ${percentage}%`);
+    }
+
     function saveAttendance(cell) {
-        // Просто показываем что данные сохранятся при отправке формы
-        if (cell) {
-            cell.style.background = '#dff5e5';
+        console.log('=== SAVING ATTENDANCE ===');
+        const formData = new FormData();
+        const input = cell.querySelector('input[type="hidden"]');
+        const name = input.name;
+        const value = input.value;
+        
+        console.log(`Saving: ${name} = ${value}`);
+        console.log(`Form action: ${cell.closest('form').action}`);
+        console.log(`CSRF token: ${document.querySelector('[name=csrfmiddlewaretoken]').value}`);
+        
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        formData.append(name, value);
+        
+        // Добавляем комментарии если есть
+        const comment = cell.getAttribute('data-comment') || '';
+        if (comment) {
+            const match = name.match(/att_(\d+)_(\d+)/);
+            if (match) {
+                const lessonId = match[1];
+                const studentId = match[2];
+                const commentsData = {};
+                commentsData[`${lessonId}_${studentId}`] = comment;
+                formData.append('comments_data', JSON.stringify(commentsData));
+            }
+        }
+        
+        // Показываем индикатор сохранения
+        cell.style.background = '#dff5e5';
+        
+        console.log('Sending fetch request...');
+        console.log('Form data entries:');
+        for (let pair of formData.entries()) {
+            console.log(pair[0], pair[1]);
+        }
+        
+        fetch(cell.closest('form').action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData
+        })
+        .then(response => {
+            console.log(`Response status: ${response.status}`);
+            console.log(`Response ok: ${response.ok}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            console.log('Response data keys:', Object.keys(data));
+            
+            if (data.success) {
+                console.log('Save successful - processed lessons:', data.debug?.processed_lessons);
+                cell.style.background = '#d4edda';
+                setTimeout(() => {
+                    cell.style.background = '';
+                    // Обновляем проценты посещаемости для строки студента
+                    updateRowPercentage(cell);
+                }, 800);
+            } else {
+                cell.style.background = '#f8d7da';
+                setTimeout(() => {
+                    cell.style.background = '';
+                }, 800);
+                console.error('Ошибка сохранения:', data.error);
+            }
+        })
+        .catch(error => {
+            cell.style.background = '#f8d7da';
             setTimeout(() => {
                 cell.style.background = '';
-            }, 500);
-        }
-        console.log('Данные будут сохранены при отправке формы');
+            }, 800);
+            console.error('Ошибка сети:', error);
+            console.error('Детали:', error.message);
+        });
     }
 
     document.querySelectorAll('.att-cell').forEach(function (cell) {
@@ -590,6 +838,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (e.target.closest('.hover-menu')) return;
 
             if (!checkCooldown(this)) {
+                return;
+            }
+
+            if (cell.classList.contains('disabled')) {
                 return;
             }
 
@@ -614,7 +866,7 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const lessonId = this.getAttribute('data-lesson');
             const isChecked = this.checked;
-            const cells = document.querySelectorAll(`.att-cell[data-name*="_${lessonId}"]`);
+            const cells = document.querySelectorAll(`.att-cell[data-name*="_${lessonId}"]:not(.disabled)`);
             
             cells.forEach(function(cell) {
                 if (isChecked) {
@@ -626,38 +878,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
-    });
-
-    // Собираем комментарии перед отправкой формы
-    document.getElementById('att-form').addEventListener('submit', function(e) {
-        const cells = document.querySelectorAll('.att-cell[data-comment]');
-        const commentsData = {};
-        
-        cells.forEach(function(cell) {
-            const comment = cell.getAttribute('data-comment');
-            if (comment && comment.trim()) {
-                const nameAttr = cell.getAttribute('data-name');
-                const match = nameAttr.match(/att_(\d+)_(\d+)/);
-                if (match) {
-                    const lessonId = match[1];
-                    const studentId = match[2];
-                    const key = `${lessonId}_${studentId}`;
-                    commentsData[key] = comment;
-                }
-            }
-        });
-        
-        console.log('Комментарии для сохранения:', commentsData);
-        
-        // Добавляем комментарии в форму как JSON
-        if (Object.keys(commentsData).length > 0) {
-            const commentsInput = document.createElement('input');
-            commentsInput.type = 'hidden';
-            commentsInput.name = 'comments_data';
-            commentsInput.value = JSON.stringify(commentsData);
-            this.appendChild(commentsInput);
-            console.log('Добавлены комментарии в форму:', commentsInput.value);
-        }
     });
 });
 </script>

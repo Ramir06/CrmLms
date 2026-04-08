@@ -1,6 +1,6 @@
 {% extends "base/admin_base.html" %}
 {% load static %}
-{% block title %}Студенты{% endblock %}
+{% block page_title %}Студенты{% endblock %}
 {% block content %}
 <div class="page-header">
     <h4 class="page-title">Студенты</h4>
@@ -30,6 +30,7 @@
         {% if search or status_filter or subject_filter %}<a href="{% url 'admin_students:list' %}" class="btn btn-outline-secondary btn-sm">Сброс</a>{% endif %}
     </form>
 </div>
+
 <!-- Active Students -->
 <div class="card mb-4">
     <div class="card-header bg-light">
@@ -37,46 +38,80 @@
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 students-table">
                 <thead class="table-light">
-                    <tr><th>ФИО</th><th>Телефон</th><th>Курсы</th><th>Источник</th><th>Статус</th><th>Аккаунт</th><th>Добавлен</th><th></th></tr>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Телефон</th>
+                        <th>Курсы</th>
+                        <th>Источник</th>
+                        <th>Статус</th>
+                        <th>Аккаунт</th>
+                        <th>Был в сети</th>
+                        <th>Добавлен</th>
+                        <th style="width: 140px;"></th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for s in active_students %}
-                    <tr>
-                        <td><a href="{% url 'admin_students:detail' pk=s.pk %}" class="fw-medium text-decoration-none">{{ s.full_name }}</a></td>
+                    <tr class="student-row" data-student-id="{{ s.pk }}" style="cursor: pointer;">
+                        <td>
+                            <div class="student-name-cell">
+                                <a href="{% url 'admin_students:detail' pk=s.pk %}" class="fw-medium text-decoration-none student-name-link" onclick="event.stopPropagation()">
+                                    {{ s.full_name }}
+                                </a>
+                                {% if s.status == 'left' %}
+                                <span class="badge bg-warning text-dark ms-2">Ушел</span>
+                                {% endif %}
+                            </div>
+                        </td>
                         <td class="text-muted">{{ s.phone }}</td>
                         <td>
-                            {% for enr in s.course_enrollments.all|slice:":2" %}
-                                {% if enr.status == 'active' %}
-                                <span class="badge bg-success-subtle text-success border">{{ enr.course.title }}</span>
-                                {% else %}
-                                <span class="badge bg-light text-dark border">{{ enr.course.title }}</span>
+                            <div class="courses-badges">
+                                {% for enr in s.course_enrollments.all|slice:":2" %}
+                                    {% if enr.status == 'active' %}
+                                    <span class="badge bg-success-subtle text-success border course-badge">{{ enr.course.title }}</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark border course-badge">{{ enr.course.title }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if s.course_enrollments.all|length > 2 %}
+                                <span class="badge bg-secondary">+{{ s.course_enrollments.all|length|add:"-2" }}</span>
                                 {% endif %}
-                            {% endfor %}
+                            </div>
                         </td>
                         <td><span class="text-muted small">{{ s.get_source_display|default:"—" }}</span></td>
                         <td>
-                            <span class="badge {% if s.status == 'active' %}bg-success{% elif s.status == 'graduated' %}bg-info{% else %}bg-secondary{% endif %}">
+                            <span class="badge student-status-badge status-{{ s.status }}">
                                 {{ s.get_status_display }}
                             </span>
                         </td>
                         <td>
                             {% if s.user_account %}
                                 {% if s.user_account.is_active %}
-                                <span class="badge bg-success-subtle text-success"><i class="bi bi-unlock-fill"></i></span>
+                                <span class="badge account-status-badge account-active">
+                                    <i class="bi bi-unlock-fill"></i>
+                                </span>
                                 {% else %}
-                                <span class="badge bg-danger-subtle text-danger"><i class="bi bi-lock-fill"></i></span>
+                                <span class="badge account-status-badge account-blocked">
+                                    <i class="bi bi-lock-fill"></i>
+                                </span>
                                 {% endif %}
                             {% else %}
-                                <span class="badge bg-light text-muted">—</span>
+                                <span class="badge account-status-badge account-none">—</span>
                             {% endif %}
                         </td>
+                        <td class="text-muted small">{{ s.user_account.get_last_login_display|default:"—" }}</td>
                         <td class="text-muted small">{{ s.created_at|date:"d.m.Y" }}</td>
-                        <td><a href="{% url 'admin_students:detail' pk=s.pk %}" class="btn btn-sm btn-outline-primary">Открыть</a></td>
+                        <td>
+                            <a href="{% url 'admin_students:detail' pk=s.pk %}" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation()">Открыть</a>
+                            <a href="{% url 'admin_students:detailed_excel_report' pk=s.pk %}" class="btn btn-sm btn-success" onclick="event.stopPropagation()" title="Детальный отчёт Excel">
+                                <i class="bi bi-file-earmark-excel"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="text-center text-muted py-4">Студенты не найдены</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-4">Студенты не найдены</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -92,43 +127,81 @@
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 students-table">
                 <thead class="table-light">
-                    <tr><th>ФИО</th><th>Телефон</th><th>Курсы</th><th>Источник</th><th>Статус</th><th>Аккаунт</th><th>Добавлен</th><th></th></tr>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>ФИО</th>
+                        <th>Телефон</th>
+                        <th>Курсы</th>
+                        <th>Источник</th>
+                        <th>Статус</th>
+                        <th>Аккаунт</th>
+                        <th>Был в сети</th>
+                        <th>Добавлен</th>
+                        <th style="width: 140px;"></th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for s in left_students %}
-                    <tr class="table-warning bg-opacity-5">
-                        <td><a href="{% url 'admin_students:detail' pk=s.pk %}" class="fw-medium text-decoration-none">{{ s.full_name }}</a></td>
+                    <tr class="student-row" data-student-id="{{ s.pk }}" style="cursor: pointer;">
+                        <td class="student-avatar-cell">
+                            <div class="student-avatar-small">
+                                {% if s.first_name %}
+                                    {{ s.first_name.0 }}{% if s.last_name %}{{ s.last_name.0 }}{% endif %}
+                                {% else %}
+                                    {% for word in s.full_name.split %}{% if forloop.counter0 < 2 %}{{ word.0 }}{% endif %}{% endfor %}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="student-name-cell">
+                                <a href="{% url 'admin_students:detail' pk=s.pk %}" class="fw-medium text-decoration-none student-name-link" onclick="event.stopPropagation()">
+                                    {{ s.full_name }}
+                                </a>
+                            </div>
+                        </td>
                         <td class="text-muted">{{ s.phone }}</td>
                         <td>
-                            {% for enr in s.course_enrollments.all %}
-                                {% if enr.status == 'left' %}
-                                <span class="badge bg-warning text-dark border">{{ enr.course.title }}</span>
-                                {% else %}
-                                <span class="badge bg-light text-dark border">{{ enr.course.title }}</span>
-                                {% endif %}
-                            {% endfor %}
+                            <div class="courses-badges">
+                                {% for enr in s.course_enrollments.all %}
+                                    {% if enr.status == 'left' %}
+                                    <span class="badge bg-warning text-dark border course-badge">{{ enr.course.title }}</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark border course-badge">{{ enr.course.title }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </td>
                         <td><span class="text-muted small">{{ s.get_source_display|default:"—" }}</span></td>
                         <td>
-                            <span class="badge {% if s.status == 'active' %}bg-success{% elif s.status == 'graduated' %}bg-info{% else %}bg-secondary{% endif %}">
+                            <span class="badge student-status-badge status-{{ s.status }}">
                                 {{ s.get_status_display }}
                             </span>
                         </td>
                         <td>
                             {% if s.user_account %}
                                 {% if s.user_account.is_active %}
-                                <span class="badge bg-success-subtle text-success"><i class="bi bi-unlock-fill"></i></span>
+                                <span class="badge account-status-badge account-active">
+                                    <i class="bi bi-unlock-fill"></i>
+                                </span>
                                 {% else %}
-                                <span class="badge bg-danger-subtle text-danger"><i class="bi bi-lock-fill"></i></span>
+                                <span class="badge account-status-badge account-blocked">
+                                    <i class="bi bi-lock-fill"></i>
+                                </span>
                                 {% endif %}
                             {% else %}
-                                <span class="badge bg-light text-muted">—</span>
+                                <span class="badge account-status-badge account-none">—</span>
                             {% endif %}
                         </td>
+                        <td class="text-muted small">{{ s.user_account.get_last_login_display|default:"—" }}</td>
                         <td class="text-muted small">{{ s.created_at|date:"d.m.Y" }}</td>
-                        <td><a href="{% url 'admin_students:detail' pk=s.pk %}" class="btn btn-sm btn-outline-primary">Открыть</a></td>
+                        <td>
+                            <a href="{% url 'admin_students:detail' pk=s.pk %}" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation()">Открыть</a>
+                            <a href="{% url 'admin_students:detailed_excel_report' pk=s.pk %}" class="btn btn-sm btn-success" onclick="event.stopPropagation()" title="Детальный отчёт Excel">
+                                <i class="bi bi-file-earmark-excel"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -137,4 +210,317 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Боковая панель для информации о студенте -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="studentDrawer" aria-labelledby="studentDrawerLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="studentDrawerLabel">Информация о студенте</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body" id="studentDrawerContent">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработчики кликов на строки студентов
+    document.querySelectorAll('.student-row').forEach(function(row) {
+        row.addEventListener('click', function(event) {
+            // Проверяем, что клик был не по ссылке ФИО
+            if (event.target.closest('.student-name-link')) {
+                return; // Не открывать drawer если клик по ссылке ФИО
+            }
+            
+            // Проверяем, что клик был не по кнопке "Открыть"
+            if (event.target.closest('a.btn')) {
+                return; // Не открывать drawer если клик по кнопке
+            }
+            
+            const studentId = this.dataset.studentId;
+            
+            // Убираем активный класс у всех строк
+            document.querySelectorAll('.student-row').forEach(function(r) {
+                r.classList.remove('active-row');
+            });
+            
+            // Добавляем активный класс текущей строке
+            this.classList.add('active-row');
+            
+            openStudentDrawer(studentId);
+        });
+    });
+    
+    // Проверяем query параметр для открытия конкретного студента
+    const urlParams = new URLSearchParams(window.location.search);
+    const studentId = urlParams.get('student');
+    if (studentId) {
+        openStudentDrawer(studentId);
+        
+        // Находим и выделяем строку студента
+        const studentRow = document.querySelector(`[data-student-id="${studentId}"]`);
+        if (studentRow) {
+            studentRow.classList.add('active-row');
+            studentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+});
+
+function openStudentDrawer(studentId) {
+    const drawer = new bootstrap.Offcanvas(document.getElementById('studentDrawer'));
+    const contentDiv = document.getElementById('studentDrawerContent');
+    
+    // Показываем индикатор загрузки
+    contentDiv.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+        </div>
+    `;
+    
+    // Открываем боковую панель
+    drawer.show();
+    
+    // Обновляем URL
+    const url = new URL(window.location);
+    url.searchParams.set('student', studentId);
+    window.history.pushState({}, '', url);
+    
+    // Загружаем данные студента
+    fetch(`/admin/students/${studentId}/drawer/`)
+        .then(response => response.json())
+        .then(data => {
+            contentDiv.innerHTML = data.html;
+        })
+        .catch(error => {
+            console.error('Error loading student data:', error);
+            contentDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Ошибка загрузки данных студента. Пожалуйста, попробуйте еще раз.
+                </div>
+            `;
+        });
+}
+
+function closeStudentDrawer() {
+    const drawer = bootstrap.Offcanvas.getInstance(document.getElementById('studentDrawer'));
+    if (drawer) {
+        drawer.hide();
+    }
+    
+    // Убираем параметр student из URL
+    const url = new URL(window.location);
+    url.searchParams.delete('student');
+    window.history.pushState({}, '', url);
+    
+    // Убираем активный класс у всех строк
+    document.querySelectorAll('.student-row').forEach(function(row) {
+        row.classList.remove('active-row');
+    });
+}
+
+// Закрытие drawer при нажатии Escape
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeStudentDrawer();
+    }
+});
+
+// Закрытие drawer при клике вне панели
+document.getElementById('studentDrawer').addEventListener('hidden.bs.offcanvas', function () {
+    const url = new URL(window.location);
+    url.searchParams.delete('student');
+    window.history.pushState({}, '', url);
+    
+    document.querySelectorAll('.student-row').forEach(function(row) {
+        row.classList.remove('active-row');
+    });
+});
+</script>
+
+<style>
+/* ===== Стили для таблицы студентов ===== */
+.students-table {
+    font-size: 0.9rem;
+}
+
+.student-row {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.student-row:hover {
+    background-color: #f8f9fa !important;
+    transform: translateX(2px);
+}
+
+.student-row.active-row {
+    background-color: #e3f2fd !important;
+    border-left: 4px solid #2196f3;
+}
+
+.student-row.active-row:hover {
+    transform: translateX(0);
+}
+
+/* ===== Аватары в таблице ===== */
+.student-avatar-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.student-avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.8rem;
+    border: 2px solid #f8f9fa;
+}
+
+/* ===== Ячейка с именем ===== */
+.student-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.student-name-link {
+    color: #111827;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    position: relative;
+    z-index: 10;
+}
+
+.student-name-link:hover {
+    color: #2563eb;
+}
+
+/* ===== Бейджи статусов ===== */
+.student-status-badge {
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.status-active {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.status-graduated {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.status-left {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.status-inactive {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.status-expelled {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.account-status-badge {
+    font-weight: 500;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.65rem;
+}
+
+.account-active {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.account-blocked {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.account-none {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+/* ===== Бейджи курсов ===== */
+.courses-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.course-badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ===== Мобильная адаптация ===== */
+@media (max-width: 768px) {
+    .student-avatar-small {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+    
+    .courses-badges {
+        max-width: 120px;
+    }
+    
+    .course-badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.3rem;
+    }
+    
+    .students-table {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .student-avatar-cell {
+        display: none;
+    }
+    
+    .courses-badges {
+        max-width: 80px;
+    }
+    
+    .student-status-badge, .account-status-badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.3rem;
+    }
+}
+</style>
 {% endblock %}

@@ -1,0 +1,116 @@
+{% load static i18n %}
+<form id="feedbackForm" method="post" action="/feedback/quick/">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+        <label class="form-label fw-bold">Тип обратной связи</label>
+        <select class="form-select" id="feedbackType" name="type" onchange="updateFormContent()">
+            <option value="review">Отзыв</option>
+            <option value="idea">Идея</option>
+            <option value="bug">Баг</option>
+            <option value="complaint">Жалоба</option>
+            <option value="suggestion">Предложение</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label fw-bold">Заголовок <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" name="title" id="feedbackTitle" required>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label fw-bold">Сообщение <span class="text-danger">*</span></label>
+        <textarea class="form-control" name="description" id="feedbackDescription" rows="4" required placeholder="Минимум 10 символов..."></textarea>
+        <div class="form-text">
+            Минимум 10 символов. Подробно опишите ваш <span id="feedbackTypeText">отзыв</span>.
+        </div>
+    </div>
+    
+    {% if not request.user.is_authenticated %}
+    <div class="mb-3">
+        <label class="form-label fw-bold">Email</label>
+        <input type="email" class="form-control" name="email" placeholder="Укажите email для ответа">
+        <div class="form-text">
+            Укажите email, если хотите получить ответ на ваше сообщение
+        </div>
+    </div>
+    {% endif %}
+</form>
+
+<script>
+function updateFormContent() {
+    const feedbackType = document.getElementById('feedbackType').value;
+    const feedbackTypeText = document.getElementById('feedbackTypeText');
+    const feedbackDescription = document.getElementById('feedbackDescription');
+    
+    const typeTexts = {
+        'review': 'отзыв',
+        'idea': 'идею',
+        'bug': 'проблему',
+        'complaint': 'жалобу',
+        'suggestion': 'предложение'
+    };
+    
+    const placeholders = {
+        'review': 'Расскажите, что вам нравится в нашей платформе...',
+        'idea': 'Опишите вашу идею новой функции...',
+        'bug': 'Опишите проблему пошагово: что вы делали, что произошло...',
+        'complaint': 'Опишите вашу жалобу подробно. Укажите, что именно вызвало недовольство...',
+        'suggestion': 'Поделитесь идеями по улучшению нашей платформы...'
+    };
+    
+    feedbackTypeText.textContent = typeTexts[feedbackType] || 'отзыв';
+    feedbackDescription.placeholder = placeholders[feedbackType] || 'Минимум 10 символов...';
+}
+
+function submitFeedback() {
+    const form = document.getElementById('feedbackForm');
+    const formData = new FormData(form);
+    
+    // Проверяем обязательные поля
+    const type = formData.get('type');
+    const title = formData.get('title');
+    const description = formData.get('description');
+    
+    if (!type || !title || !description || description.length < 10) {
+        alert('Пожалуйста, заполните все обязательные поля. Сообщение должно содержать минимум 10 символов.');
+        return;
+    }
+    
+    // Отправляем форму
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Показываем сообщение об успехе
+            alert('Ваше сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.');
+            
+            // Очищаем форму
+            form.reset();
+        } else {
+            alert('Ошибка: ' + (data.error || 'Произошла ошибка при отправке.'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при отправке. Пожалуйста, попробуйте еще раз.');
+    });
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    updateFormContent();
+});
+</script>

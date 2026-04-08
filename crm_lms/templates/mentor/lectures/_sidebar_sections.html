@@ -42,32 +42,44 @@
             </div>
             <div class="collapse show" id="sb-sec-{{ section.pk }}">
                 {% for material in section.materials.all %}
-                <a href="{% url 'lectures:material_detail' course_id=course.pk material_id=material.pk %}"
+                <a href="#" onclick="loadItemDetail('material', {{ material.pk }}); return false;"
                    class="sb-item {% if active_item_type == 'material' and active_item_id == material.pk %}active{% endif %}">
                     <span class="sb-dot mat"></span>
                     <span class="sb-item-title text-truncate">{{ material.title }}</span>
                     <button class="sb-vis-btn {% if not material.is_visible %}off{% endif %}" onclick="event.preventDefault();toggleVis('material',{{ material.pk }},this)" title="Видимость">
-                        📋
+                        {% if material.is_visible %}
+                            <i class="fa fa-eye" style="color: #007bff;"></i>
+                        {% else %}
+                            <i class="fa fa-eye-slash" style="color: #dc3545;"></i>
+                        {% endif %}
                     </button>
                 </a>
                 {% endfor %}
                 {% for assignment in section.assignments.all %}
-                <a href="{% url 'lectures:assignment_detail' course_id=course.pk assignment_id=assignment.pk %}"
+                <a href="#" onclick="loadItemDetail('assignment', {{ assignment.pk }}); return false;"
                    class="sb-item {% if active_item_type == 'assignment' and active_item_id == assignment.pk %}active{% endif %}">
                     <span class="sb-dot task"></span>
                     <span class="sb-item-title text-truncate">{{ assignment.title }}</span>
                     <button class="sb-vis-btn {% if not assignment.is_visible %}off{% endif %}" onclick="event.preventDefault();toggleVis('assignment',{{ assignment.pk }},this)" title="Видимость">
-                        📋
+                        {% if assignment.is_visible %}
+                            <i class="fa fa-eye" style="color: #007bff;"></i>
+                        {% else %}
+                            <i class="fa fa-eye-slash" style="color: #dc3545;"></i>
+                        {% endif %}
                     </button>
                 </a>
                 {% endfor %}
                 {% for quiz in section.quizzes.all %}
-                <a href="{% url 'quizzes:detail' course_id=course.pk quiz_id=quiz.pk %}"
+                <a href="#" onclick="loadItemDetail('quiz', {{ quiz.pk }}); return false;"
                    class="sb-item {% if active_item_type == 'quiz' and active_item_id == quiz.pk %}active{% endif %}">
                     <span class="sb-dot quiz"></span>
                     <span class="sb-item-title text-truncate">{{ quiz.title }}</span>
                     <button class="sb-vis-btn {% if not quiz.is_active %}off{% endif %}" onclick="event.preventDefault();toggleVis('quiz',{{ quiz.pk }},this)" title="Видимость">
-                        📋
+                        {% if quiz.is_active %}
+                            <i class="fa fa-eye" style="color: #007bff;"></i>
+                        {% else %}
+                            <i class="fa fa-eye-slash" style="color: #dc3545;"></i>
+                        {% endif %}
                     </button>
                 </a>
                 {% endfor %}

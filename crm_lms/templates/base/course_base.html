@@ -5,12 +5,97 @@
 <link rel="stylesheet" href="{% static 'css/mentor.css' %}">
 <link rel="stylesheet" href="{% static 'css/course.css' %}">
 {% block course_extra_css %}{% endblock %}
+
+<!-- ФИКС НАВБАРА ДЛЯ COURSE PAGES -->
+<style>
+#appNavbar,
+body #appNavbar,
+html body #appNavbar,
+body > #appNavbar,
+html body > #appNavbar,
+nav#appNavbar,
+.navbar#appNavbar,
+.header-navbar#appNavbar,
+#appNavbar.floating-nav,
+.header-navbar.floating-nav {
+  position: fixed !important;
+  top: 20px !important;
+  right: 32px !important;
+  left: auto !important;
+  bottom: auto !important;
+  z-index: 999999 !important;
+  margin: 0 !important;
+  transform: none !important;
+  pointer-events: auto !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Стили для course-header-bar */
+.course-header-bar {
+    margin-bottom: 2rem;
+    -webkit-transition: all .3s ease-in-out, background 0s, color 0s, border-color 0s;
+    transition: all .3s ease-in-out, background 0s, color 0s, border-color 0s;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    background-color: #FFF;
+    background-clip: border-box;
+    border: 1px solid #ebe9f1;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+/* Поднимаем модальные окна и сообщения выше навбара */
+.modal {
+    z-index: 1000000 !important;
+}
+
+.modal-backdrop {
+    z-index: 999999 !important;
+}
+
+.django-messages {
+    z-index: 1000001 !important;
+    position: relative;
+}
+
+.alert {
+    z-index: 1000001 !important;
+    position: relative;
+}
+
+/* Переопределяем все возможные conflicting стили */
+#appNavbar[style],
+body #appNavbar[style],
+html body #appNavbar[style],
+nav#appNavbar[style],
+.header-navbar#appNavbar[style] {
+  position: fixed !important;
+  top: 20px !important;
+  right: 32px !important;
+  left: auto !important;
+  bottom: auto !important;
+  z-index: 999999 !important;
+  margin: 0 !important;
+}
+
+/* Убираем любые bottom стили */
+#appNavbar,
+.header-navbar {
+  bottom: auto !important;
+  top: 20px !important;
+}
+</style>
 {% endblock %}
 
 {% block body %}
 
 {% include "includes/navbar.html" %}
-{% include "includes/sidebar_course.html" %}
+{% include "includes/sidebar_mentor_new.html" %}
 
 <div class="content-overlay" id="contentOverlay"></div>
 
@@ -43,7 +128,7 @@
 <footer class="footer footer-static footer-light">
     <p class="clearfix mb-0">
         <span class="float-md-end d-none d-md-block" style="font-size:12px;">
-            Made with <i class="bi bi-heart-fill text-danger" style="font-size:10px;"></i> by IT Academy
+            Made with <i class="bi bi-heart-fill text-danger" style="font-size:10px;"></i> by ОкууTrack
         </span>
     </p>
 </footer>
@@ -60,5 +145,25 @@
     <div class="drawer-body" id="drawerBody"></div>
 </div>
 
-{% block extra_js_base %}{% endblock %}
+{% block extra_js %}
+<script>
+// ПРОСТАЯ ПРОВЕРКА НАВБАРА - ИЗБЕГАЕМ КОНФЛИКТОВ
+(function() {
+    console.log('=== NAVBAR CHECK ===');
+    const navbarEl = document.getElementById('appNavbar');
+    if (navbarEl) {
+        console.log('Navbar position:', navbarEl.style.cssText);
+        console.log('Navbar should be at: top: 20px, right: 32px');
+        console.log('Navbar classes:', navbarEl.className);
+        
+        // Проверяем видимость
+        const rect = navbarEl.getBoundingClientRect();
+        console.log('Navbar rect:', rect);
+        console.log('Navbar visible:', rect.width > 0 && rect.height > 0);
+    } else {
+        console.log('Navbar NOT FOUND!');
+    }
+})();
+</script>
+{% endblock %}
 {% endblock %}

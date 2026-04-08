@@ -1,0 +1,108 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='courses' %}">Courses</a>
+&rsaquo; <a href="{% url 'admin:courses_course_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; <a href="{% url 'admin:course_students' course.id %}">{{ course.title }}</a>
+&rsaquo; {% trans 'Ticket History' %} - {{ student_name }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module">
+        <h2>{% trans 'Ticket History' %} - {{ student_name }}</h2>
+        <p>{% trans 'Course' %}: {{ course_title }}</p>
+        
+        <div class="results">
+            <table id="result_list">
+                <thead>
+                    <tr>
+                        <th scope="col">{% trans 'Date' %}</th>
+                        <th scope="col">{% trans 'Type' %}</th>
+                        <th scope="col">{% trans 'Quantity' %}</th>
+                        <th scope="col">{% trans 'Price per Ticket' %}</th>
+                        <th scope="col">{% trans 'Comment' %}</th>
+                        <th scope="col">{% trans 'Created by' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr class="{% cycle 'row1' 'row2' %}">
+                        <td>{{ transaction.created_at }}</td>
+                        <td>{{ transaction.type }}</td>
+                        <td>{% if transaction.transaction_type == 'add' %}+{% endif %}{{ transaction.quantity }}</td>
+                        <td>{% if transaction.price_per_ticket %}{{ transaction.price_per_ticket }} сом{% else %}-{% endif %}</td>
+                        <td>{{ transaction.comment|default:"-" }}</td>
+                        <td>{{ transaction.created_by }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center;">{% trans 'No transactions found' %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="#" onclick="window.close(); return false;" class="button">{% trans 'Close' %}</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.ticket-history-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.ticket-history-content {
+    position: relative;
+    background-color: white;
+    margin: 5% auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 5px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+</style>
+
+<script>
+// Если это открыто как модальное окно
+if (window.opener) {
+    document.body.classList.add('ticket-history-modal');
+    document.querySelector('.module').classList.add('ticket-history-content');
+    
+    // Добавляем кнопку закрытия
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'close-btn';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = function() { window.close(); };
+    document.querySelector('h2').appendChild(closeBtn);
+}
+</script>
+{% endblock %}

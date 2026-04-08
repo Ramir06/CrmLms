@@ -1,15 +1,16 @@
 from django.db import models
-from apps.core.models import TimeStampedModel
+from apps.core.models import TimeStampedModel, OrganizationMixin
 import random
 import string
 
 
-class MentorProfile(TimeStampedModel):
+class MentorProfile(OrganizationMixin, TimeStampedModel):
     SALARY_TYPE_CHOICES = [
         ('fixed', 'Фиксированная'),
         ('hourly', 'Почасовая'),
         ('percent', 'Процент'),
         ('mixed', 'Смешанная'),
+        ('per_lesson', 'По занятиям'),
     ]
 
     user = models.OneToOneField(
@@ -32,8 +33,22 @@ class MentorProfile(TimeStampedModel):
     percent_salary = models.DecimalField(
         max_digits=5, decimal_places=2, default=0, verbose_name='Процент от оплат'
     )
+    per_lesson_rate = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, verbose_name='Ставка за занятие',
+        help_text='Фиксированная оплата за одно проведенное занятие'
+    )
     hired_at = models.DateField(null=True, blank=True, verbose_name='Дата найма')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
+    kpi = models.FloatField(null=True, blank=True, verbose_name='KPI')
+    kpi_status = models.CharField(
+        max_length=20, choices=[
+            ('recommended', 'Рекомендуется'),
+            ('good', 'Хорошо'),
+            ('caution', 'С осторожностью'),
+            ('not_recommended', 'Не рекомендуется'),
+        ], null=True, blank=True, verbose_name='KPI статус'
+    )
+    kpi_updated_at = models.DateTimeField(null=True, blank=True, verbose_name='KPI обновлён')
     # Поля 2FA будут добавлены после миграции
     # two_factor_enabled = models.BooleanField(default=False, verbose_name='Двухфакторная аутентификация')
     # two_factor_code = models.CharField(max_length=6, blank=True, verbose_name='Код 2FA')
@@ -156,6 +171,25 @@ class MentorProfile(TimeStampedModel):
             percent_amount = total_payments * (self.percent_salary / 100)
             return base_salary + percent_amount
         
+        elif self.salary_type == 'per_lesson':
+            # Оплата за каждое проведенное занятие
+            start_date = date(year, month, 1)
+            if month == 12:
+                end_date = date(year + 1, 1, 1)
+            else:
+                end_date = date(year, month + 1, 1)
+            
+            # Получаем проведенные уроки ментора за этот период
+            lessons = Lesson.objects.filter(
+                course__mentor=self.user,
+                lesson_date__gte=start_date,
+                lesson_date__lt=end_date,
+                status='completed'
+            )
+            
+            # Количество проведенных занятий * ставка за занятие
+            return lessons.count() * self.per_lesson_rate
+        
         return 0
 
     def get_salary_breakdown(self, year, month):
@@ -175,6 +209,8 @@ class MentorProfile(TimeStampedModel):
             'total_payments': 0,
             'percent_rate': self.percent_salary,
             'percent_amount': 0,
+            'lessons_count': 0,
+            'per_lesson_rate': self.per_lesson_rate,
             'total': 0
         }
         
@@ -224,5 +260,18 @@ class MentorProfile(TimeStampedModel):
                 breakdown['total'] = self.fixed_salary + breakdown['percent_amount']
             else:
                 breakdown['total'] = breakdown['percent_amount']
+        
+        elif self.salary_type == 'per_lesson':
+            # Оплата за каждое проведенное занятие
+            lessons = Lesson.objects.filter(
+                course__mentor=self.user,
+                lesson_date__gte=start_date,
+                lesson_date__lt=end_date,
+                status='completed'
+            )
+            
+            lessons_count = lessons.count()
+            breakdown['lessons_count'] = lessons_count
+            breakdown['total'] = lessons_count * self.per_lesson_rate
         
         return breakdown

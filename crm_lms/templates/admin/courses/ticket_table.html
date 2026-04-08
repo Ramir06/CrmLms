@@ -1,5 +1,5 @@
-{% load ticket_filters %}
 <!-- Таблица талонов для бесконечного курса -->
+{% load dict_filters %}
 <div class="card mb-4">
     <div class="card-header d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
@@ -30,12 +30,12 @@
                 </thead>
                 <tbody>
                     {% for cs in active_students %}
-                    {% with current_ticket_data=ticket_data|lookup_dict:cs.pk %}
-                    <tr class="{% if current_ticket_data and current_ticket_data.ticket_status == 'no_tickets' %}table-danger{% elif current_ticket_data and current_ticket_data.ticket_status == 'low_tickets' %}table-warning{% endif %}">
+                    {% with current_ticket_data=ticket_data|get_item:cs.pk %}
+                    <tr class="{% if current_ticket_data and current_ticket_data.remaining <= 0 %}table-danger{% elif current_ticket_data and current_ticket_data.remaining <= 3 %}table-warning{% endif %}">
                         <td class="text-muted">{{ forloop.counter }}</td>
                         <td>
                             <a href="{% url 'admin_students:detail' pk=cs.student.pk %}" class="text-decoration-none fw-medium d-flex align-items-center gap-2">
-                                <span class="avatar-xs rounded-circle {% if current_ticket_data and current_ticket_data.ticket_status == 'no_tickets' %}bg-danger{% elif current_ticket_data and current_ticket_data.ticket_status == 'low_tickets' %}bg-warning{% else %}bg-primary{% endif %} text-white d-inline-flex align-items-center justify-content-center" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
+                                <span class="avatar-xs rounded-circle {% if current_ticket_data and current_ticket_data.remaining <= 0 %}bg-danger{% elif current_ticket_data and current_ticket_data.remaining <= 3 %}bg-warning{% else %}bg-primary{% endif %} text-white d-inline-flex align-items-center justify-content-center" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
                                     {{ cs.student.full_name|first }}
                                 </span>
                                 {{ cs.student.full_name }}
@@ -43,32 +43,32 @@
                         </td>
                         <td>
                             <span class="fw-medium">
-                                {% if current_ticket_data %}{{ current_ticket_data.balance.total_tickets }}{% else %}0{% endif %}
+                                {% if current_ticket_data %}{{ current_ticket_data.total }}{% else %}0{% endif %}
                             </span>
                         </td>
                         <td>
                             <span class="text-muted">
-                                {% if current_ticket_data %}{{ current_ticket_data.balance.used_tickets }}{% else %}0{% endif %}
+                                {% if current_ticket_data %}{{ current_ticket_data.used }}{% else %}0{% endif %}
                             </span>
                         </td>
                         <td>
                             <span class="text-muted">
-                                {% if current_ticket_data %}{{ current_ticket_data.balance.total_attended_lessons }}{% else %}0{% endif %}
+                                {% if current_ticket_data %}{{ current_ticket_data.recent_attendances|length }}{% else %}0{% endif %}
                             </span>
                         </td>
                         <td>
                             {% if current_ticket_data %}
-                                {% if current_ticket_data.ticket_status == 'no_tickets' %}
+                                {% if current_ticket_data.remaining <= 0 %}
                                     <span class="badge bg-danger">
-                                        {{ current_ticket_data.ticket_status_display }}
+                                        Нет талонов
                                     </span>
-                                {% elif current_ticket_data.ticket_status == 'low_tickets' %}
+                                {% elif current_ticket_data.remaining <= 3 %}
                                     <span class="badge bg-warning text-dark">
-                                        {{ current_ticket_data.ticket_status_display }}
+                                        Мало талонов
                                     </span>
                                 {% else %}
                                     <span class="badge bg-success">
-                                        {{ current_ticket_data.ticket_status_display }}
+                                        {{ current_ticket_data.remaining }} талонов
                                     </span>
                                 {% endif %}
                             {% else %}

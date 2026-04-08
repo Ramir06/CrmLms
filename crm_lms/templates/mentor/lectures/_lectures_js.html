@@ -1,70 +1,1044 @@
 <script>
-const TOGGLE_URL = '{% url "lectures:toggle_visibility" course_id=course.pk %}';
-const TYPE_LABELS = {material:'Добавить материал', assignment:'Добавить задание', quiz:'Добавить тест'};
-const TYPE_URLS = {
-    material: '{% url "lectures:material_create_ajax" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/'),
-    assignment: '{% url "lectures:assignment_create_in_section" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/'),
-    quiz: '{% url "lectures:quiz_create_in_section" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/')
-};
+console.log('Lectures JS loaded');
 
-function toggleVis(type, id, btn) {
-    fetch(TOGGLE_URL, {
-        method: 'POST',
-        headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'type=' + type + '&id=' + id
-    }).then(r => r.json()).then(data => {
-        if (data.ok) {
-            const icon = btn.querySelector('i');
-            if (data.visible) {
-                icon.className = 'bi bi-eye';
-                btn.classList.remove('off');
-            } else {
-                icon.className = 'bi bi-eye-slash';
-                btn.classList.add('off');
+// Проверяем чтобы переменные не объявлялись повторно
+if (typeof TOGGLE_URL === 'undefined') {
+    var TOGGLE_URL = '{% url "lectures:toggle_visibility" course_id=course.pk %}';
+    var TYPE_LABELS = {material:'Добавить материал', assignment:'Добавить задание', quiz:'Добавить тест'};
+    var TYPE_URLS = {
+        material: '{% url "lectures:material_create_ajax" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/'),
+        assignment: '{% url "lectures:assignment_create_in_section" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/'),
+        quiz: '{% url "lectures:quiz_create_in_section" course_id=course.pk section_id=0 %}'.replace('/0/', '/{sid}/')
+    };
+
+    // URL для загрузки деталей элементов
+    var DETAIL_URLS = {
+        material: '{% url "lectures:material_detail_ajax" course_id=course.pk material_id=0 %}'.replace('/0/', '/{id}/'),
+        assignment: '{% url "lectures:assignment_detail_ajax" course_id=course.pk assignment_id=0 %}'.replace('/0/', '/{id}/'),
+        quiz: '{% url "lectures:quiz_detail_ajax" course_id=course.pk quiz_id=0 %}'.replace('/0/', '/{id}/')
+    };
+    
+    // Функция для получения CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
+    }
+    
+    // Функция для возврата к исходному состоянию
+    function showDefaultContent() {
+        // Показываем контент по умолчанию
+        const defaultContent = document.getElementById('default-content');
+        if (defaultContent) {
+            defaultContent.style.display = 'block';
+        }
+        
+        // Скрываем редактор блоков
+        const blockEditor = document.getElementById('block-editor');
+        if (blockEditor) {
+            blockEditor.style.display = 'none';
+        }
+        
+        // Очищаем контент
+        const lectureContent = document.getElementById('lecture-content');
+        if (lectureContent) {
+            lectureContent.innerHTML = '';
+        }
+        
+        // Убираем выделение со всех элементов
+        document.querySelectorAll('.lesson-item').forEach(item => {
+            item.classList.remove('selected');
+            item.classList.remove('active');
+        });
+    }
+}
+
+// Функция загрузки деталей элемента
+function loadItemDetail(type, id) {
+    console.log('Loading item detail:', type, id);
+    
+    // Убираем активный класс со всех элементов (старый дизайн)
+    document.querySelectorAll('.sb-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Убираем выделение со всех элементов (новый дизайн)
+    document.querySelectorAll('.lesson-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    // Добавляем активный класс к текущему элементу
+    const clickEvent = window.currentClickEvent;
+    const targetElement = clickEvent ? 
+        (clickEvent.target.closest('.sb-item') || clickEvent.target.closest('.lesson-item')) :
+        document.querySelector(`[data-id="${id}"]`);
+    
+    if (targetElement) {
+        targetElement.classList.add('active');
+        targetElement.classList.add('selected');
+    }
+    
+    // Скрываем контент по умолчанию и показываем редактор
+    const defaultContent = document.getElementById('default-content');
+    const blockEditor = document.getElementById('block-editor');
+    
+    if (defaultContent) {
+        defaultContent.style.display = 'none';
+    }
+    
+    if (blockEditor) {
+        blockEditor.style.display = 'block';
+    }
+    
+    const url = DETAIL_URLS[type].replace('{id}', id);
+    console.log('Loading URL:', url);
+    
+    // Получаем CSRF токен
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                      document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+    
+    // Показываем индикатор загрузки
+    const contentArea = document.querySelector('#lecture-content') || 
+                       document.querySelector('.lec-content-area');
+    
+    console.log('Content area found:', !!contentArea);
+    
+    if (contentArea) {
+        contentArea.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+                <p class="mt-3 text-muted">Загрузка...</p>
+            </div>
+        `;
+    }
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    }).then(r => {
+        console.log('Response status:', r.status);
+        if (!r.ok) {
+            throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+        }
+        return r.text();
+    }).then(html => {
+        console.log('Response HTML length:', html.length);
+        
+        if (contentArea) {
+            contentArea.innerHTML = html;
+            
+            // Обновляем заголовок материала/задания
+            const lectureTitle = document.querySelector('#lecture-title');
+            const itemTitle = document.querySelector(`[data-id="${id}"] .lecture-title`);
+            if (lectureTitle && itemTitle) {
+                lectureTitle.textContent = itemTitle.textContent.trim();
+            }
+            
+            // Инициализируем Bootstrap компоненты в загруженном HTML
+            const tooltips = contentArea.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltips.forEach(tooltip => {
+                new bootstrap.Tooltip(tooltip);
+            });
+        } else {
+            console.error('Content area not found!');
+        }
+        
+        const modals = contentArea.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            // Bootstrap модали будут работать автоматически
+        });
+    }).catch(err => {
+        console.error('Load detail error:', err);
+        contentArea.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-triangle" style="font-size:3rem;color:#dc3545"></i>
+                <h5 class="mt-3">Ошибка загрузки</h5>
+                <p class="text-muted">${err.message}</p>
+                <button class="btn btn-outline-primary" onclick="location.reload()">Обновить страницу</button>
+            </div>
+        `;
     });
 }
 
-document.querySelectorAll('.add-item-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-        e.preventDefault();
-        const sec = btn.dataset.section;
-        const type = btn.dataset.type;
+function toggleVis(type, id, btn) {
+    console.log('Toggle visibility:', type, id);
+    
+    // Получаем иконку
+    const icon = btn.querySelector('i');
+    
+    fetch(TOGGLE_URL, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': 'mJIMJfpUJ2strvfUdeS8nEsiJmsPOACJNP44H1ly3woo4MOBretRzD1fIdMBrQYy', 
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'type=' + type + '&id=' + id
+    }).then(r => r.json()).then(data => {
+        console.log('Toggle response:', data);
+        if (data.ok) {
+            // Меняем иконку и класс в зависимости от видимости
+            if (data.visible) {
+                icon.className = 'fa fa-eye is-blue';
+                if (btn.classList) {
+                    btn.classList.remove('off');
+                }
+            } else {
+                icon.className = 'fa fa-eye is-red';
+                if (btn.classList) {
+                    btn.classList.add('off');
+                }
+            }
+        }
+    }).catch(err => console.error('Toggle error:', err));
+}
+
+// Инициализация кнопок добавления элементов
+document.addEventListener('DOMContentLoaded', function() {
+    // Предотвращаем множественную инициализацию
+    if (window.lecturesJsInitialized) {
+        console.log('Lectures JS already initialized, skipping');
+        return;
+    }
+    window.lecturesJsInitialized = true;
+    
+    // Инициализируем ajax-form обработчики для существующих dropdown меню
+    document.querySelectorAll('.ajax-form').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const url = this.dataset.url;
+            const modal = this.dataset.modal;
+            const place = this.dataset.place || 'form-fragment';
+            
+            console.log('Ajax form clicked:', url, modal);
+            
+            // Используем существующую систему
+            if (window.AjaxModal) {
+                AjaxModal.show(url, modal, place);
+            } else {
+                // Fallback: простой AJAX запрос
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const container = document.getElementById(place);
+                    if (container) {
+                        container.innerHTML = html;
+                        const modalElement = document.querySelector('.modal');
+                        if (modalElement) {
+                            const bsModal = new bootstrap.Modal(modalElement);
+                            bsModal.show();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading form:', error);
+                });
+            }
+        });
+    });
+        
+    // Добавляем обработчики кликов на материалы
+    document.querySelectorAll('.lesson-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Не обрабатываем клик на иконки и dropdown
+            if (e.target.closest('.icons') || e.target.closest('.dropdown')) {
+                return;
+            }
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('Clicked on item:', this.dataset.id, this.classList);
+            
+            // Убираем выделение со всех элементов
+            document.querySelectorAll('.lesson-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Добавляем выделение текущему элементу
+            this.classList.add('selected');
+            
+            // Получаем ID материала
+            const itemId = this.dataset.id;
+            const isLecture = this.classList.contains('is-lecture');
+            const isTask = this.classList.contains('is-task');
+            const isQuiz = this.classList.contains('is-quiz');
+            
+            console.log('Item details:', { itemId, isLecture, isTask, isQuiz });
+            
+            if (itemId) {
+                let itemType = 'material';
+                if (isTask) {
+                    itemType = 'assignment';
+                } else if (isQuiz) {
+                    itemType = 'quiz';
+                }
+                
+                // Для заданий переходим на страницу детализации
+                if (itemType === 'assignment') {
+                    const assignmentUrl = `/lms/mentor/courses/{{ course.pk }}/lectures/assignment/${itemId}/`;
+                    window.location.href = assignmentUrl;
+                    return;
+                }
+                
+                // Сохраняем event для использования в loadItemDetail
+                window.currentClickEvent = e;
+                
+                // Для остальных элементов загружаем детали в правую колонку
+                loadItemDetail(itemType, itemId);
+                
+                // Если это пустой материал, дополнительно показываем редактор блоков
+                if (isLecture) {
+                    const lectureContent = document.getElementById('lecture-content');
+                    const hasBlocks = lectureContent && lectureContent.querySelector('.lecture-block');
+                    
+                    console.log('Checking for blocks:', !!lectureContent, !!hasBlocks);
+                    
+                    if (!hasBlocks) {
+                        // Если материал пустой, показываем редактор блоков
+                        setTimeout(() => showBlockEditor(itemId), 100);
+                    }
+                }
+            }
+            
+            // Функция показа редактора блоков
+            function showBlockEditor(lectureId) {
+                // Скрываем контент по умолчанию
+                const defaultContent = document.getElementById('default-content');
+                if (defaultContent) {
+                    defaultContent.style.display = 'none';
+                }
+                
+                // Показываем редактор блоков
+                const blockEditor = document.getElementById('block-editor');
+                if (blockEditor) {
+                    blockEditor.style.display = 'block';
+                }
+                
+                // Устанавливаем ID лекции для редактора
+                const lectureIdInput = document.getElementById('lecture-id');
+                if (lectureIdInput) {
+                    lectureIdInput.value = lectureId;
+                }
+                
+                // Показываем панель добавления блоков
+                const addBlockButtons = document.getElementById('add-block-buttons');
+                if (addBlockButtons) {
+                    addBlockButtons.style.display = 'block';
+                }
+                
+                // Показываем кнопки типов блоков
+                const blockTypeButtons = document.getElementById('block-type-buttons');
+                if (blockTypeButtons) {
+                    blockTypeButtons.style.display = 'block';
+                }
+                
+                // Не очищаем контент если он уже есть, только показываем редактор
+                const lectureContent = document.getElementById('lecture-content');
+                if (lectureContent) {
+                    // Проверяем есть ли уже контент (не считая placeholder)
+                    const hasRealContent = lectureContent.innerHTML && 
+                        !lectureContent.innerHTML.includes('Начните добавлять блоки');
+                    
+                    if (!hasRealContent) {
+                        lectureContent.innerHTML = '<div class="text-center text-muted py-5">Начните добавлять блоки с помощью кнопок ниже</div>';
+                    }
+                    lectureContent.classList.add('is-editing');
+                }
+            }
+            
+            // Функция скрытия редактора блоков
+            function hideBlockEditor() {
+                // Показываем контент по умолчанию
+                const defaultContent = document.getElementById('default-content');
+                if (defaultContent) {
+                    defaultContent.style.display = 'block';
+                }
+                
+                // Скрываем редактор блоков
+                const blockEditor = document.getElementById('block-editor');
+                if (blockEditor) {
+                    blockEditor.style.display = 'none';
+                }
+            }
+        });
+    });
+    
+    console.log('DOM loaded, initializing buttons');
+    
+    // Инициализация кнопок создания элементов справа от текста "Выберите элемент"
+    const blockButtonsToggleInline = document.getElementById('block-buttons-toggle-inline');
+    const blockTypeButtonsInline = document.getElementById('block-type-buttons-inline');
+    
+    if (blockButtonsToggleInline && blockTypeButtonsInline) {
+        blockButtonsToggleInline.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Переключаем видимость кнопок типов блоков
+            if (blockTypeButtonsInline.style.display === 'none') {
+                blockTypeButtonsInline.style.display = 'block';
+                this.innerHTML = '<i class="fa fa-times"></i> Закрыть';
+            } else {
+                blockTypeButtonsInline.style.display = 'none';
+                this.innerHTML = '<i class="fa fa-plus"></i> Добавить элемент';
+            }
+        });
+        
+        // Добавляем обработчики для кнопок типов блоков справа от текста
+        blockTypeButtonsInline.querySelectorAll('[data-type]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const blockType = this.dataset.type;
+                const lectureId = document.getElementById('lecture-id')?.value;
+                
+                console.log('Block type clicked (inline):', blockType, 'Lecture ID:', lectureId);
+                
+                if (!lectureId) {
+                    console.error('No lecture ID found');
+                    alert('Ошибка: не найден ID материала. Пожалуйста, выберите материал для редактирования.');
+                    return;
+                }
+                
+                // Показываем форму для добавления блока
+                showBlockForm(blockType, lectureId);
+                
+                // Закрываем панель кнопок после выбора
+                blockTypeButtonsInline.style.display = 'none';
+                blockButtonsToggleInline.innerHTML = '<i class="fa fa-plus"></i> Добавить элемент';
+            });
+        });
+    }
+    
+    // Обработчики для кнопок добавления материалов/заданий/тестов в разделы
+    document.querySelectorAll('.section-add-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const itemType = this.dataset.type;
+            
+            // Показываем модальное окно для выбора раздела
+            showSectionSelectorModal(itemType);
+        });
+    });
+    
+    // Функция показа модального окна для выбора раздела
+    function showSectionSelectorModal(itemType) {
+        // Получаем список разделов
+        const sections = [];
+        document.querySelectorAll('.lesson-section').forEach(section => {
+            const sectionId = section.dataset.id;
+            const sectionTitle = section.querySelector('.section-id')?.textContent?.trim() || `Раздел ${sectionId}`;
+            sections.push({ id: sectionId, title: sectionTitle });
+        });
+        
+        if (sections.length === 0) {
+            alert('Сначала создайте хотя бы один раздел');
+            return;
+        }
+        
+        // Создаем модальное окно
+        const modalHtml = `
+            <div class="modal fade" id="sectionSelectorModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Выберите раздел</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>В какой раздел вы хотите добавить ${itemType === 'material' ? 'материал' : itemType === 'assignment' ? 'задание' : 'тест'}?</p>
+                            <div class="list-group">
+                                ${sections.map(section => `
+                                    <a href="#" class="list-group-item list-group-item-action section-select-btn" 
+                                       data-section="${section.id}" data-type="${itemType}">
+                                        <i class="fa fa-folder"></i> ${section.title}
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Удаляем существующее модальное окно если есть
+        const existingModal = document.getElementById('sectionSelectorModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Добавляем новое модальное окно
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Показываем модальное окно
+        const modal = new bootstrap.Modal(document.getElementById('sectionSelectorModal'));
+        modal.show();
+        
+        // Добавляем обработчики для кнопок выбора раздела
+        document.querySelectorAll('.section-select-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const sectionId = this.dataset.section;
+                const itemType = this.dataset.type;
+                
+                // Закрываем модальное окно
+                modal.hide();
+                
+                // Вызываем существующую функцию добавления элемента
+                addItemToSection(sectionId, itemType);
+            });
+        });
+    }
+    
+    // Функция добавления элемента в раздел
+    function addItemToSection(sectionId, itemType) {
+        const url = TYPE_URLS[itemType].replace('{sid}', sectionId);
+        
+        if (itemType === 'material') {
+            // Для материалов запрашиваем название
+            const title = prompt('Название материала:');
+            if (!title) return;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: `title=${encodeURIComponent(title)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    // Перезагружаем страницу
+                    window.location.reload();
+                } else if (data.error) {
+                    alert('Ошибка: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error creating material:', error);
+                alert('Произошла ошибка при создании материала');
+            });
+        } else {
+            // Для заданий и тестов используем модальные окна
+            const modalId = itemType === 'assignment' ? 'add-task-modal-form' : 'add-quiz-modal-form';
+            const ajaxUrl = itemType === 'assignment' ? 
+                `/lms/mentor/courses/{{ course.id }}/lectures/section/${sectionId}/add-assignment-form/` :
+                `/lms/mentor/ajax/course-{{ course.id }}/tasks/${sectionId}/add-quiz/`;
+            
+            if (window.AjaxModal) {
+                AjaxModal.show(ajaxUrl, modalId);
+            } else {
+                alert('Функция временно недоступна');
+            }
+        }
+    }
+    
+    // Предотвращаем закрытие dropdown при клике на элементы
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        menu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+    
+    // Добавляем обработчики для кнопок типов блоков
+    document.querySelectorAll('[data-type]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const blockType = this.dataset.type;
+            const lectureId = document.getElementById('lecture-id')?.value;
+            
+            console.log('Block type clicked:', blockType, 'Lecture ID:', lectureId);
+            
+            if (!lectureId) {
+                console.error('No lecture ID found');
+                alert('Ошибка: не найден ID материала');
+                return;
+            }
+            
+            // Показываем форму для добавления блока
+            showBlockForm(blockType, lectureId);
+        });
+    });
+    
+    // Функция показа формы добавления блока
+    function showBlockForm(blockType, lectureId) {
+        const form = document.getElementById('lecture-editor');
+        const formType = document.getElementById('form-block-type');
+        const formContent = document.querySelector('.form-content');
+        
+        if (!form || !formType || !formContent) {
+            console.error('Form elements not found');
+            return;
+        }
+        
+        // Устанавливаем тип блока
+        formType.value = blockType;
+        
+        // Показываем соответствующую форму в зависимости от типа
+        let formHtml = '';
+        
+        switch(blockType) {
+            case 'heading':
+                formHtml = `
+                    <div class="mb-3">
+                        <label class="form-label">Текст заголовка</label>
+                        <input type="text" name="content" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Уровень заголовка</label>
+                        <select name="level" class="form-select">
+                            <option value="1">H1</option>
+                            <option value="2">H2</option>
+                            <option value="3" selected>H3</option>
+                            <option value="4">H4</option>
+                            <option value="5">H5</option>
+                            <option value="6">H6</option>
+                        </select>
+                    </div>
+                `;
+                break;
+                
+            case 'richtext':
+                formHtml = `
+                    <div class="mb-3">
+                        <label class="form-label">Текст</label>
+                        <textarea name="content" class="form-control" rows="5" required></textarea>
+                    </div>
+                `;
+                break;
+                
+            case 'image':
+                formHtml = `
+                    <div class="mb-3">
+                        <label class="form-label">URL изображения</label>
+                        <input type="url" name="content" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Альтернативный текст</label>
+                        <input type="text" name="alt" class="form-control">
+                    </div>
+                `;
+                break;
+                
+            case 'link':
+                formHtml = `
+                    <div class="mb-3">
+                        <label class="form-label">URL ссылки</label>
+                        <input type="url" name="content" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Текст ссылки</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                `;
+                break;
+                
+            case 'youtube':
+                formHtml = `
+                    <div class="mb-3">
+                        <label class="form-label">YouTube URL или ID видео</label>
+                        <input type="text" name="content" class="form-control" required placeholder="https://youtube.com/watch?v=... или ID видео">
+                    </div>
+                `;
+                break;
+                
+            case 'code_snippet':
+                formHtml = `
+                    <div class="mb-3">
+                        <label class="form-label">Код</label>
+                        <textarea name="content" class="form-control" rows="8" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Язык программирования</label>
+                        <select name="language" class="form-select">
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="sql">SQL</option>
+                            <option value="bash">Bash</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                `;
+                break;
+                
+            default:
+                formHtml = `
+                    <div class="mb-3">
+                        <label class="form-label">Содержимое</label>
+                        <input type="text" name="content" class="form-control" required>
+                    </div>
+                `;
+        }
+        
+        formContent.innerHTML = formHtml;
+        form.style.display = 'block';
+        
+        // Обработчик отправки формы
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            submitBlock(blockType, lectureId);
+        };
+    }
+    
+    // Функция отправки блока
+    function submitBlock(blockType, lectureId) {
+        const form = document.getElementById('lecture-editor');
+        const formData = new FormData(form);
+        
+        // Получаем текущий контент материала
+        const lectureContent = document.getElementById('lecture-content');
+        let currentContent = '';
+        
+        if (lectureContent) {
+            // Если есть подсказка о пустом материале, игнорируем ее
+            const placeholder = lectureContent.querySelector('.text-center.text-muted');
+            if (placeholder) {
+                currentContent = '';
+            } else {
+                currentContent = lectureContent.innerHTML || '';
+            }
+        }
+        
+        // Получаем данные из формы
+        const content = formData.get('content') || '';
+        const title = formData.get('title') || '';
+        const alt = formData.get('alt') || '';
+        const level = formData.get('level') || '3';
+        const language = formData.get('language') || 'javascript';
+        
+        // Создаем HTML для блока в зависимости от типа
+        let blockHtml = '';
+        
+        switch(blockType) {
+            case 'heading':
+                blockHtml = `<h${level}>${content}</h${level}>`;
+                break;
+            case 'richtext':
+                blockHtml = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+                break;
+            case 'divider':
+                blockHtml = '<hr>';
+                break;
+            case 'image':
+                blockHtml = `<img src="${content}" alt="${alt}" style="max-width: 100%; height: auto;">`;
+                break;
+            case 'link':
+                blockHtml = `<a href="${content}" target="_blank">${title}</a>`;
+                break;
+            case 'youtube':
+                // Извлекаем ID видео из URL
+                let videoId = content;
+                if (content.includes('youtube.com/watch?v=')) {
+                    videoId = content.split('v=')[1].split('&')[0];
+                } else if (content.includes('youtu.be/')) {
+                    videoId = content.split('youtu.be/')[1].split('?')[0];
+                }
+                blockHtml = `<div class="youtube-iframe-container">
+                    <iframe class="youtube-iframe" type="text/html" 
+                        src="https://www.youtube.com/embed/${videoId}?fs=1" 
+                        allowfullscreen></iframe>
+                </div>`;
+                break;
+            case 'code_snippet':
+                blockHtml = `<pre><code class="language-${language}">${content}</code></pre>`;
+                break;
+            default:
+                blockHtml = `<div>${content}</div>`;
+        }
+        
+        // Добавляем новый блок к существующему контенту
+        const newContent = currentContent + blockHtml;
+        
+        console.log('Current content length:', currentContent.length);
+        console.log('Generated block HTML:', blockHtml);
+        console.log('New content length:', newContent.length);
+        
+        // Добавляем CSRF токен
+        const csrfToken = getCookie('csrftoken');
+        
+        // Отправляем запрос на обновление материала
+        const updateData = {
+            'body_html': newContent,
+            'csrfmiddlewaretoken': csrfToken
+        };
+        
+        // Используем специальный AJAX URL для обновления контента
+        const url = DETAIL_URLS.material.replace('{id}', lectureId).replace('/ajax/', '/update-content/');
+        console.log('Update URL:', url);
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams(updateData)
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.log('Error response text:', text);
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                });
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('Update response received:', data);
+            
+            if (data.success) {
+                console.log('Server confirmed successful update');
+                
+                // Скрываем форму
+                form.style.display = 'none';
+                
+                // Перезагружаем детали материала чтобы показать обновленный контент
+                setTimeout(() => {
+                    loadItemDetail('material', lectureId);
+                }, 100);
+                
+                // Показываем сообщение об успехе
+                alert('Блок успешно добавлен!');
+            } else {
+                console.error('Server returned error:', data);
+                alert('Ошибка: ' + (data.error || data.message || 'Неизвестная ошибка'));
+            }
+        })
+        .catch(error => {
+            console.error('Submit block error:', error);
+            alert('Произошла ошибка при добавлении блока: ' + error.message);
+        });
+    }
+    
+    document.querySelectorAll('.add-item-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Add item clicked:', btn.dataset.section, btn.dataset.type);
+            
+            // Для старой системы используем ajax-form модальные окна
+            const sectionId = btn.dataset.section;
+            const itemType = btn.dataset.type;
+            
+            if (itemType === 'material') {
+                // Для материалов сразу создаем и переходим на страницу редактирования
+                const title = prompt('Название материала:');
+                if (!title) return;
+                
+                // Создаем материал через AJAX и переходим на страницу редактирования
+                const url = TYPE_URLS.material.replace('{sid}', sectionId);
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: `title=${encodeURIComponent(title)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        // Перезагружаем страницу с новым материалом
+                        window.location.reload();
+                    } else if (data.error) {
+                        alert('Ошибка: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error creating material:', error);
+                    alert('Произошла ошибка при создании материала');
+                });
+            } else if (itemType === 'assignment') {
+                const url = `/lms/mentor/courses/{{ course.id }}/lectures/section/${sectionId}/add-assignment-form/`;
+                const modalId = 'add-task-modal-form';
+                
+                if (window.AjaxModal) {
+                    AjaxModal.show(url, modalId);
+                } else {
+                    showAddItemModal(sectionId, itemType);
+                }
+            } else if (itemType === 'quiz') {
+                const url = `/lms/mentor/ajax/course-{{ course.id }}/tasks/${sectionId}/add-quiz/`;
+                const modalId = 'add-quiz-modal-form';
+                
+                if (window.AjaxModal) {
+                    AjaxModal.show(url, modalId);
+                } else {
+                    showAddItemModal(sectionId, itemType);
+                }
+            }
+        });
+    });
+    
+    // Fallback функция для простого модального окна
+    function showAddItemModal(sectionId, itemType) {
+        const sec = sectionId;
+        const type = itemType;
         document.getElementById('addItemSection').value = sec;
         document.getElementById('addItemType').value = type;
         document.getElementById('addItemTitle').textContent = TYPE_LABELS[type];
         document.getElementById('addItemName').value = '';
         document.getElementById('maxScoreGroup').style.display = type === 'assignment' ? '' : 'none';
-        new bootstrap.Modal(document.getElementById('addItemModal')).show();
-    });
-});
-
-document.getElementById('addItemSubmit').addEventListener('click', () => {
-    const sec = document.getElementById('addItemSection').value;
-    const type = document.getElementById('addItemType').value;
-    const name = document.getElementById('addItemName').value.trim();
-    if (!name) return;
-    const url = TYPE_URLS[type].replace('{sid}', sec);
-    const body = new URLSearchParams({title: name});
-    if (type === 'assignment') body.append('max_score', document.getElementById('addItemMaxScore').value);
-    fetch(url, {
-        method: 'POST',
-        headers: {'X-CSRFToken': '{{ csrf_token }}'},
-        body: body
-    }).then(r => r.json()).then(data => {
-        if (data.ok) location.reload();
-    });
-});
-
-document.querySelectorAll('.sb-sec-hdr').forEach(hdr => {
-    const target = hdr.getAttribute('data-bs-target');
-    if (target) {
-        const el = document.querySelector(target);
-        if (el) {
-            el.addEventListener('hide.bs.collapse', () => hdr.classList.add('collapsed'));
-            el.addEventListener('show.bs.collapse', () => hdr.classList.remove('collapsed'));
-        }
+        const modal = new bootstrap.Modal(document.getElementById('addItemModal'));
+        modal.show();
     }
+
+    document.getElementById('addItemSubmit').addEventListener('click', function() {
+        // Защита от двойного клика
+        if (this.disabled) {
+            console.log('Button already clicked, ignoring');
+            return;
+        }
+        
+        const sec = document.getElementById('addItemSection').value;
+        const type = document.getElementById('addItemType').value;
+        const name = document.getElementById('addItemName').value.trim();
+        console.log('Submit item:', sec, type, name);
+        
+        if (!name) {
+            alert('Введите название');
+            return;
+        }
+        
+        // Отключаем кнопку на время отправки
+        this.disabled = true;
+        const originalText = this.innerHTML;
+        this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Создание...';
+        
+        const url = TYPE_URLS[type].replace('{sid}', sec);
+        const body = new URLSearchParams({title: name});
+        if (type === 'assignment') body.append('max_score', document.getElementById('addItemMaxScore').value);
+        
+        console.log('Sending to:', url, body.toString());
+        
+        // Получаем CSRF токен
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                          document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+        
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            alert('Ошибка безопасности: CSRF токен не найден');
+            return;
+        }
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body.toString()
+        }).then(r => {
+            console.log('Response status:', r.status);
+            if (!r.ok) {
+                throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+            }
+            return r.json();
+        }).then(data => {
+            console.log('Create response:', data);
+            if (data.ok) {
+                // Закрываем модальное окно
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addItemModal'));
+                modal.hide();
+                
+                // Если это материал и у нас есть ID, перенаправляем на редактирование
+                if (type === 'material' && data.id) {
+                    console.log('Redirecting to edit material:', data.id);
+                    setTimeout(() => {
+                        window.location.href = DETAIL_URLS.material.replace('{id}', data.id).replace('/ajax/', '/edit/');
+                    }, 300);
+                } else {
+                    // Для других типов перезагружаем страницу
+                    setTimeout(() => location.reload(), 300);
+                }
+            } else {
+                alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+            }
+        }).catch(err => {
+            console.error('Create error:', err);
+            alert('Ошибка при создании: ' + err.message);
+            // Возвращаем кнопку в исходное состояние
+            this.disabled = false;
+            this.innerHTML = originalText;
+        });
+    });
+
+    // Функция для модального окна копирования курса
+    window.showCopyCourseModal = function() {
+        console.log('Show copy course modal');
+        const modal = new bootstrap.Modal(document.getElementById('copyCourseModal'));
+        modal.show();
+    };
+
+    // Старые спойлеры
+    document.querySelectorAll('.spoiler-trigger').forEach(trigger => {
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            const section = this.closest('.lesson-section');
+            const content = section.querySelector('.spoiler-content');
+            const caret = section.querySelector('.spoiler-caret');
+            
+            if (section.classList.contains('is-expanded')) {
+                section.classList.remove('is-expanded');
+                content.style.display = 'none';
+                if (caret) caret.style.transform = 'rotate(180deg)';
+            } else {
+                section.classList.add('is-expanded');
+                content.style.display = 'block';
+                if (caret) caret.style.transform = 'rotate(0deg)';
+            }
+        });
+    });
+
+    // Bootstrap спойлеры для обратной совместимости
+    document.querySelectorAll('.sb-sec-hdr').forEach(hdr => {
+        const target = hdr.getAttribute('data-bs-target');
+        if (target) {
+            const el = document.querySelector(target);
+            if (el) {
+                el.addEventListener('hide.bs.collapse', () => hdr.classList.add('collapsed'));
+                el.addEventListener('show.bs.collapse', () => hdr.classList.remove('collapsed'));
+            }
+        }
+    });
 });
 </script>

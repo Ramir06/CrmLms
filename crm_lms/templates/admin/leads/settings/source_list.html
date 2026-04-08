@@ -1,0 +1,170 @@
+{% extends 'base/admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>Источники лидов</h4>
+                <a href="{% url 'leads:lead_source_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Добавить источник
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    {% if sources %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Иконка</th>
+                                    <th>Название</th>
+                                    <th>Slug</th>
+                                    <th>Описание</th>
+                                    <th>По умолчанию</th>
+                                    <th>Активен</th>
+                                    <th>Порядок</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for source in sources %}
+                                <tr>
+                                    <td>
+                                        {% if source.icon %}
+                                            <img src="{{ source.icon.url }}" alt="{{ source.name }}" style="max-width: 30px; max-height: 30px;">
+                                        {% else %}
+                                            <i class="bi bi-link-45deg"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            {{ source.name }}
+                                        </span>
+                                    </td>
+                                    <td><code>{{ source.slug }}</code></td>
+                                    <td>
+                                        {% if source.description %}
+                                            <span class="text-muted">{{ source.description|truncatechars:50 }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if source.is_default %}
+                                            <span class="badge bg-success">Да</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Нет</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if source.is_active %}
+                                            <span class="badge bg-success">Да</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Нет</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ source.order }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'leads:lead_source_edit' source.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                    onclick="deleteSourceWithLeads('{{ source.pk }}', '{{ source.name|escapejs }}')" 
+                                                    title="Удалить источник вместе со всеми лидами">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="deleteSource('{{ source.pk }}', '{{ source.name|escapejs }}')">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-link-45deg display-4 text-muted"></i>
+                        <p class="text-muted mt-3">Источники не найдены</p>
+                        <a href="{% url 'leads:lead_source_create' %}" class="btn btn-primary">
+                            Создать первый источник
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteSource(pk, name) {
+    if (confirm('Вы уверены, что хотите удалить источник "' + name + '"?')) {
+        fetch('/admin/leads/settings/sources/' + pk + '/delete/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Ошибка при удалении');
+            }
+        })
+        .catch(error => {
+            alert('Ошибка при отправке запроса');
+        });
+    }
+}
+
+function deleteSourceWithLeads(pk, name) {
+    if (confirm('Вы уверены, что хотите удалить источник "' + name + '" вместе со ВСЕМИ лидами? Это действие необратимо!')) {
+        fetch('/admin/leads/settings/sources/' + pk + '/delete-with-leads/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Ошибка при удалении');
+            }
+        })
+        .catch(error => {
+            alert('Ошибка при отправке запроса');
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

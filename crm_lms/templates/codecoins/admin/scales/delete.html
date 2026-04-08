@@ -1,0 +1,73 @@
+{% extends "codecoins/admin/scales/base.html" %}
+
+{% block title %}Удаление шкалы - Админка{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Удаление шкалы</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'codecoins_admin:admin_dashboard' %}">Кодкойны</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'codecoins_admin:admin_scales' %}">Шкалы</a></li>
+                    <li class="breadcrumb-item active">Удаление</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="scale-form">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+                        <h3 class="mt-3">Подтвердите удаление</h3>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h5><i class="bi bi-exclamation-triangle me-2"></i>Внимание!</h5>
+                        <p class="mb-0">
+                            Вы собираетесь удалить шкалу <strong>"{{ object.title }}"</strong> со значением 
+                            <strong>{% if object.value > 0 %}+{% endif %}{{ object.value }}</strong> кодкойнов.
+                        </p>
+                        {% if object.is_active %}
+                            <p class="mb-0 mt-2">
+                                <strong>Эта шкала активна и используется менторами!</strong>
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="scale-item">
+                        <div class="scale-title">{{ object.title }}</div>
+                        <div class="scale-value {% if object.value < 0 %}negative{% endif %}">
+                            {% if object.value > 0 %}+{% endif %}{{ object.value }} кодкойнов
+                        </div>
+                        <div class="scale-meta">
+                            Порядок: {{ object.sort_order }} • 
+                            Статус: {% if object.is_active %}<span class="text-success">Активна</span>{% else %}<span class="text-danger">Неактивна</span>{% endif %}
+                        </div>
+                    </div>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'codecoins_admin:admin_scales' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Отмена
+                            </a>
+                            <button type="submit" class="btn btn-delete">
+                                <i class="bi bi-trash me-2"></i>Удалить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

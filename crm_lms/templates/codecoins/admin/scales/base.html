@@ -1,0 +1,110 @@
+{% extends "codecoins/admin/base.html" %}
+
+{% block extra_css %}
+<style>
+.scale-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.scale-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid #7367F0;
+    transition: all 0.3s ease;
+}
+
+.scale-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.scale-item.inactive {
+    border-left-color: #B9B9C3;
+    opacity: 0.7;
+}
+
+.scale-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2C2C2C;
+    margin-bottom: 0.5rem;
+}
+
+.scale-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #7367F0;
+    margin-bottom: 0.5rem;
+}
+
+.scale-value.negative {
+    color: #EA5455;
+}
+
+.scale-meta {
+    color: #6E6B7B;
+    font-size: 0.9rem;
+}
+
+.btn-scale {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-scale:hover {
+    background: linear-gradient(135deg, #6458f0, #8e7be8);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #EA5455, #FF6B6B);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-delete:hover {
+    background: linear-gradient(135deg, #D63939, #EA5455);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.form-control:focus {
+    border-color: #7367F0;
+    box-shadow: 0 0 0 0.2rem rgba(115, 103, 240, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #6458f0, #8e7be8);
+    border: none;
+}
+
+.btn-secondary {
+    background: #6E6B7B;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: #5A575F;
+    border: none;
+}
+</style>
+{% endblock %}

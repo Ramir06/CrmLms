@@ -1,0 +1,237 @@
+{% extends "codecoins/admin/base.html" %}
+
+{% block title %}Все операции - Кодкойны{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Все операции с кодкойнами</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'codecoins:admin_dashboard' %}">Кодкойны</a></li>
+                    <li class="breadcrumb-item active">Операции</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Форма корректировки -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-gear"></i> Корректировка баланса
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'codecoins:admin_adjust_balance' %}">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-3">
+                                    {{ adjustment_form.student.label_tag }}
+                                    {{ adjustment_form.student }}
+                                </div>
+                                <div class="col-md-2">
+                                    {{ adjustment_form.adjustment_type.label_tag }}
+                                    {{ adjustment_form.adjustment_type }}
+                                </div>
+                                <div class="col-md-2">
+                                    {{ adjustment_form.amount.label_tag }}
+                                    {{ adjustment_form.amount }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ adjustment_form.reason.label_tag }}
+                                    {{ adjustment_form.reason }}
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check"></i> Применить
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-3">
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="Поиск по студенту или описанию"
+                                       value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="type" class="form-select">
+                                    <option value="">Все типы</option>
+                                    {% for type_value, type_label in transaction_types %}
+                                    <option value="{{ type_value }}" {% if request.GET.type == type_value %}selected{% endif %}>
+                                        {{ type_label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" name="date_from" class="form-control" 
+                                       placeholder="Дата с" value="{{ request.GET.date_from }}">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" name="date_to" class="form-control" 
+                                       placeholder="Дата по" value="{{ request.GET.date_to }}">
+                            </div>
+                            <div class="col-md-3">
+                                <div class="btn-group w-100">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="bi bi-search"></i> Найти
+                                    </button>
+                                    <a href="{% url 'codecoins:admin_transactions' %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-circle"></i> Сброс
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблица операций -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-list-ul"></i> Операции
+                        </h3>
+                        <span class="badge bg-info float-end">
+                            Всего: {{ page_obj.paginator.count }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Сумма</th>
+                                        <th>Студент</th>
+                                        <th>Тип операции</th>
+                                        <th>Описание</th>
+                                        <th>Курс</th>
+                                        <th>Кто создал</th>
+                                        <th>Дата</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trans in page_obj %}
+                                    <tr class="transaction-{% if trans.is_income %}income{% else %}expense{% endif %}">
+                                        <td class="{% if trans.is_income %}coin-positive{% else %}coin-negative{% endif %}">
+                                            {% if trans.is_income %}+{% endif %}{{ trans.amount }}
+                                        </td>
+                                        <td>
+                                            <a href="#" title="{{ trans.wallet.student.full_name }}">
+                                                {{ trans.wallet.student.full_name|truncatechars:20 }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">
+                                                {{ trans.get_transaction_type_display }}
+                                            </span>
+                                        </td>
+                                        <td title="{{ trans.description }}">
+                                            {{ trans.description|truncatechars:40 }}
+                                        </td>
+                                        <td>
+                                            {% if trans.course %}
+                                                <a href="#" title="{{ trans.course.title }}">
+                                                    {{ trans.course.title|truncatechars:15 }}
+                                                </a>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if trans.created_by %}
+                                                {{ trans.created_by.get_display_name|truncatechars:15 }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ trans.created_at|date:"d.m.Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            {% if not trans.is_cancelled and trans.transaction_type not in 'withdrawal_approved,withdrawal_rejected' %}
+                                                <a href="{% url 'codecoins:admin_cancel_transaction' trans.id %}" 
+                                                   class="btn btn-sm btn-outline-warning"
+                                                   onclick="return confirm('Отменить операцию на {{ trans.amount }} кодкойнов?')">
+                                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                                </a>
+                                            {% elif trans.is_cancelled %}
+                                                <span class="badge bg-secondary">Отменена</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Завершена</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Пагинация -->
+                        {% if page_obj.has_other_pages %}
+                        <nav aria-label="Пагинация">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|safe }}">«</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{{ request.GET.urlencode|safe }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|safe }}">»</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p>Операций не найдено</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,270 @@
+{% extends "base/mentor_base.html" %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mentor.css' %}">
+{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+
+<div class="container-xxl p-0">
+    
+    <div class="content-header content-header-left row mb-2">
+    <div class="col-12">
+        <h2 class="content-header-title  float-start  mb-0">
+            {{ student.full_name }}
+        </h2>
+        <div class="breadcrumb-wrapper">
+            <ol class="breadcrumb">
+                
+        <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Главная</a></li>
+        
+            <li class="breadcrumb-item"><a href="{% url 'lectures:index' course.pk %}">{{ course.title }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'lectures:students' course.pk %}">Студенты</a></li>
+        
+        <li class="breadcrumb-item">{{ student.full_name }}</li>
+    
+            </ol>
+        </div>
+    </div>
+</div>
+
+    <div id="user-profile">
+        <div class="card profile-header mb-2">
+
+            <div class="position-relative">
+                <div class="profile-img-container d-flex align-items-center">
+                    <div class="profile-img">
+                        <img src="https://www.gravatar.com/avatar/{{ gravatar_hash }}?s=256&d=robohash" class="rounded" alt="Avatar">
+                    </div>
+                    <!-- profile title -->
+                    <div class="profile-title ms-3">
+                        <h2>{{ student.full_name }}</h2>
+                        <p>{{ course.title }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-header-nav">
+                <nav class="navbar navbar-expand-md navbar-light justify-content-center">
+                    <div class="online-indicator">
+                        
+                            <span class="dot offline"></span> Был(а)
+                            
+                                {% if student.last_login %}{{ student.last_login|timesince }} назад{% else %}давно{% endif %}
+                            
+                        
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-md-3">
+            
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Рейтинг</h4>
+                        <div class="mt-2 coins">
+                            <img src="/static/img/target.png" style="width: 32px;" alt="coins">
+                            <span class="num text-decoration-underline">{{ course_student.points }}</span>
+                            <span>баллов</span>
+                        </div>
+
+                        <div class="subtitle mt-1 text-warning">
+                            <b>Прогресс: {{ course_student.progress_percent|default:0 }}%</b> на курсе <b>{{ course.title }}</b>
+                        </div>
+                        
+                        <a class="card-link mt-2 d-block" href="#">
+                            <i class="fa fa-external-link-alt"></i>
+                            Рейтинг студента
+                        </a>
+                        
+                    </div>
+                </div>
+            
+
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Информация о студенте</h4>
+
+                    <div class="mt-2">
+                        <h5 class="mb-75">Зарегистрирован</h5>
+                        <p class="card-text">{{ student.created_at|date:"d.m.Y H:i"|default:"—" }}</p>
+                    </div>
+
+                    <div class="mt-2">
+                        <h5 class="mb-75">Номер телефона</h5>
+                        <p class="card-text">{{ student.phone }}</p>
+                    </div>
+
+                    <div class="mt-2">
+                        <h5 class="mb-75">Адрес электронной почты</h5>
+                        <p class="card-text">{% if student.email %}{{ student.email }}{% else %}—{% endif %}</p>
+                    </div>
+
+                    {% if student.parent_name %}
+                    <div class="mt-2">
+                        <h5 class="mb-75">Родитель</h5>
+                        <p class="card-text">{{ student.parent_name }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-2">
+                        <h5 class="mb-75">Откуда</h5>
+                        <p class="card-text">{{ student.get_source_display|default:"—" }}</p>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <h5 class="mb-75">Ссылка для родителей</h5>
+                        <p class="card-text">
+                            <a href="/common/student-info/{{ student.id }}/" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                                Посмотреть детальную информацию
+                            </a>
+                        </p>
+                    </div>
+
+                    <div class="mt-2">
+                        <h5 class="mb-75">Статус</h5>
+                        <p class="card-text">
+                            <span class="badge
+                                {% if course_student.status == 'active' %}bg-success
+                                {% elif course_student.status == 'frozen' %}bg-info text-dark
+                                {% elif course_student.status == 'left' %}bg-danger
+                                {% elif course_student.status == 'graduated' %}bg-primary
+                                {% else %}bg-secondary{% endif %}">
+                                {{ course_student.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="mt-2">
+                        <h5 class="mb-75">Зачислен</h5>
+                        <p class="card-text">{{ course_student.joined_at|date:"d.m.Y"|default:"—" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Статистика по курсу</h5>
+
+                    <div class="mt-1">
+                        <p class="card-text">
+                            <strong>Лекции:</strong> {{ viewed_lectures }}/{{ total_lectures }} просмотрено<br>
+                            <strong>Задания:</strong> {{ submitted_assignments }}/{{ total_assignments }} отправлено<br>
+                            <strong>Принято:</strong> {{ accepted_assignments }} заданий
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-7">
+            
+                <div class="card">
+                    <div class="card-body">
+                        <h1 class="card-title">Примечания</h1>
+
+                        <div class="alert alert-primary mb-2">
+                            <div class="alert-body">
+                                Напоминание: Ваши заметки будут видны родителям студента, однако самому студенту они недоступны
+                            </div>
+                        </div>
+
+                        {% if notes %}
+                            {% for note in notes %}
+                            <div class="alert alert-light border-left-primary mb-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <p class="mb-1">{{ note.text|linebreaks }}</p>
+                                        <small class="text-muted">
+                                            {{ note.created_at|date:"d.m.Y H:i" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="card-text text-muted">Заметок пока нет</div>
+                        {% endif %}
+
+                        <div class="card-title mt-3">Написать примечание</div>
+
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mt-2">
+                                <label class="form-label" for="id_text">Примечание</label>
+                                <textarea class="form-control" id="id_text" name="text" rows="4" placeholder="Введите текст заметки..."></textarea>
+                            </div>
+
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-primary waves-effect waves-float waves-light" name="action" value="add_note">Добавить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Последние задания -->
+                {% if recent_submissions %}
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-tasks text-primary"></i> Последние задания
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Задание</th>
+                                        <th>Отправлено</th>
+                                        <th>Статус</th>
+                                        <th>Оценка</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for submission in recent_submissions %}
+                                    <tr>
+                                        <td>{{ submission.assignment.title }}</td>
+                                        <td>{{ submission.submitted_at|date:"d.m.Y H:i"|default:"—" }}</td>
+                                        <td>
+                                            <span class="badge
+                                                {% if submission.status == 'checked' %}bg-success
+                                                {% elif submission.status == 'submitted' %}bg-warning
+                                                {% elif submission.status == 'revision' %}bg-danger
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ submission.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if submission.grade %}
+                                                {{ submission.grade.score }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+        </div>
+    </div>
+    
+    <div id="form-fragment"></div>
+
+    <script>
+        Analytics.logEvent("View_Student_Profile", {
+            "id": "{{ student.pk }}",
+            "name": "{{ student.full_name }}"
+        })
+    </script>
+
+</div>
+
+{% endblock %}

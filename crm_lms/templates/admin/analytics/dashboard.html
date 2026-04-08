@@ -1,0 +1,252 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}Аналитика{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {{ attendance_data|json_script:"attendanceData" }}
+    {{ courses_data|json_script:"coursesData" }}
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="content-header">
+                <h1 class="content-header-title">Аналитика</h1>
+                <div class="content-header-tools">
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Обновить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистические карточки -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_students }}</h4>
+                            <p class="mb-0">Всего студентов</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_active_students }}</h4>
+                            <p class="mb-0">Активные студенты</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_courses }}</h4>
+                            <p class="mb-0">Активные курсы</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-graduation-cap fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ top_courses|length }}</h4>
+                            <p class="mb-0">Топ курсов</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-trophy fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- График посещаемости -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Посещаемость за последние 30 дней</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="attendanceChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Распределение по курсам -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Распределение студентов по курсам</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="coursesChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Топ курсы -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Топ-5 самых популярных курсов</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Курс</th>
+                                    <th>Студентов</th>
+                                    <th>Ментор</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in top_courses %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'analytics:course_students' course.id %}" class="text-decoration-none">
+                                            {{ course.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ course.student_count }}</span>
+                                    </td>
+                                    <td>{{ course.mentor.get_full_name|default:course.mentor.username }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if course.status == 'active' %}bg-success
+                                            {% elif course.status == 'planned' %}bg-warning
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ course.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Получаем данные из json_script
+const attendanceData = JSON.parse(document.getElementById('attendanceData').textContent);
+const coursesData = JSON.parse(document.getElementById('coursesData').textContent);
+
+// График посещаемости
+const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+const attendanceChart = new Chart(attendanceCtx, {
+    type: 'line',
+    data: {
+        labels: attendanceData.map(function(d) { return d.date; }),
+        datasets: [{
+            label: 'Присутствовали',
+            data: attendanceData.map(function(d) { return d.present; }),
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Отсутствовали',
+            data: attendanceData.map(function(d) { return d.absent; }),
+            borderColor: '#dc3545',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Круговая диаграмма распределения по курсам
+const coursesCtx = document.getElementById('coursesChart').getContext('2d');
+const coursesChart = new Chart(coursesCtx, {
+    type: 'doughnut',
+    data: {
+        labels: coursesData.map(function(c) { return c.title; }),
+        datasets: [{
+            data: coursesData.map(function(c) { return c.student_count; }),
+            backgroundColor: coursesData.map(function(c) { return c.color; }),
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            },
+            title: {
+                display: false
+            }
+        },
+        onClick: function(evt, item) {
+            if (item.length > 0) {
+                const courseData = coursesData[item[0].index];
+                window.location.href = '/analytics/course/' + courseData.id + '/students/';
+            }
+        }
+    }
+});
+
+// Функция обновления данных
+function refreshData() {
+    window.location.reload();
+}
+</script>
+{% endblock %}

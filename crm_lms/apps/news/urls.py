@@ -11,4 +11,7 @@ urlpatterns = [
     path('<int:pk>/toggle/', views.news_toggle_publish, name='toggle'),
     path('mentor/', views.news_list_mentor, name='mentor_list'),
     path('mentor/<int:pk>/', views.news_detail_mentor, name='mentor_detail'),
+    path('students/', views.news_list_student, name='student_list'),
+    path('students/create/', views.news_create_student, name='student_create'),
+    path('students/<int:pk>/', views.news_detail_student, name='student_detail'),
 ]

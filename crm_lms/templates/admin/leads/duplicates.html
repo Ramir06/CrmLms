@@ -1,0 +1,417 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% load leads_extras %}
+
+{% block title %}Дубликаты лидов{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<link href="{% static 'css/leads.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">CRM — Дубликаты лидов</h4>
+    <div class="page-actions d-flex flex-wrap gap-2">
+        <form method="post" action="{% url 'leads:find_duplicates' %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-search me-1"></i>Найти дубликаты
+            </button>
+        </form>
+        
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="confirmedOnly" 
+                   {% if show_confirmed %}checked{% endif %}>
+            <label class="form-check-label" for="confirmedOnly">
+                Только подтвержденные
+            </label>
+        </div>
+        
+        <form method="get" class="d-flex gap-2">
+            <input type="text" name="search" class="form-control form-control-sm" 
+                   placeholder="Поиск по значению" value="{{ search_query }}">
+            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+        
+        <a href="{% url 'leads:kanban' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>К лидам
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if groups %}
+            {% for group in groups %}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">
+                            <i class="bi bi-files me-2"></i>
+                            Дубли по {{ group.get_match_type_display }}: 
+                            <strong>{{ group.match_value }}</strong>
+                        </h6>
+                        <small class="text-muted">
+                            Найдено: {{ group.duplicates.count }} лидов | 
+                            Создано: {{ group.created_at|date:"d.m.Y H:i" }}
+                        </small>
+                    </div>
+                    <div>
+                        {% if group.is_confirmed %}
+                            <span class="badge bg-success me-2">Подтверждено</span>
+                        {% else %}
+                            <span class="badge bg-warning me-2">Требует проверки</span>
+                        {% endif %}
+                        
+                        {% if group.is_resolved %}
+                            <span class="badge bg-secondary">Обработано</span>
+                        {% else %}
+                            <span class="badge bg-danger">Не обработано</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="30">
+                                        <input type="checkbox" class="form-check-input" id="select-all-{{ group.id }}">
+                                    </th>
+                                    <th>ID</th>
+                                    <th>Имя</th>
+                                    <th>Телефон</th>
+                                    <th>Email</th>
+                                    <th>Источник</th>
+                                    <th>Статус</th>
+                                    <th>Менеджер</th>
+                                    <th>Создан</th>
+                                    <th>Уверенность</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for duplicate in group.duplicates.all %}
+                                <tr class="{% if duplicate.is_primary %}table-primary{% endif %}">
+                                    <td>
+                                        <input type="checkbox" class="form-check-input lead-checkbox" 
+                                               data-lead-id="{{ duplicate.lead.id }}" 
+                                               data-group-id="{{ group.id }}"
+                                               {% if duplicate.is_primary %}disabled{% endif %}>
+                                    </td>
+                                    <td>{{ duplicate.lead.id }}</td>
+                                    <td>
+                                        <strong>{{ duplicate.lead.full_name }}</strong>
+                                        {% if duplicate.is_primary %}
+                                            <span class="badge bg-primary ms-2">Основной</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ duplicate.lead.phone }}</td>
+                                    <td>{{ duplicate.lead.email|default:"-" }}</td>
+                                    <td>
+                                        {% if duplicate.lead.current_source %}
+                                            {{ duplicate.lead.current_source }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            {{ duplicate.lead.current_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if duplicate.lead.assigned_to %}
+                                            {{ duplicate.lead.assigned_to|get_full_name_safe }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ duplicate.lead.created_at|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ duplicate.confidence_score|mul:100 }}%"
+                                                 aria-valuenow="{{ duplicate.confidence_score|mul:100 }}" 
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                                {{ duplicate.confidence_score|mul:100|floatformat:0 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'leads:detail' duplicate.lead.id %}" 
+                                               class="btn btn-outline-primary" title="Открыть">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if not duplicate.is_primary %}
+                                                <button type="button" 
+                                                        class="btn btn-outline-success set-primary-btn"
+                                                        data-lead-id="{{ duplicate.lead.id }}"
+                                                        data-group-id="{{ group.id }}"
+                                                        title="Сделать основным">
+                                                    <i class="bi bi-star"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="11" class="text-center text-muted">
+                                        Дубликаты не найдены
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if not group.is_resolved %}
+                    <div class="mt-3 d-flex gap-2">
+                        <button type="button" 
+                                class="btn btn-success merge-btn"
+                                data-group-id="{{ group.id }}"
+                                title="Объединить выбранных дубликатов">
+                            <i class="bi bi-layers me-1"></i>Объединить
+                        </button>
+                        
+                        <button type="button" 
+                                class="btn btn-outline-warning mark-not-duplicate-btn"
+                                data-group-id="{{ group.id }}"
+                                title="Пометить как не дубликат">
+                            <i class="bi bi-x-circle me-1"></i>Не дубликат
+                        </button>
+                        
+                        {% if group.notes %}
+                        <div class="alert alert-info mb-0">
+                            <small><strong>Заметки:</strong> {{ group.notes }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-files display-1 text-muted"></i>
+                <h4 class="mt-3 text-muted">Дубликаты не найдены</h4>
+                <p class="text-muted">
+                    Нажмите "Найти дубликаты" для поиска возможных дубликатов лидов
+                </p>
+                <form method="post" action="{% url 'leads:find_duplicates' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Найти дубликаты
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно объединения -->
+<div class="modal fade" id="mergeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Объединение дубликатов</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="mergeForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Основной лид (в него будут объединены данные):</label>
+                        <select name="primary_lead_id" class="form-select" required>
+                            <option value="">Выберите основной лид...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Причина объединения:</label>
+                        <textarea name="merge_reason" class="form-control" rows="3" 
+                                  placeholder="Укажите причину объединения..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <small>
+                            <strong>Важно:</strong> Все выбранные лиды будут объединены в основного. 
+                            Дубликаты будут архивированы, но не удалены. 
+                            Все действия будут записаны в историю.
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success" id="confirmMerge">
+                    <i class="bi bi-layers me-1"></i>Объединить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно "Не дубликат" -->
+<div class="modal fade" id="notDuplicateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Пометить как не дубликат</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="notDuplicateForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="group_id" id="notDuplicateGroupId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Заметки:</label>
+                        <textarea name="notes" class="form-control" rows="3" 
+                                  placeholder="Укажите причину, почему это не дубликаты..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-warning" id="confirmNotDuplicate">
+                    <i class="bi bi-x-circle me-1"></i>Пометить как не дубликат
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Фильтр только подтвержденных
+document.getElementById('confirmedOnly').addEventListener('change', function() {
+    const url = new URL(window.location);
+    if (this.checked) {
+        url.searchParams.set('confirmed', 'true');
+    } else {
+        url.searchParams.delete('confirmed');
+    }
+    window.location = url;
+});
+
+// Выбор всех лидов в группе
+document.querySelectorAll('[id^="select-all-"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const groupId = this.id.replace('select-all-', '');
+        const groupCheckboxes = document.querySelectorAll(`[data-group-id="${groupId}"]:not(:disabled)`);
+        groupCheckboxes.forEach(cb => cb.checked = this.checked);
+    });
+});
+
+// Кнопка объединения
+document.querySelectorAll('.merge-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const groupId = this.dataset.groupId;
+        const selectedLeads = Array.from(document.querySelectorAll(`[data-group-id="${groupId}"]:checked`))
+            .map(cb => cb.dataset.leadId);
+        
+        if (selectedLeads.length === 0) {
+            alert('Выберите хотя бы одного лида для объединения');
+            return;
+        }
+        
+        // Заполняем список основных лидов
+        const select = document.querySelector('#mergeForm select[name="primary_lead_id"]');
+        select.innerHTML = '<option value="">Выберите основной лид...</option>';
+        
+        document.querySelectorAll(`[data-group-id="${groupId}"]`).forEach(cb => {
+            const leadId = cb.dataset.leadId;
+            const row = cb.closest('tr');
+            const leadName = row.querySelector('td:nth-child(3)').textContent.trim();
+            
+            const option = document.createElement('option');
+            option.value = leadId;
+            option.textContent = `${leadName} (ID: ${leadId})`;
+            select.appendChild(option);
+        });
+        
+        // Сохраняем данные для формы
+        document.getElementById('mergeForm').dataset.groupId = groupId;
+        document.getElementById('mergeForm').dataset.selectedLeads = JSON.stringify(selectedLeads);
+        
+        // Показываем модальное окно
+        new bootstrap.Modal(document.getElementById('mergeModal')).show();
+    });
+});
+
+// Подтверждение объединения
+document.getElementById('confirmMerge').addEventListener('click', function() {
+    const form = document.getElementById('mergeForm');
+    const formData = new FormData(form);
+    
+    formData.append('group_id', form.dataset.groupId);
+    formData.append('duplicate_lead_ids', form.dataset.selectedLeads);
+    
+    fetch('{% url "leads:merge_leads" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.href = data.redirect_url;
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Произошла ошибка: ' + error);
+    });
+});
+
+// Кнопка "Не дубликат"
+document.querySelectorAll('.mark-not-duplicate-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('notDuplicateGroupId').value = this.dataset.groupId;
+        new bootstrap.Modal(document.getElementById('notDuplicateModal')).show();
+    });
+});
+
+// Подтверждение "Не дубликат"
+document.getElementById('confirmNotDuplicate').addEventListener('click', function() {
+    const form = document.getElementById('notDuplicateForm');
+    const formData = new FormData(form);
+    
+    fetch('{% url "leads:mark_as_not_duplicate" %}', {
+        method: 'POST',
+        body: JSON.stringify({
+            group_id: formData.get('group_id'),
+            notes: formData.get('notes')
+        }),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Произошла ошибка: ' + error);
+    });
+});
+</script>
+{% endblock %}

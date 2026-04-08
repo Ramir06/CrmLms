@@ -1,101 +1,345 @@
 {% extends "base/course_base.html" %}
 {% load static %}
-{% block title %}Студенты — {{ course.title }}{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<div class="page-header">
-    <h4 class="page-title">Студенты курса</h4>
-    <span class="badge bg-primary" style="font-size:13px;">{{ course_students.count }}</span>
+
+<div class="container-xxl p-0">
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-10 col-12">
+                    <h4 class="card-title">{{ course.title }}: {{ course.get_status_display }}</h4>
+                    
+                    {% if course.schedule_display %}
+                    <p class="card-text">
+                        Расписание:
+                        <b>{{ course.schedule_display }}</b>
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="col-md-2 col-12 text-center text-md-end d-flex flex-column justify-content-center">
+                    
+                    {% if course.meeting_link %}
+                    <a class="btn btn-sm btn-gradient-danger mt-1 mt-md-0" target="_blank" href="{{ course.meeting_link }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-video"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg> <span>Зайти на урок</span>
+                    </a>
+                    {% endif %}
+                    
+                    <a class="btn btn-sm btn-gradient-info mt-1" href="{% url 'chat:room_list' %}">
+                        <i class="far fa-comments"></i> <span>Открыть чат</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div>
+        
+    <div id="page-id">mates</div>
+
+    <div class="content-header content-header-left row mb-2">
+    <div class="col-12">
+        <h2 class="content-header-title  float-start  mb-0">
+            Активные студенты
+        </h2>
+        <div class="breadcrumb-wrapper">
+            <ol class="breadcrumb">
+                
+        <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'lectures:index' course.pk %}">{{ course.title }}</a></li>
+        <li class="breadcrumb-item">Активные студенты</li>
+    
+            </ol>
+        </div>
+    </div>
 </div>
 
-<!-- Stats mini row -->
-<div class="row g-2 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="stat-card"><div class="stat-icon-box green"><i class="bi bi-person-check-fill"></i></div>
-            <div class="stat-info"><div class="stat-value">{{ active_count }}</div><div class="stat-label">Активных</div></div></div>
+    <div class="btn-toolbar">
+        <div>
+            <a href="{% url 'lectures:export_students' course.pk %}" class="btn btn-sm btn-primary mb-25 waves-effect waves-float waves-light">
+                <i class="far fa-file-excel"></i> Выгрузить список
+            </a>
+            
+            
+            <a class="btn btn-sm btn-primary mb-25 dropdown-toggle waves-effect waves-float waves-light" data-bs-toggle="dropdown">
+                <span>Ещё</span>
+            </a>
+            <div class="dropdown-menu">
+                <form method="post" class="d-inline-block">
+                    {% csrf_token %}
+                    <button name="action" value="invite_all" type="submit" class="dropdown-item">
+                        <i class="fas fa-envelope"></i> Пригласить всех
+                    </button>
+                </form>
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-bell"></i> Отправить всем уведомление
+                </a>
+                
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-users"></i> Создать встречу
+                </a>
+                
+            </div>
+        </div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card"><div class="stat-icon-box red"><i class="bi bi-person-x-fill"></i></div>
-            <div class="stat-info"><div class="stat-value">{{ left_count }}</div><div class="stat-label">Ушедших</div></div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card"><div class="stat-icon-box blue"><i class="bi bi-snow"></i></div>
-            <div class="stat-info"><div class="stat-value">{{ frozen_count }}</div><div class="stat-label">Заморожен.</div></div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card"><div class="stat-icon-box purple"><i class="bi bi-award-fill"></i></div>
-            <div class="stat-info"><div class="stat-value">{{ graduated_count }}</div><div class="stat-label">Окончили</div></div></div>
-    </div>
-</div>
 
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0" style="font-size:13px;">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:32px">#</th>
-                        <th>Студент</th>
-                        <th>Телефон</th>
-                        <th>Статус</th>
-                        <th>Прогресс</th>
-                        <th>Рейтинг</th>
-                        <th>Баллы</th>
-                        <th>Зачислен</th>
-                    </tr>
+    
+    
+
+    <div class="card mt-2">
+        <!-- Desktop Table View -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover table-striped">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ФИО</th>
+                    <th>Номер тел.</th>
+                    <th>Лекции</th>
+                    <th>Задания</th>
+                    <th>Аккаунт</th>
+                    <th>Рейтинг</th>
+                    <th>
+                        
+                            
+                                <a href="?order_by=point">
+                                    Баллы
+                                </a>
+                            
+                        
+                    </th>
+                    
+                </tr>
                 </thead>
+                
                 <tbody>
-                    {% for cs in course_students %}
+                    {% for cs in active_students %}
                     <tr>
-                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td>{{ forloop.counter }}</td>
                         <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-semibold"
-                                      style="width:30px;height:30px;font-size:12px;flex-shrink:0;">{{ cs.student.full_name|first }}</span>
-                                <div>
-                                    <div class="fw-medium">{{ cs.student.full_name }}</div>
-                                    {% if cs.student.parent_name %}<div class="text-muted" style="font-size:11px;">Родитель: {{ cs.student.parent_name }}</div>{% endif %}
-                                </div>
+                            <div>
+                                <a href="{% url 'lectures:student_detail' course.pk cs.student.pk %}">{{ cs.student.full_name }}</a>
+                            </div>
+                            <div class="online-indicator">
+                                
+                                    <span class="dot offline"></span> Был(а)
+                                    
+                                        {{ cs.student.last_login|timesince }} назад
+                                    
+                                
                             </div>
                         </td>
-                        <td class="text-muted">{{ cs.student.phone }}</td>
+                        <td>{{ cs.student.phone }}</td>
                         <td>
-                            <span class="badge
-                                {% if cs.status == 'active' %}bg-success
-                                {% elif cs.status == 'frozen' %}bg-info text-dark
-                                {% elif cs.status == 'left' %}bg-danger
-                                {% elif cs.status == 'graduated' %}bg-primary
-                                {% else %}bg-secondary{% endif %}">
-                                {{ cs.get_status_display }}
-                            </span>
+                            {{ cs.total_lectures }}
+                            <i class="fas fa-book-open" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Всего лекций опубликовано"></i>
+                            -&gt; {{ cs.viewed_lectures }}
+                            <i class="fas fa-eye" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Просмотрено лекций"></i>
+                            -&gt; {{ cs.studied_lectures }}
+                            <i class="fas fa-check" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Изучено лекций"></i>
                         </td>
                         <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="progress" style="height:5px;width:60px;flex-shrink:0;">
-                                    <div class="progress-bar bg-primary" style="width:{{ cs.progress_percent }}%;"></div>
-                                </div>
-                                <small class="text-muted">{{ cs.progress_percent }}%</small>
-                            </div>
+                            {{ cs.total_assignments }}
+                            <i class="fas fa-pencil-ruler" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Всего заданий опубликовано"></i>
+                            -&gt; {{ cs.submitted_assignments }}
+                            <i class="fas fa-file-upload" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Отправлено решений"></i>
+                            -&gt; {{ cs.accepted_assignments }}
+                            <i class="fas fa-check" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Принято решений"></i>
                         </td>
                         <td>
-                            {% if cs.rating %}
-                            <span class="text-warning"><i class="bi bi-star-fill" style="font-size:10px;"></i></span>
-                            <span class="fw-medium">{{ cs.rating }}</span>
-                            {% else %}<span class="text-muted">—</span>{% endif %}
+                            
+                                <i class="fas fa-check text-success"></i>
+                            
                         </td>
-                        <td><span class="fw-medium text-primary">{{ cs.points }}</span></td>
-                        <td class="text-muted">{{ cs.joined_at|date:"d.m.Y"|default:"—" }}</td>
+                        <td>
+                            {{ cs.progress_percent|default:0 }}%
+                        </td>
+                        <td>
+                            
+                                <i class="fa fa-coins text-warning"></i>
+                                <b>{{ cs.points }}</b>
+                            
+                        </td>
+                        
                     </tr>
                     {% empty %}
                     <tr>
                         <td colspan="8" class="text-center text-muted py-5">
                             <i class="bi bi-people fs-2 d-block mb-2 opacity-50"></i>
-                            Нет студентов в этом курсе
+                            Нет активных студентов в этом курсе
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <!-- Mobile Card View -->
+        <div class="mobile-card-view d-block d-md-none">
+            {% for cs in active_students %}
+            <div class="student-card" onclick="window.location.href='{% url 'lectures:student_detail' course.pk cs.student.pk %}'">
+                <div class="student-card-header">
+                    <a href="{% url 'lectures:student_detail' course.pk cs.student.pk %}" class="student-name">
+                        {{ cs.student.full_name }}
+                    </a>
+                    <div class="student-status">
+                        <span class="dot offline"></span>
+                        Был(а) {{ cs.student.last_login|timesince }} назад
+                    </div>
+                </div>
+                
+                <div class="student-card-body">
+                    <div class="student-info-item">
+                        <span class="student-info-label">Телефон</span>
+                        <span class="student-info-value">{{ cs.student.phone|default:"—" }}</span>
+                    </div>
+                    <div class="student-info-item">
+                        <span class="student-info-label">Лекции</span>
+                        <span class="student-info-value">
+                            {{ cs.viewed_lectures }}/{{ cs.total_lectures }}
+                        </span>
+                    </div>
+                    <div class="student-info-item">
+                        <span class="student-info-label">Задания</span>
+                        <span class="student-info-value">
+                            {{ cs.accepted_assignments }}/{{ cs.submitted_assignments }}
+                        </span>
+                    </div>
+                    <div class="student-info-item">
+                        <span class="student-info-label">Прогресс</span>
+                        <span class="student-info-value">{{ cs.progress_percent|default:0 }}%</span>
+                    </div>
+                </div>
+                
+                <div class="student-stats">
+                    <div class="student-stat">
+                        <div class="student-stat-value">{{ cs.progress_percent|default:0 }}%</div>
+                        <div class="student-stat-label">Прогресс</div>
+                    </div>
+                    <div class="student-stat">
+                        <div class="student-stat-value">{{ cs.points|default:0 }}</div>
+                        <div class="student-stat-label">Баллы</div>
+                    </div>
+                    <div class="student-stat">
+                        <div class="student-stat-value">
+                            {% if cs.student.user_account %}
+                                <i class="fas fa-check text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times text-danger"></i>
+                            {% endif %}
+                        </div>
+                        <div class="student-stat-label">Аккаунт</div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <i class="bi bi-people fs-2 d-block mb-2 opacity-50"></i>
+                <p class="text-muted">Нет активных студентов в этом курсе</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
-</div>
+
+    
+        {% if left_students %}
+        <h4 class="title mt-2">Покинули учебу</h4>
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>ФИО</th>
+                        <th>Номер тел.</th>
+                        <th>Лекции</th>
+                        <th>Задания</th>
+                        
+                    </tr>
+                    </thead>
+                    
+                    <tbody>
+                        {% for cs in left_students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'lectures:student_detail' course.pk cs.student.pk %}">{{ cs.student.full_name }}</a>
+                                <div class="online-indicator">
+                                    
+                                        <span class="dot offline"></span> Был(а)
+                                        
+                                            {{ cs.student.last_login|timesince }} назад
+                                        
+                                    
+                                </div>
+                            </td>
+                            <td>{{ cs.student.phone }}</td>
+                            <td>
+                                {{ cs.total_lectures }}
+                                <i class="fas fa-book-open" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Всего лекций опубликовано"></i>
+                                -&gt; {{ cs.viewed_lectures }}
+                                <i class="fas fa-eye" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Просмотрено лекций"></i>
+                                -&gt; {{ cs.studied_lectures }}
+                                <i class="fas fa-check" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Изучено лекций"></i>
+                            </td>
+                            <td>
+                                {{ cs.total_assignments }}
+                                <i class="fas fa-pencil-ruler" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Всего заданий опубликовано"></i>
+                                -&gt; {{ cs.submitted_assignments }}
+                                <i class="fas fa-file-upload" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Отправлено решений"></i>
+                                -&gt; {{ cs.accepted_assignments }}
+                                <i class="fas fa-check" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Принято решений"></i>
+                            </td>
+                            
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+    <table class="dvData hidden-table" style="display: none;">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>ФИО</th>
+            <th>Номер тел.</th>
+            <th>Аккаунт</th>
+            <th>Баллы</th>
+        </tr>
+        </thead>
+        
+        <tbody>
+            {% for cs in course_students %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    <div>{{ cs.student.full_name }}</div>
+                </td>
+                <td>{{ cs.student.phone }}</td>
+                <td>
+                    {{ cs.student.user_account.email|default:"—" }}
+                </td>
+                <td>{{ cs.points }}</td>
+            </tr>
+            {% endfor %}
+    </tbody></table>
+
+    <div id="form-fragment"></div>
+
+    
+    <script>
+        Analytics.logEvent("View_LMS_Course_Students", {
+            "name": "{{ course.title }}"
+        })
+    </script>
+
+    </div>
+
+        </div>
+
 {% endblock %}

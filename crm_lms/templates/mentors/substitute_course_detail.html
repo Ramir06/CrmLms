@@ -1,0 +1,279 @@
+{% extends "base/mentor_base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <span class="badge bg-danger me-2">ЗАМЕНА</span>
+                    {{ course.title }}
+                </h1>
+                <div>
+                    <a href="{% url 'mentors:substitute_courses' %}" class="btn btn-secondary">
+                        ← К списку замен
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация о курсе -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Информация о курсе</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Основной ментор:</strong></p>
+                            <div class="p-2 bg-light rounded mb-3">
+                                <strong>{{ substitutions.first.original_mentor.get_full_name }}</strong>
+                                <br><small class="text-muted">{{ substitutions.first.original_mentor.email }}</small>
+                            </div>
+                            
+                            <p><strong>Предмет:</strong> {{ course.subject|default:"-" }}</p>
+                            <p><strong>Студенты:</strong> {{ course.current_students_count }}/{{ course.capacity }}</p>
+                            <p><strong>Длительность:</strong> {{ course.duration_months }} мес.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Ваши права доступа:</strong></p>
+                            <div class="p-2 bg-warning rounded">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="fas fa-check text-success"></i> Отмечать посещаемость</li>
+                                    <li><i class="fas fa-check text-success"></i> Создавать материалы</li>
+                                    <li><i class="fas fa-check text-success"></i> Просматривать оценки</li>
+                                    <li><i class="fas fa-check text-success"></i> Создавать задания</li>
+                                    <li><i class="fas fa-times text-danger"></i> Оценивать задания</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Навигация по разделам -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <a href="#schedule" class="btn btn-outline-primary">Расписание</a>
+                        <a href="#attendance" class="btn btn-outline-primary">Посещаемость</a>
+                        <a href="#materials" class="btn btn-outline-primary">Материалы</a>
+                        <a href="#assignments" class="btn btn-outline-primary">Задания</a>
+                        <a href="#grades" class="btn btn-outline-primary">Оценки (просмотр)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Расписание замен -->
+    <div class="row mb-4" id="schedule">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Расписание замен</h5>
+                </div>
+                <div class="card-body">
+                    {% if substitute_lessons %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Время</th>
+                                    <th>Тема урока</th>
+                                    <th>Кабинет</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lesson in substitute_lessons %}
+                                <tr>
+                                    <td>{{ lesson.lesson_date|date:"d.m.Y" }}</td>
+                                    <td>{{ lesson.start_time|time:"H:i" }} - {{ lesson.end_time|time:"H:i" }}</td>
+                                    <td>{{ lesson.title|default:"Без названия" }}</td>
+                                    <td>{{ lesson.room|default:"-" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="#" class="btn btn-outline-primary">Детали</a>
+                                            <a href="#" class="btn btn-outline-success">Отметить посещаемость</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Запланированных замен нет.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Посещаемость -->
+    <div class="row mb-4" id="attendance">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Посещаемость</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Доступ к посещаемости только на дни, когда вы заменяете.</p>
+                    
+                    {% if substitute_lessons %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Студент</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Здесь будет логика отображения посещаемости -->
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        Посещаемость будет доступна в день проведения урока
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Нет запланированных уроков для отметки посещаемости.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Материалы -->
+    <div class="row mb-4" id="materials">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Материалы курса</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Вы можете создавать материалы для уроков, на которых являетесь заменой.</p>
+                    
+                    <button class="btn btn-primary mb-3">
+                        <i class="fas fa-plus"></i> Создать материал
+                    </button>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Урок</th>
+                                    <th>Дата создания</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        Материалы пока не созданы
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Задания -->
+    <div class="row mb-4" id="assignments">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Задания</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Вы можете создавать задания для уроков, на которых являетесь заменой.</p>
+                    
+                    <button class="btn btn-primary mb-3">
+                        <i class="fas fa-plus"></i> Создать задание
+                    </button>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Урок</th>
+                                    <th>Срок сдачи</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        Задания пока не созданы
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Оценки (только просмотр) -->
+    <div class="row mb-4" id="grades">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Оценки (только просмотр)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        Вы можете только просматривать оценки. Оценивание доступно только основному ментору.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Студент</th>
+                                    <th>Задание</th>
+                                    <th>Оценка</th>
+                                    <th>Дата оценки</th>
+                                    <th>Проверил</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        Оценки пока не выставлены
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

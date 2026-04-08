@@ -1,0 +1,195 @@
+/* CRM LMS — Leads Kanban animations */
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.kanban-card {
+    transition: all 0.3s ease;
+}
+
+.kanban-card.dragging {
+    opacity: 0.5;
+}
+
+/* Галочки в заголовках статусов */
+.kanban-col-header .form-check {
+    margin-bottom: 0;
+}
+
+.kanban-col-header .form-check-input {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+.kanban-col-header .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.kanban-col-header .form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.kanban-col-header .form-check-input:indeterminate {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='white' d='M4 8h8v2H4z'/%3e%3c/svg%3e");
+}
+
+.kanban-col-header .form-check-label {
+    display: none;
+}
+
+/* Кнопки действий статусов */
+.status-actions {
+    animation: slideIn 0.2s ease;
+}
+
+.status-actions .btn {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.status-actions .btn:hover {
+    background-color: #ffca2c;
+    border-color: #ffc720;
+    color: #000;
+}
+
+.status-actions .dropdown-menu {
+    font-size: 0.75rem;
+    min-width: 150px;
+}
+
+/* Галочки у лидов */
+.kanban-card-header {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 10;
+}
+
+.kanban-card-header .form-check {
+    margin-bottom: 0;
+}
+
+.kanban-card-header .form-check-input {
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 0.25rem;
+    border: 1px solid #dee2e6;
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: all 0.2s ease;
+}
+
+.kanban-card-header .form-check-input:checked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.kanban-card-header .form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.kanban-card-header .form-check-label {
+    display: none;
+}
+
+/* Смещаем контент карточки для галочки */
+.kanban-card-body {
+    padding-top: 1.5rem;
+}
+
+/* Кнопка массовых действий */
+#bulk-actions {
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+#bulk-actions .btn {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+#bulk-actions .btn:hover {
+    background-color: #ffca2c;
+    border-color: #ffc720;
+    color: #000;
+}
+
+/* Кнопка удаления лида */
+.kanban-card-footer form {
+    margin: 0;
+}
+
+.kanban-card-footer .btn-link {
+    text-decoration: none;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.kanban-card-footer .btn-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.1);
+}
+
+.kanban-card-footer .btn-link.text-danger:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+/* Кнопка действий в заголовке колонки */
+.kanban-col-header .dropdown-toggle {
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.kanban-col-header .dropdown-toggle:hover {
+    opacity: 1;
+}
+
+.kanban-col-header .dropdown-toggle:focus {
+    box-shadow: none;
+    opacity: 1;
+}
+
+.kanban-card.dragging {
+    transform: rotate(5deg);
+}
+
+.kanban-cards.drag-over {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: #0d6efd;
+}
+
+.kanban-card-status {
+    transition: all 0.3s ease;
+}

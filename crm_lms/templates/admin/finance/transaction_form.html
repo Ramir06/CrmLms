@@ -1,0 +1,366 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.form-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
+    color: #64748b;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.transfer-fields {
+    display: none;
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.type-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.type-income {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.type-expense {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.type-transfer {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #f3f4f6;
+}
+
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1rem;
+        margin: 1rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="form-container">
+        <div class="form-header">
+            <h1 class="form-title">
+                {% if action == 'create' %}➕ Добавить транзакцию{% else %}✏️ Редактировать транзакцию{% endif %}
+            </h1>
+            <p class="form-subtitle">Заполните информацию о финансовой операции</p>
+        </div>
+
+        <form method="post" id="transactionForm">
+            {% csrf_token %}
+            
+            <!-- Основная информация -->
+            <div class="form-section">
+                <h3 class="section-title">📋 Основная информация</h3>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Тип операции *</label>
+                        {{ form.type }}
+                        {% if form.type.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.type.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Coma *</label>
+                        {{ form.transaction_date }}
+                        {% if form.transaction_date.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.transaction_date.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Сумма *</label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.amount.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Категория</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.category.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Поля для перевода -->
+                <div id="transferFields" class="transfer-fields">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Счёт получения</label>
+                            {{ form.transfer_to_account }}
+                            {% if form.transfer_to_account.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.transfer_to_account.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Счёт -->
+            <div class="form-section">
+                <h3 class="section-title">🏦 Счёт</h3>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Счёт *</label>
+                        {{ form.account }}
+                        {% if form.account.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.account.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Выберите счёт для операции</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Описание -->
+            <div class="form-section">
+                <h3 class="section-title">📝 Описание</h3>
+                
+                <div class="mb-3">
+                    <label class="form-label">Детали операции</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Добавьте подробное описание транзакции</div>
+                </div>
+            </div>
+
+            <!-- Индикатор типа -->
+            <div id="typeIndicator" class="type-indicator type-income" style="display: none;">
+                <span id="typeIcon">📈</span>
+                <span id="typeText">Доход</span>
+            </div>
+
+            <!-- Кнопки действий -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% if action == 'create' %}➕ Создать транзакцию{% else %}💾 Сохранить изменения{% endif %}
+                </button>
+                <a href="{% url 'finance:list' %}" class="btn btn-secondary">
+                    ❌ Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('transaction_type');
+    const transferFields = document.getElementById('transferFields');
+    const typeIndicator = document.getElementById('typeIndicator');
+    const typeIcon = document.getElementById('typeIcon');
+    const typeText = document.getElementById('typeText');
+    const accountField = document.getElementById('id_account');
+    const transferToAccountField = document.getElementById('id_transfer_to_account');
+
+    function updateForm() {
+        const selectedType = typeSelect.value;
+        
+        // Показываем индикатор типа
+        typeIndicator.style.display = 'inline-flex';
+        
+        if (selectedType === 'income') {
+            typeIndicator.className = 'type-indicator type-income';
+            typeIcon.textContent = '📈';
+            typeText.textContent = 'Доход';
+            transferFields.style.display = 'none';
+            transferToAccountField.required = false;
+        } else if (selectedType === 'expense') {
+            typeIndicator.className = 'type-indicator type-expense';
+            typeIcon.textContent = '📉';
+            typeText.textContent = 'Расход';
+            transferFields.style.display = 'none';
+            transferToAccountField.required = false;
+        } else if (selectedType === 'transfer') {
+            typeIndicator.className = 'type-indicator type-transfer';
+            typeIcon.textContent = '🔄';
+            typeText.textContent = 'Перевод';
+            transferFields.style.display = 'block';
+            transferToAccountField.required = true;
+        }
+
+        // Фильтруем категории по типу
+        filterCategories(selectedType);
+    }
+
+    function filterCategories(type) {
+        const categorySelect = document.getElementById('id_category');
+        const options = categorySelect.querySelectorAll('option');
+        
+        options.forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+                return;
+            }
+            
+            // Здесь можно добавить логику фильтрации категорий по типу
+            // если категории хранят информацию о типе
+            option.style.display = 'block';
+        });
+    }
+
+    // Предотвращаем выбор того же счёта для перевода
+    function validateTransferAccounts() {
+        if (typeSelect.value === 'transfer') {
+            const accountValue = accountField.value;
+            const transferToValue = transferToAccountField.value;
+            
+            if (accountValue && transferToValue && accountValue === transferToValue) {
+                alert('Счёт получения не может быть таким же, как счёт отправления');
+                transferToAccountField.value = '';
+            }
+        }
+    }
+
+    // Обработчики событий
+    typeSelect.addEventListener('change', updateForm);
+    accountField.addEventListener('change', validateTransferAccounts);
+    transferToAccountField.addEventListener('change', validateTransferAccounts);
+
+    // Инициализация
+    updateForm();
+
+    // Устанавливаем текущую дату по умолчанию для новой транзакции
+    {% if action == 'create' %}
+    const dateField = document.getElementById('id_transaction_date');
+    if (!dateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

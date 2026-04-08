@@ -1,0 +1,166 @@
+{% extends "base/course_base.html" %}
+{% load static i18n %}
+{% block title %}{% trans "Посещаемость" %} — {{ course.title }}{% endblock %}
+
+{% block course_extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .att-grid {
+        overflow-x: auto;
+    }
+
+    .att-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: auto;
+        min-width: 100%;
+    }
+
+    .att-table th,
+    .att-table td {
+        border: 1px solid #e9ecef;
+        padding: 0;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .att-table .student-col {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 2;
+        min-width: 190px;
+        max-width: 240px;
+        text-align: left;
+        padding: 8px 10px;
+        font-weight: 500;
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .att-table thead th {
+        background: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+    }
+
+    .att-table thead th.student-col {
+        z-index: 4;
+    }
+
+    .week-header {
+        background: #e3f2fd;
+        font-weight: 600;
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="text-center mb-3">
+        <h4 class="page-title mb-3">{% trans "Посещаемость" %} — {{ course.title }}</h4>
+        <div class="d-inline-flex align-items-center gap-2">
+            <a href="?week={{ prev_week }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-chevron-left"></i> Предыдущая
+            </a>
+            <span class="fw-semibold px-3">
+                Недели с {{ weeks_data.0.week_start|date:"d.m" }} по {{ weeks_data.2.week_end|date:"d.m.Y" }}
+            </span>
+            <a href="?week={{ next_week }}" class="btn btn-sm btn-outline-secondary">
+                Следующая <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if is_substitute_mentor %}
+<div class="substitute-notice">
+    <h6><i class="bi bi-info-circle me-2"></i>Доступ заменяющего ментора</h6>
+    <p>Вы можете отмечать посещаемость только в дни, когда вы заменяете основного ментора. Доступные дни для отметки посещаемости выделены в таблице.</p>
+</div>
+{% endif %}
+
+<div class="att-grid">
+    <table class="att-table">
+        <thead>
+            <tr>
+                <th class="student-col" rowspan="2">{% trans "Студент" %}</th>
+                {% for week_data in weeks_data %}
+                <th colspan="{{ week_data.lessons|length }}" class="text-center">
+                    <div class="week-header">
+                        {{ week_data.week_start|date:"d.m" }} - {{ week_data.week_end|date:"d.m" }}
+                    </div>
+                </th>
+                {% endfor %}
+                <th class="att-pct" rowspan="2">%</th>
+            </tr>
+            <tr>
+                <th class="student-col"></th>
+                {% for week_data in weeks_data %}
+                    {% for lesson in week_data.lessons %}
+                    <th class="att-date-header" title="{{ lesson.title|default:'' }} — {{ lesson.lesson_date|date:'d.m.Y' }} {{ lesson.start_time|time:'H:i' }}">
+                        <input type="checkbox" class="select-all-date" data-lesson="{{ lesson.id }}" title="Выбрать всех">
+                        <span class="date-day">{{ lesson.lesson_date|date:"d" }}</span>
+                        <span class="date-month">{{ lesson.lesson_date|date:"m" }}</span>
+                    </th>
+                    {% endfor %}
+                {% endfor %}
+                <th class="att-pct"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in matrix %}
+            <tr>
+                <td class="student-col" title="{{ row.cs.student.full_name }}">
+                    <div class="student-meta">
+                        <div>{{ row.cs.student.full_name }}</div>
+                        {% if course.is_unlimited and row.ticket_info %}
+                            {% if row.ticket_info.remaining_tickets > 5 %}
+                                <span class="ticket-badge success">{{ row.ticket_info.used_tickets }}/{{ row.ticket_info.total_tickets }}</span>
+                            {% elif row.ticket_info.remaining_tickets > 0 %}
+                                <span class="ticket-badge warning">{{ row.ticket_info.used_tickets }}/{{ row.ticket_info.total_tickets }}</span>
+                            {% else %}
+                                <span class="ticket-badge danger">{{ row.ticket_info.used_tickets }}/{{ row.ticket_info.total_tickets }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </td>
+
+                {% for week_cells in row.weeks_cells %}
+                    {% for cell in week_cells.cells %}
+                    <td class="att-cell{% if not cell.can_mark %} disabled{% endif %}"
+                        data-val="{{ cell.status|default:'' }}"
+                        data-name="att_{{ cell.lesson_id }}_{{ row.cs.student_id }}"
+                        data-comment="{{ cell.comment|default:'' }}"
+                        {% if not cell.can_mark %}title="Недоступно для отметки"{% endif %}>
+                        <div class="att-state">
+                            <span class="state-icon state-empty">—</span>
+                        </div>
+                    </td>
+                    {% endfor %}
+                    {% if forloop.last %}
+                    <td class="att-pct">
+                        <span class="badge {% if week_cells.percent >= 80 %}bg-success{% elif week_cells.percent >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                            {{ week_cells.percent }}%
+                        </span>
+                    </td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="20" class="text-center text-muted py-4">
+                    {% trans "Нет студентов" %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

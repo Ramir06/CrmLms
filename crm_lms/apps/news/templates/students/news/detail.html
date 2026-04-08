@@ -1,0 +1,116 @@
+{% extends "students/base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0">
+                            <i class="bi bi-megaphone me-2"></i>
+                            {{ news.title }}
+                        </h4>
+                        <a href="{% url 'students:news_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Назад
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    
+                    {% if news.image %}
+                    <div class="mb-4">
+                        <img src="{{ news.image.url }}" class="img-fluid rounded news-detail-image" alt="{{ news.title }}">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-3 text-muted">
+                            <span class="badge bg-primary">
+                                {% if news.audience == 'all' %}Все{% elif news.audience == 'students' %}Студенты{% else %}{{ news.get_audience_display }}{% endif %}
+                            </span>
+                            
+                            {% if news.created_by %}
+                            <span>
+                                <i class="bi bi-person"></i> {{ news.created_by.get_full_name|default:news.created_by.username }}
+                            </span>
+                            {% endif %}
+                            
+                            <span>
+                                <i class="bi bi-calendar"></i> {{ news.published_at|date:"d.m.Y H:i" }}
+                            </span>
+                            
+                            {% if news.organization %}
+                            <span>
+                                <i class="bi bi-building"></i> {{ news.organization.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="news-content">
+                        {{ news.content|linebreaks }}
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'students:news_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-list"></i> Все объявления
+                            </a>
+                            
+                            {% if news.created_by == request.user %}
+                            <div>
+                                <a href="{% url 'students:news_edit' news.pk %}" class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="bi bi-pencil"></i> Редактировать
+                                </a>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deleteNews({{ news.pk }})">
+                                    <i class="bi bi-trash"></i> Удалить
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.news-detail-image {
+    max-height: 400px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.news-content {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.news-content p {
+    margin-bottom: 1rem;
+}
+
+.news-content ul, .news-content ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+
+<script>
+function deleteNews(pk) {
+    if (confirm('Вы уверены, что хотите удалить это объявление?')) {
+        // Здесь можно добавить AJAX запрос на удаление
+        window.location.href = `/students/news/${pk}/delete/`;
+    }
+}
+</script>
+{% endblock %}

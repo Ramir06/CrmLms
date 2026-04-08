@@ -3,16 +3,33 @@
 {% block title %}{% trans "Задания" %} — {{ course.title }}{% endblock %}
 
 {% block breadcrumb %}
-<div class="st-breadcrumb">
-    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
-    <span class="sep">/</span>
-    <a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a>
-    <span class="sep">/</span>
-    <span class="current">{% trans "Задания" %}</span>
-</div>
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">{% trans "Задания" %}</li>
+    <li class="breadcrumb-item"><a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a></li>
+</ol>
 {% endblock %}
 
 {% block content %}
+{% if course %}
+<div class="course-header-bar px-3 py-2" style="margin-bottom:1rem;">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div>
+            <h6 class="mb-0 fw-semibold">{{ course.title }}</h6>
+            <small class="text-muted">
+                <span class="badge badge-sm me-1 {% if course.status == 'active' %}bg-success{% elif course.status == 'planned' %}bg-warning text-dark{% elif course.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                    {{ course.get_status_display }}
+                </span>
+                {{ course.get_days_display_short }}
+                {% if course.lesson_start_time %} · {{ course.lesson_start_time|time:"H:i" }}{% endif %}
+            </small>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <span class="badge bg-light text-dark border">{{ course.current_students_count }}/{{ course.capacity }}</span>
+        </div>
+    </div>
+</div>
+{% endif %}
 <div class="p-4">
     <div class="mb-4">
         <h3 class="fw-bold mb-1" style="color:#111827">
@@ -60,14 +77,11 @@
 
                     {% if item.assignment.description %}
                     <p class="text-muted small mb-2" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                        {{ item.assignment.description }}
+                        {{ item.assignment.description|safe }}
                     </p>
                     {% endif %}
 
                     <div class="d-flex flex-wrap gap-2 mb-3" style="font-size:13px;">
-                        <span class="text-muted">
-                            <i class="bi bi-trophy me-1"></i>{% trans "Макс. балл" %}: {{ item.assignment.max_score }}
-                        </span>
                         {% if item.assignment.due_date %}
                         <span class="{% if item.is_overdue %}text-danger{% else %}text-muted{% endif %}">
                             <i class="bi bi-calendar-event me-1"></i>{% trans "Срок" %}: {{ item.assignment.due_date|date:"d.m.Y" }}
@@ -75,7 +89,7 @@
                         {% endif %}
                         {% if item.grade %}
                         <span class="text-success fw-semibold">
-                            <i class="bi bi-star me-1"></i>{{ item.grade.score }}/{{ item.assignment.max_score }}
+                            <i class="bi bi-check-circle me-1"></i>{% trans "Сдано" %}
                         </span>
                         {% endif %}
                     </div>

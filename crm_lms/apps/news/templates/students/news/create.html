@@ -1,0 +1,145 @@
+{% extends "students/base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="bi bi-megaphone me-2"></i>
+                        {{ page_title }}
+                    </h4>
+                    <a href="{% url 'students:news_list' %}" class="btn btn-outline-secondary float-end">
+                        <i class="bi bi-arrow-left"></i> Назад
+                    </a>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Важно:</strong> Ваше объявление будет отправлено на модерацию администратору. 
+                        После проверки оно будет опубликовано и станет доступным для других студентов.
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                                        {{ form.title.label }} <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.title.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.content.id_for_label }}" class="form-label">
+                                        {{ form.content.label }} <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.content }}
+                                    {% if form.content.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.content.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.image.id_for_label }}" class="form-label">
+                                        {{ form.image.label }}
+                                    </label>
+                                    {{ form.image }}
+                                    {% if form.image.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.image.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Необязательно. Максимальный размер: 5MB
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.audience.id_for_label }}" class="form-label">
+                                        {{ form.audience.label }}
+                                    </label>
+                                    {{ form.audience }}
+                                    {% if form.audience.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.audience.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Кто сможет видеть это объявление
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.is_published }}
+                                        <label class="form-check-label" for="{{ form.is_published.id_for_label }}">
+                                            {{ form.is_published.label }}
+                                        </label>
+                                    </div>
+                                    <div class="form-text text-warning">
+                                        <i class="bi bi-lock"></i> Публикация доступна только после модерации
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-top pt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-2"></i>
+                                Отправить на модерацию
+                            </button>
+                            <a href="{% url 'students:news_list' %}" class="btn btn-outline-secondary">
+                                Отмена
+                            </a>
+                        </div>
+                        
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.alert {
+    border-left: 4px solid var(--primary-color);
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}

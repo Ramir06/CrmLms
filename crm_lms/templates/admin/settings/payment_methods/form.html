@@ -1,0 +1,72 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'settings:payment_methods_list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="page-title mb-0">{{ page_title }}</h4>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Название способа оплаты *</label>
+                        <input type="text" 
+                               name="name" 
+                               class="form-control" 
+                               value="{{ payment_method.name|default:'' }}" 
+                               required 
+                               placeholder="Например: Наличные, Карта, Mbank">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Описание</label>
+                        <textarea name="description" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Дополнительная информация о способе оплаты">{{ payment_method.description|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Порядок сортировки</label>
+                        <input type="number" 
+                               name="sort_order" 
+                               class="form-control" 
+                               value="{{ payment_method.sort_order|default:0 }}" 
+                               min="0">
+                        <div class="form-text">Чем меньше число, тем выше в списке</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   name="is_active" 
+                                   id="is_active" 
+                                   {% if payment_method.is_active|default:True %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">
+                                Активен
+                            </label>
+                            <div class="form-text">Отключенные способы не будут доступны при добавлении оплат</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Сохранить
+                        </button>
+                        <a href="{% url 'settings:payment_methods_list' %}" class="btn btn-outline-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

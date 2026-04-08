@@ -1,0 +1,340 @@
+{% load i18n %}
+{% if footer_content %}
+    {% if footer_content.is_active %}
+        {% load static %}
+        <footer class="site-footer">
+            <div class="container">
+                {% if footer_content and footer_content.is_active %}
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% if footer_content.title %}
+                            <h5>{{ footer_content.title }}</h5>
+                            {% endif %}
+                            {% if footer_content.description %}
+                            <p>{{ footer_content.description|safe }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {% if footer_content.contact_info %}
+                            <h6>Контакты</h6>
+                            <p>{{ footer_content.contact_info|safe }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {% if footer_content.social_links %}
+                            <h6>Мы в социальных сетях</h6>
+                            <div class="social-links">
+                                {% if footer_content.social_links.telegram %}
+                                <a href="{{ footer_content.social_links.telegram }}" target="_blank" class="social-link">
+                                    <i class="bi bi-telegram"></i>
+                                </a>
+                                {% endif %}
+                                {% if footer_content.social_links.instagram %}
+                                <a href="{{ footer_content.social_links.instagram }}" target="_blank" class="social-link">
+                                    <i class="bi bi-instagram"></i>
+                                </a>
+                                {% endif %}
+                                {% if footer_content.social_links.facebook %}
+                                <a href="{{ footer_content.social_links.facebook }}" target="_blank" class="social-link">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Навигационные ссылки -->
+                    {% if nav_links %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="nav-links-section">
+                                <h6>Навигационные ссылки</h6>
+                                <div class="nav-links">
+                                    {% for link in nav_links %}
+                                        {% if link.is_active %}
+                                        <div class="nav-link-item">
+                                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#navModal-{{ link.slug }}">
+                                                {{ link.title }}
+                                            </a>
+                                            
+                                            <!-- Модальное окно для навигационной ссылки -->
+                                            <div class="modal fade" id="navModal-{{ link.slug }}" tabindex="-1" aria-labelledby="navModalLabel-{{ link.slug }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="navModalLabel-{{ link.slug }}">{{ link.title }}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            {{ link.content|safe }}
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Публичная оферта -->
+                    {% if footer_content.public_offer %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="public-offer-section">
+                                <h6>Публичная оферта</h6>
+                                <div class="public-offer-content">
+                                    {{ footer_content.public_offer|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Дополнительные ссылки -->
+                    {% if footer_content.additional_links %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="additional-links">
+                                {% for link_title, link_url in footer_content.additional_links.items %}
+                                <a href="{{ link_url }}" class="additional-link">{{ link_title }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <hr class="footer-divider">
+                    
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            {% if footer_content.copyright_text %}
+                            <p class="copyright">{{ footer_content.copyright_text|safe }}</p>
+                            {% else %}
+                            <p class="copyright">© {% now "Y" %} {{ footer_content.title|default:"ОкууTrack" }}. Все права защищены.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Футер по умолчанию, если нет настроенного контента -->
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <p>© {% now "Y" %} ОкууTrack. Все права защищены.</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </footer>
+
+        <style>
+        .site-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            padding: 40px 0;
+            margin-top: 50px;
+        }
+
+        .site-footer h5 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .site-footer h6 {
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .site-footer p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .social-link:hover {
+            background-color: #5a6268;
+            color: white;
+        }
+
+        .social-link i {
+            font-size: 18px;
+        }
+
+        .footer-divider {
+            border-color: #dee2e6;
+            margin: 30px 0;
+        }
+
+        .copyright {
+            color: #6c757d;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .additional-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .additional-link {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 5px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .additional-link:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+            border-color: #6c757d;
+        }
+
+        .nav-links-section {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.nav-links-section h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.nav-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.nav-link-item {
+    margin-bottom: 5px;
+}
+
+.nav-link {
+    display: inline-block;
+    color: #007bff;
+    text-decoration: none;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: white;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.nav-link:hover {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.public-offer-section {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .public-offer-section h6 {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .public-offer-content {
+            color: #495057;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .public-offer-content h1,
+        .public-offer-content h2,
+        .public-offer-content h3,
+        .public-offer-content h4,
+        .public-offer-content h5,
+        .public-offer-content h6 {
+            color: #343a40;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .public-offer-content p {
+            margin-bottom: 15px;
+        }
+
+        .public-offer-content ul,
+        .public-offer-content ol {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .public-offer-content li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .site-footer .row {
+                text-align: center;
+            }
+            
+            .site-footer .col-md-4 {
+                margin-bottom: 20px;
+            }
+            
+            .social-links {
+                justify-content: center;
+            }
+            
+            .additional-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        </style>
+    {% endif %}
+{% else %}
+    <!-- Default footer if no content exists -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="text-center">
+                <p class="mb-0">© 2024 ОкууTrack. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+{% endif %}

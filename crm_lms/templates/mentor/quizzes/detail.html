@@ -1,6 +1,80 @@
 {% extends "base/course_base.html" %}
 {% load static %}
 {% block title %}{{ quiz.title }}{% endblock %}
+
+{% block course_extra_css %}
+<style>
+.stats-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    min-width: 150px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.stat-value.clickable {
+    color: #0d6efd;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.stat-value.clickable:hover {
+    text-decoration: underline;
+}
+
+.attempts-table {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.attempts-table table {
+    margin: 0;
+}
+
+.attempts-table th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.attempts-table td {
+    vertical-align: middle;
+}
+
+.student-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.student-link:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <div class="d-flex align-items-center gap-2">
@@ -16,130 +90,178 @@
     </div>
 </div>
 
-<!-- Stats row -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="stat-card"><div class="stat-icon-box purple"><i class="bi bi-question-circle-fill"></i></div>
-            <div class="stat-info"><div class="stat-value">{{ quiz.questions_count }}</div><div class="stat-label">Вопросов</div></div></div>
+<!-- Статистика -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-value clickable" onclick="toggleAttemptsTable()">{{ attempts.count }}</div>
+        <div class="stat-label">Всего решений</div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card"><div class="stat-icon-box blue"><i class="bi bi-trophy-fill"></i></div>
-            <div class="stat-info"><div class="stat-value">{{ quiz.total_points }}</div><div class="stat-label">Всего баллов</div></div></div>
+    <div class="stat-card">
+        <div class="stat-value" style="color: #198754;">{{ passed_attempts|length }}</div>
+        <div class="stat-label">Успех</div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card"><div class="stat-icon-box green"><i class="bi bi-people-fill"></i></div>
-            <div class="stat-info"><div class="stat-value">{{ attempts.count }}</div><div class="stat-label">Попыток</div></div></div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card"><div class="stat-icon-box orange"><i class="bi bi-percent"></i></div>
-            <div class="stat-info"><div class="stat-value">{{ quiz.pass_score }}%</div><div class="stat-label">Проходной балл</div></div></div>
+    <div class="stat-card">
+        <div class="stat-value" style="color: #dc3545;">{{ failed_attempts|length }}</div>
+        <div class="stat-label">Не прошло</div>
     </div>
 </div>
 
-<div class="row g-3">
-    <!-- Questions -->
-    <div class="col-lg-7">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0">Вопросы</h6>
-                <a href="{% url 'quizzes:question_create' course_id=course.pk quiz_id=quiz.pk %}" class="btn btn-sm btn-primary">
-                    <i class="bi bi-plus-lg me-1"></i>Добавить
-                </a>
-            </div>
-            <div class="card-body p-0">
-                {% if not questions %}
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-question-circle d-block fs-3 mb-2 opacity-50"></i>
-                    Нет вопросов. <a href="{% url 'quizzes:question_create' course_id=course.pk quiz_id=quiz.pk %}">Добавить первый</a>
-                </div>
-                {% else %}
-                {% for q in questions %}
-                <div class="p-3 {% if not forloop.last %}border-bottom{% endif %}">
-                    <div class="d-flex align-items-start justify-content-between gap-2">
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge bg-light text-dark border" style="font-size:10px;">{{ forloop.counter }}</span>
-                                <span class="badge {% if q.question_type == 'single' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %}" style="font-size:10px;">
-                                    {{ q.get_question_type_display }}
-                                </span>
-                                <span class="text-muted" style="font-size:11px;">{{ q.points }} балл.</span>
-                            </div>
-                            <p class="mb-2 fw-medium" style="font-size:13px;">{{ q.text }}</p>
-                            <div class="d-flex flex-wrap gap-1">
-                                {% for choice in q.choices.all %}
-                                <span class="badge {% if choice.is_correct %}bg-success{% else %}bg-light text-dark border{% endif %}" style="font-size:11px;">
-                                    {% if choice.is_correct %}<i class="bi bi-check me-1"></i>{% endif %}{{ choice.text }}
-                                </span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <form method="post" action="{% url 'quizzes:question_delete' course_id=course.pk quiz_id=quiz.pk question_id=q.pk %}" onsubmit="return confirm('Удалить вопрос?')">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                        </form>
-                    </div>
-                </div>
-                {% endfor %}
-                {% endif %}
-            </div>
-        </div>
+<!-- Таблица попыток (изначально скрыта) -->
+<div class="attempts-table" id="attemptsTable" style="display: none;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="card-title mb-0">Результаты студентов</h6>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAttemptsTable()">
+            <i class="bi bi-x-lg"></i>
+        </button>
     </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Баллов</th>
+                    <th>Правильных ответов</th>
+                    <th>%</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in attempts %}
+                <tr>
+                    <td>
+                        <a href="#" class="student-link" onclick="showStudentDetails('{{ att.course_student.student.full_name|escapejs }}', {{ att.pk }}); return false;">
+                            {{ att.course_student.student.full_name }}
+                        </a>
+                    </td>
+                    <td><strong>{{ att.score }}</strong> / {{ att.max_score }}</td>
+                    <td>{{ att.correct_answers_count }}</td>
+                    <td>{{ att.percentage }}%</td>
+                    <td>
+                        {% if not att.is_submitted %}
+                            <span class="badge bg-warning text-dark">В процессе</span>
+                        {% elif att.passed %}
+                            <span class="badge bg-success">Сдал</span>
+                        {% else %}
+                            <span class="badge bg-danger">Не сдал</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">Пока нет решений</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-    <!-- Attempts + send link -->
-    <div class="col-lg-5">
-        <div class="card mb-3">
-            <div class="card-header"><h6 class="card-title mb-0">Отправить студенту</h6></div>
-            <div class="card-body">
-                <form method="post" action="{% url 'quizzes:start_attempt' course_id=course.pk quiz_id=quiz.pk %}">
-                    {% csrf_token %}
-                    <div class="mb-2">
-                        <label class="form-label small fw-medium">Выберите студента</label>
-                        <select name="course_student_id" class="form-select form-select-sm" required>
-                            <option value="">— Выберите —</option>
-                            {% for cs in course_students %}
-                            <option value="{{ cs.pk }}">{{ cs.student.full_name }}</option>
-                            {% endfor %}
-                        </select>
+<!-- Вопросы -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="card-title mb-0">Вопросы ({{ quiz.questions_count }})</h6>
+        <a href="{% url 'quizzes:question_create' course_id=course.pk quiz_id=quiz.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Добавить
+        </a>
+    </div>
+    <div class="card-body p-0">
+        {% if not questions %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-question-circle d-block fs-3 mb-2 opacity-50"></i>
+            Нет вопросов. <a href="{% url 'quizzes:question_create' course_id=course.pk quiz_id=quiz.pk %}">Добавить первый</a>
+        </div>
+        {% else %}
+        {% for q in questions %}
+        <div class="p-3 {% if not forloop.last %}border-bottom{% endif %}">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-light text-dark border" style="font-size:10px;">{{ forloop.counter }}</span>
+                        <span class="badge {% if q.question_type == 'single' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %}" style="font-size:10px;">
+                            {{ q.get_question_type_display }}
+                        </span>
+                        <span class="text-muted" style="font-size:11px;">{{ q.points }} балл.</span>
                     </div>
-                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-send me-1"></i>Создать ссылку</button>
+                    <p class="mb-2 fw-medium" style="font-size:13px;">{{ q.text }}</p>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for choice in q.choices.all %}
+                        <span class="badge {% if choice.is_correct %}bg-success{% else %}bg-light text-dark border{% endif %}" style="font-size:11px;">
+                            {% if choice.is_correct %}<i class="bi bi-check me-1"></i>{% endif %}{{ choice.text }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <form method="post" action="{% url 'quizzes:question_delete' course_id=course.pk quiz_id=quiz.pk question_id=q.pk %}" onsubmit="return confirm('Удалить вопрос?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                 </form>
             </div>
         </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
 
-        <div class="card">
-            <div class="card-header"><h6 class="card-title mb-0">Результаты <span class="badge bg-primary">{{ attempts.count }}</span></h6></div>
-            <div class="card-body p-0">
-                {% if not attempts %}
-                <div class="text-center py-3 text-muted small">Нет попыток</div>
-                {% else %}
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0" style="font-size:12px;">
-                        <thead class="table-light">
-                            <tr><th>Студент</th><th>Балл</th><th>%</th><th>Статус</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for att in attempts %}
-                            <tr>
-                                <td class="fw-medium">{{ att.course_student.student.full_name }}</td>
-                                <td>{% if att.is_submitted %}{{ att.score }}/{{ att.max_score }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-                                <td>{% if att.is_submitted %}{{ att.percentage }}%{% else %}<span class="text-muted">—</span>{% endif %}</td>
-                                <td>
-                                    {% if not att.is_submitted %}
-                                        <span class="badge bg-warning text-dark">В процессе</span>
-                                    {% elif att.passed %}
-                                        <span class="badge bg-success">Сдал</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Не сдал</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+<!-- Модальное окно для деталей студента -->
+<div class="modal fade" id="studentDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Детальные результаты: <span id="studentName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="studentDetailsContent">
+                    <div class="text-center py-3">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                    </div>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleAttemptsTable() {
+    const table = document.getElementById('attemptsTable');
+    if (table.style.display === 'none') {
+        table.style.display = 'block';
+    } else {
+        table.style.display = 'none';
+    }
+}
+
+function showStudentDetails(studentName, attemptId) {
+    document.getElementById('studentName').textContent = studentName;
+    const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'));
+    modal.show();
+    
+    // Загружаем детали попытки
+    fetch(`/quizzes/result/${attemptId}/`)
+        .then(response => response.text())
+        .then(html => {
+            // Здесь нужно распарсить HTML и извлечь только контент ответов
+            // Для простоты пока покажем базовую информацию
+            document.getElementById('studentDetailsContent').innerHTML = `
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Детальная информация о попытке будет доступна скоро
+                </div>
+            `;
+        })
+        .catch(error => {
+            document.getElementById('studentDetailsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Ошибка загрузки деталей: ${error.message}
+                </div>
+            `;
+        });
+}
+</script>
 {% endblock %}

@@ -1,11 +1,14 @@
 {% extends "base/admin_base.html" %}
 {% load static humanize %}
-{% block title %}Оплаты{% endblock %}
+{% block title %}Оплата за учёбу{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h4 class="page-title">Оплаты</h4>
+    <h4 class="page-title">Оплата за учёбу</h4>
     <div class="page-actions">
-        <a href="{% url 'payments:export' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Excel</a>
+        <a href="{% url 'payments:organization_settings' %}" class="btn btn-sm btn-outline-info me-2" title="Настройки чеков">
+            <i class="bi bi-gear me-1"></i>Настройки
+        </a>
+        <a href="{% url 'payments:export' %}" class="btn btn-sm btn-outline-secondary me-2"><i class="bi bi-download me-1"></i>Excel</a>
         <a href="{% url 'payments:create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
     </div>
 </div>
@@ -15,6 +18,10 @@
         <select name="course" class="form-select form-select-sm" style="width:180px">
             <option value="">Все курсы</option>
             {% for c in courses %}<option value="{{ c.pk }}" {% if filter_course == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.title }}</option>{% endfor %}
+        </select>
+        <select name="method" class="form-select form-select-sm" style="width:150px">
+            <option value="">Все способы</option>
+            {% for m in payment_methods %}<option value="{{ m.pk }}" {% if filter_method == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.name }}</option>{% endfor %}
         </select>
         <input type="date" name="date_from" value="{{ request.GET.date_from }}" class="form-control form-control-sm" style="width:150px">
         <input type="date" name="date_to" value="{{ request.GET.date_to }}" class="form-control form-control-sm" style="width:150px">
@@ -26,7 +33,7 @@
         <div class="stat-card stat-green">
             <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
             <div class="stat-value">{{ total|floatformat:0|intcomma }}</div>
-            <div class="stat-label">Итого (сум)</div>
+            <div class="stat-label">Итого (сом)</div>
         </div>
     </div>
 </div>
@@ -40,7 +47,7 @@
                     <td><a href="{% url 'admin_students:detail' pk=p.student.pk %}" class="text-decoration-none fw-medium">{{ p.student.full_name }}</a></td>
                     <td class="text-muted">{{ p.course.title }}</td>
                     <td class="text-success fw-semibold">{{ p.amount|floatformat:0|intcomma }}</td>
-                    <td><span class="badge bg-light text-dark border">{{ p.get_payment_method_display }}</span></td>
+                    <td><span class="badge bg-light text-dark border">{{ p.payment_method.name|default:"—" }}</span></td>
                     <td class="text-muted small">{{ p.paid_at|date:"d.m.Y" }}</td>
                     <td>
                         <form action="{% url 'payments:delete' pk=p.pk %}" method="post" onsubmit="return confirm('Удалить?')">
@@ -50,7 +57,7 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" class="text-center text-muted py-4">Нет оплат</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">Нет оплат за учёбу</td></tr>
                 {% endfor %}
             </tbody>
         </table>

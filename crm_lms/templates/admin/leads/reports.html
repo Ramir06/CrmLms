@@ -1,0 +1,352 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+{% load leads_extras %}
+
+{% block title %}Отчеты по лидам{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<link href="{% static 'css/leads.css' %}" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4 class="page-title">CRM — Отчеты по лидам</h4>
+    <div class="page-actions d-flex flex-wrap gap-2">
+        <form method="get" class="d-flex gap-2">
+            <input type="date" name="start_date" class="form-control form-control-sm" 
+                   value="{{ filters.start_date }}">
+            <input type="date" name="end_date" class="form-control form-control-sm" 
+                   value="{{ filters.end_date }}">
+            <select name="manager" class="form-select form-select-sm">
+                <option value="">Все менеджеры</option>
+                {% for manager in managers %}
+                <option value="{{ manager.id }}" {% if filters.manager == manager.id|stringformat:"s" %}selected{% endif %}>
+                    {{ manager|get_full_name_safe }}
+                </option>
+                {% endfor %}
+            </select>
+            <select name="source" class="form-select form-select-sm">
+                <option value="">Все источники</option>
+                {% for source in sources %}
+                <option value="{{ source.id }}" {% if filters.source == source.id|stringformat:"s" %}selected{% endif %}>
+                    {{ source.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-funnel me-1"></i>Применить
+            </button>
+        </form>
+        
+        <form method="get" action="{% url 'leads:export_leads_report' %}" class="d-inline">
+            <input type="hidden" name="start_date" value="{{ filters.start_date }}">
+            <input type="hidden" name="end_date" value="{{ filters.end_date }}">
+            <input type="hidden" name="manager" value="{{ filters.manager }}">
+            <input type="hidden" name="source" value="{{ filters.source }}">
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="bi bi-download me-1"></i>Скачать Excel
+            </button>
+        </form>
+        
+        <a href="{% url 'leads:kanban' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>К лидам
+        </a>
+    </div>
+</div>
+
+<!-- KPI карточки -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.total_leads }}</h4>
+                        <p class="card-text">Всего лидов</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-people display-4 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.new_leads }}</h4>
+                        <p class="card-text">Новых лидов</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-person-plus display-4 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.converted_leads }}</h4>
+                        <p class="card-text">Конвертировано</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-check-circle display-4 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stats.conversion_rate }}%</h4>
+                        <p class="card-text">Конверсия</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-graph-up display-4 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Графики и таблицы -->
+<div class="row">
+    <!-- График по статусам -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Лиды по статусам</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- График по источникам -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Лиды по источникам</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="sourceChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Таблица по менеджерам -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Лиды по менеджерам</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Менеджер</th>
+                                <th class="text-center">Количество</th>
+                                <th class="text-center">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for manager_stat in stats.manager_stats %}
+                            <tr>
+                                <td>
+                                    {% if manager_stat.assigned_to__username %}
+                                        {{ manager_stat.assigned_to__username }}
+                                    {% else %}
+                                        <em>Не назначен</em>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">{{ manager_stat.count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if stats.total_leads > 0 %}
+                                        {{ manager_stat.count|div:stats.total_leads|mul:100|floatformat:1 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Дополнительная статистика -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Дополнительная статистика</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <small class="text-muted">Потеряно лидов</small>
+                            <h5 class="mb-0 text-danger">{{ stats.archived_leads }}</h5>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Среднее время обработки</small>
+                            <h5 class="mb-0 text-info">{{ stats.avg_processing_time }} ч.</h5>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <small class="text-muted">Активные лиды</small>
+                            <h5 class="mb-0 text-success">{{ stats.total_leads|add:"-"|add:stats.archived_leads }}</h5>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Эффективность</small>
+                            <h5 class="mb-0 text-warning">
+                                {% if stats.total_leads > 0 %}
+                                    {{ stats.total_leads|add:"-"|add:stats.archived_leads|div:stats.total_leads|mul:100|floatformat:1 }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Детальная таблица -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Статусы лидов</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Статус</th>
+                        <th class="text-center">Количество</th>
+                        <th class="text-center">%</th>
+                        <th class="text-center">Конверсия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for status_stat in stats.status_stats %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {{ status_stat.status|default:"Без статуса" }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary">{{ status_stat.count }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if stats.total_leads > 0 %}
+                                {{ status_stat.count|div:stats.total_leads|mul:100|floatformat:1 }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if status_stat.status == 'enrolling' %}
+                                <span class="badge bg-success">Конвертировано</span>
+                            {% elif status_stat.status == 'rejected' %}
+                                <span class="badge bg-danger">Отказ</span>
+                            {% else %}
+                                <span class="badge bg-secondary">В работе</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Нет данных</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// График по статусам
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusData = {{ stats.status_stats_json|safe }};
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: statusData.map(item => item.status || 'Без статуса'),
+        datasets: [{
+            data: statusData.map(item => item.count),
+            backgroundColor: [
+                '#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d',
+                '#17a2b8', '#6f42c1', '#fd7e14', '#20c997', '#e83e8c'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// График по источникам
+const sourceCtx = document.getElementById('sourceChart').getContext('2d');
+const sourceData = {{ stats.source_stats_json|safe }};
+new Chart(sourceCtx, {
+    type: 'pie',
+    data: {
+        labels: sourceData.map(item => item.source || 'Без источника'),
+        datasets: [{
+            data: sourceData.map(item => item.count),
+            backgroundColor: [
+                '#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d',
+                '#17a2b8', '#6f42c1', '#fd7e14', '#20c997', '#e83e8c'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

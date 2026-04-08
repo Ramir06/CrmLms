@@ -1,0 +1,258 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}Замена ментора - {{ lesson.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Замена ментора</h1>
+                <a href="/mentor/courses/{{ lesson.course.pk }}/lessons/" class="btn btn-secondary">← Назад к расписанию</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация об уроке -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Информация об уроке</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Название:</strong> {{ lesson.title }}</p>
+                            <p><strong>Курс:</strong> {{ lesson.course.title }}</p>
+                            <p><strong>Дата:</strong> {{ lesson.lesson_date|date:"d.m.Y" }}</p>
+                            <p><strong>Время:</strong> {{ lesson.start_time|date:"H:i" }} - {{ lesson.end_time|date:"H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Текущий ментор:</strong> 
+                                <span class="badge bg-primary">{{ current_mentor.get_full_name }}</span>
+                            </p>
+                            <p><strong>Кабинет:</strong> {{ lesson.room|default:"Не указан" }}</p>
+                            <p><strong>Тип:</strong> {{ lesson.get_type_display }}</p>
+                            <p><strong>Статус:</strong> 
+                                <span class="badge bg-{{ lesson.status|yesno:'success,warning,secondary' }}">
+                                    {{ lesson.get_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Форма замены -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Назначить замену</h5>
+                </div>
+                <div class="card-body">
+                    <form id="substitutionForm">
+                        <div class="mb-3">
+                            <label class="form-label">Данный ментор:</label>
+                            <div class="p-3 bg-light rounded">
+                                <strong>{{ current_mentor.first_name }} {{ current_mentor.last_name }}</strong>
+                                <br><small class="text-muted">{{ current_mentor.username }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="substitute_mentor" class="form-label">Выберите ментора для замены:</label>
+                            <select class="form-select" id="substitute_mentor" name="substitute_mentor" required>
+                                <option value="">-- Выберите ментора --</option>
+                                {% for mentor in available_mentors %}
+                                <option value="{{ mentor.pk }}">
+                                    {{ mentor.first_name }} {{ mentor.last_name }} ({{ mentor.username }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Причина замены:</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" 
+                                      placeholder="Укажите причину замены (необязательно)"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Назначить замену
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Права доступа замены</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Отмечать посещаемость</li>
+                        <li><i class="fas fa-check text-success"></i> Создавать материалы</li>
+                        <li><i class="fas fa-check text-success"></i> Просматривать оценки</li>
+                        <li><i class="fas fa-check text-success"></i> Создавать задания</li>
+                        <li><i class="fas fa-times text-danger"></i> Оценивать задания</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Существующие замены -->
+    {% if existing_substitutions %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Текущие замены</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Заменяющий ментор</th>
+                                    <th>Статус</th>
+                                    <th>Причина</th>
+                                    <th>Дата создания</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for substitution in existing_substitutions %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ substitution.substitute_mentor.first_name }} {{ substitution.substitute_mentor.last_name }}</strong>
+                                        <br><small class="text-muted">{{ substitution.substitute_mentor.username }}</small>
+                                    </td>
+                                    <td>
+                                        {% if substitution.status == 'pending' %}
+                                            <span class="badge bg-warning">Ожидает подтверждения</span>
+                                        {% elif substitution.status == 'confirmed' %}
+                                            <span class="badge bg-success">Подтверждено</span>
+                                        {% elif substitution.status == 'completed' %}
+                                            <span class="badge bg-info">Завершено</span>
+                                        {% elif substitution.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Отменено</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ substitution.reason|default:"-" }}</td>
+                                    <td>{{ substitution.created_at|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if substitution.status == 'pending' %}
+                                                <button type="button" class="btn btn-success btn-sm" 
+                                                        onclick="confirmSubstitution({{ substitution.pk }})">
+                                                    Подтвердить
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm" 
+                                                        onclick="cancelSubstitution({{ substitution.pk }})">
+                                                    Отменить
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById('substitutionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(`/mentor/courses/{{ lesson.course.pk }}/lessons/{{ lesson.pk }}/substitute/create/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Замена успешно создана!');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при создании замены');
+    });
+});
+
+function confirmSubstitution(substitutionId) {
+    if (!confirm('Подтвердить эту замену?')) return;
+    
+    fetch(`/mentor/substitutions/${substitutionId}/confirm/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    });
+}
+
+function cancelSubstitution(substitutionId) {
+    if (!confirm('Отменить эту замену?')) return;
+    
+    fetch(`/mentor/substitutions/${substitutionId}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

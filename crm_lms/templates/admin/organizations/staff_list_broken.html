@@ -1,0 +1,252 @@
+{% extends 'admin/base.html' %}
+{% load static i18n %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header row">
+        <div class="content-header-left col-md-7 col-12">
+            <div class="breadcrumbs-top">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">{% trans "Главная" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'organizations:list' %}">Организации</a></li>
+                        <li class="breadcrumb-item active">Персонал</li>
+                    </ol>
+                </nav>
+            </div>
+            <h2 class="content-header-title mb-0">Персонал</h2>
+            <div class="content-header-search d-lg-inline-block">
+                <span class="text-muted">Управление персоналом и доступами к организациям</span>
+            </div>
+        </div>
+        <div class="content-header-right col-md-5 col-12">
+            <div class="btn-group float-md-right">
+                <a href="{% url 'organizations:staff_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-person-plus me-1"></i>
+                    Создать персонал
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-body">
+        <!-- Статистика -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3 col-6 mb-2">
+                                <h3 class="text-primary">{{ total_staff }}</h3>
+                                <p class="text-muted mb-0">Всего персонала</p>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <h3 class="text-success">{{ admin_count }}</h3>
+                                <p class="text-muted mb-0">Администраторы</p>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <h3 class="text-info">{{ manager_count }}</h3>
+                                <p class="text-muted mb-0">Менеджеры</p>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <h3 class="text-warning">{{ superadmin_count }}</h3>
+                                <p class="text-muted mb-0">Супер админы</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <input type="text" name="search" class="form-control" placeholder="Поиск по имени, логину, email" value="{{ search }}">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="role" class="form-select">
+                                    <option value="">Все роли</option>
+                                    <option value="admin" {% if role == 'admin' %}selected{% endif %}>Администратор</option>
+                                    <option value="manager" {% if role == 'manager' %}selected{% endif %}>Менеджер</option>
+                                    <option value="superadmin" {% if role == 'superadmin' %}selected{% endif %}>Супер администратор</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="bi bi-search me-1"></i>
+                                    Поиск
+                                </button>
+                                <a href="{% url 'organizations:staff_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg me-1"></i>
+                                    Сброс
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список персонала -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-content">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Сотрудник</th>
+                                        <th>Контакты</th>
+                                        <th>Роль</th>
+                                        <th>Организации</th>
+                                        <th>Статус</th>
+                                        <th>Создан</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for staff_member in staff_members %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-light-primary rounded-circle me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                                    <span class="text-primary fw-bold">{{ staff_member.user.first_name.0 }}{{ staff_member.user.last_name.0 }}</span>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">{{ staff_member.user.get_display_name }}</div>
+                                                    <small class="text-muted">@{{ staff_member.user.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="text-truncate" style="max-width: 200px;">{{ staff_member.user.email }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if staff_member.user.role == 'admin' %}
+                                                <span class="badge bg-success">Администратор</span>
+                                            {% elif staff_member.user.role == 'manager' %}
+                                                <span class="badge bg-info">Менеджер</span>
+                                            {% elif staff_member.user.role == 'superadmin' %}
+                                                <span class="badge bg-warning">Супер администратор</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ staff_member.user.get_role_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% for org in staff_member.organizations %}
+                                                <span class="badge bg-light text-dark" style="font-size: 11px;">{{ org.name|truncatechars:15 }}</span>
+                                                {% empty %}
+                                                <span class="text-muted">Нет доступов</span>
+                                                {% endfor %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if staff_member.user.is_active %}
+                                                <span class="badge bg-success">Активен</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Деактивирован</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ staff_member.created_at|date:"d.m.Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'organizations:staff_detail' staff_member.pk %}">
+                                                            <i class="bi bi-eye me-2"></i>Детали
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'organizations:staff_edit_access' staff_member.pk %}">
+                                                            <i class="bi bi-key me-2"></i>Доступы
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'organizations:staff_toggle_active' staff_member.pk %}">
+                                                            <i class="bi bi-{% if staff_member.user.is_active %}pause{% else %}play{% endif me-2"></i>
+                                                            {% if staff_member.user.is_active %}Деактивировать{% else %}Активировать{% endif %}
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="{% url 'organizations:staff_delete' staff_member.pk %}">
+                                                            <i class="bi bi-trash me-2"></i>Удалить
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="bi bi-people d-block fs-2 mb-2 opacity-50"></i>
+                                            Персонал не найден
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Пагинация -->
+                        {% if is_paginated %}
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="text-muted">
+                                Показано {{ page_obj.start_index }}-{{ page_obj.end_index }} из {{ page_obj.paginator.count }}
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">«</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">‹</a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">›</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">»</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,13 +3,40 @@
 {% block title %}Главная{% endblock %}
 {% block content %}
 
+<!-- Уведомления -->
+{% if recent_notifications %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Последние уведомления</h5>
+            <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-outline-primary">
+                Все уведомления
+                {% if unread_count > 0 %}
+                <span class="badge bg-primary ms-1">{{ unread_count }}</span>
+                {% endif %}
+            </a>
+        </div>
+        {% for notification in recent_notifications %}
+            {% include "notifications/notification_card.html" %}
+        {% endfor %}
+        {% if unread_count > 3 %}
+        <div class="text-center mt-3">
+            <a href="{% url 'notifications:list' %}" class="btn btn-outline-primary">
+                Показать все уведомления ({{ unread_count }})
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <!-- Stat cards -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-xl-3">
         <div class="stat-card">
             <div class="stat-icon-box purple"><i class="bi bi-book-fill"></i></div>
             <div class="stat-info">
-                <div class="stat-value">{{ my_courses_count }}</div>
+                <div class="stat-value">{{ my_courses_count|default:0 }}</div>
                 <div class="stat-label">Активных курсов</div>
             </div>
         </div>
@@ -18,7 +45,7 @@
         <div class="stat-card">
             <div class="stat-icon-box blue"><i class="bi bi-people-fill"></i></div>
             <div class="stat-info">
-                <div class="stat-value">{{ total_students }}</div>
+                <div class="stat-value">{{ total_students|default:0 }}</div>
                 <div class="stat-label">Студентов</div>
             </div>
         </div>
@@ -27,21 +54,86 @@
         <div class="stat-card">
             <div class="stat-icon-box orange"><i class="bi bi-check2-square"></i></div>
             <div class="stat-info">
-                <div class="stat-value">{{ pending_submissions }}</div>
+                <div class="stat-value">{{ pending_submissions|default:0 }}</div>
                 <div class="stat-label">Заданий на проверке</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-icon-box green"><i class="bi bi-calendar3-week"></i></div>
+        <div class="stat-card {% if substitute_courses %}stat-card-warning{% endif %}">
+            <div class="stat-icon-box {% if substitute_courses %}warning{% else %}green{% endif %}">
+                <i class="bi bi-calendar3-week"></i>
+            </div>
             <div class="stat-info">
-                <div class="stat-value">{{ today_lessons }}</div>
-                <div class="stat-label">Уроков сегодня</div>
+                <div class="stat-value">{{ total_today_lessons|default:0 }}</div>
+                <div class="stat-label">
+                    {% if substitute_courses %}Уроков сегодня ({{ substitute_courses_count }} замена){% else %}Уроков сегодня{% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Карточки курсов замен (появляются только в день замены) -->
+{% if substitute_courses %}
+<div class="mb-4">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="badge bg-warning text-dark">
+            <i class="bi bi-arrow-repeat me-1"></i>Замены сегодня
+        </div>
+        <span class="text-muted small">{{ substitute_courses_count }} курс(ов)</span>
+    </div>
+    <div class="row g-3 mb-4">
+        {% for sub_course in substitute_courses %}
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card course-card h-100 substitute-course-card" style="border-radius:10px;border:2px solid #ffc107;background:#fffbf0;">
+                <div class="card-body p-3">
+                    <!-- Индикатор замены -->
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-warning text-dark" style="font-size:10px;">
+                            <i class="bi bi-arrow-repeat"></i> ЗАМЕНА
+                        </span>
+                        {% if sub_course.is_current_lesson %}
+                        <span class="badge bg-success" style="font-size:10px;">
+                            <i class="bi bi-play-circle"></i> ИДЕТ СЕЙЧАС
+                        </span>
+                        {% elif sub_course.is_upcoming_lesson %}
+                        <span class="badge bg-info" style="font-size:10px;">
+                            <i class="bi bi-clock"></i> {{ sub_course.lesson.start_time|time:"H:i" }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex align-items-start gap-2 mb-2">
+                        <i class="bi bi-geo-alt text-muted" style="font-size:13px;margin-top:2px;flex-shrink:0;"></i>
+                        <span class="text-muted" style="font-size:12px;">{{ sub_course.lesson.room|default:"—" }}</span>
+                    </div>
+                    
+                    <a href="{% url 'lectures:index' course_id=sub_course.course.id %}" class="fw-semibold text-warning d-block mb-2" style="font-size:14px;text-decoration:none;">
+                        {{ sub_course.course.title }}
+                    </a>
+                    
+                    <div class="text-muted mb-2" style="font-size:12px;">
+                        <i class="bi bi-person-fill me-1"></i>
+                        Основной ментор: {{ sub_course.original_mentor.get_display_name }}
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-1 text-muted mb-2" style="font-size:12px;">
+                        <i class="bi bi-calendar3" style="font-size:11px;"></i>
+                        <span>Урок: {{ sub_course.lesson.lesson_date|date:"d M" }} в {{ sub_course.lesson.start_time|time:"H:i" }}-{{ sub_course.lesson.end_time|time:"H:i" }}</span>
+                    </div>
+                    
+                    <div class="d-flex align-items-center justify-content-between mt-auto pt-2" style="border-top:1px solid rgba(255,193,7,0.3);">
+                        <span class="text-muted" style="font-size:11px;">{{ sub_course.course.get_days_display_short }}</span>
+                        <span class="text-muted" style="font-size:11px;">{{ sub_course.course.duration_months }} мес.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <!-- Course cards grouped by status -->
 {% regroup my_courses by get_status_display as courses_by_status %}
@@ -50,15 +142,24 @@
 <div class="row g-3 mb-4">
     {% for course in group.list %}
     <div class="col-12 col-md-6 col-xl-4">
-        <div class="card course-card h-100" style="border-radius:10px;border:1px solid var(--border-color);">
+        {% if course.pk %}
+        <a href="{% url 'lectures:index' course_id=course.pk %}" class="text-decoration-none">
+        {% endif %}
+        <div class="card course-card h-100 {% if course.pk %}clickable-course-card{% endif %}" style="border-radius:10px;border:1px solid var(--border-color);">
             <div class="card-body p-3">
                 <div class="d-flex align-items-start gap-2 mb-2">
                     <i class="bi bi-geo-alt text-muted" style="font-size:13px;margin-top:2px;flex-shrink:0;"></i>
                     <span class="text-muted" style="font-size:12px;">{{ course.room|default:"—" }}</span>
                 </div>
-                <a href="{% url 'lectures:index' course_id=course.pk %}" class="fw-semibold text-primary d-block mb-2" style="font-size:14px;text-decoration:none;">
+                {% if course.pk %}
+                <div class="fw-semibold text-primary d-block mb-2" style="font-size:14px;">
                     {{ course.title }}
-                </a>
+                </div>
+                {% else %}
+                <div class="fw-semibold text-primary d-block mb-2" style="font-size:14px;">
+                    {{ course.title }}
+                </div>
+                {% endif %}
                 {% if course.mentor %}
                 <div class="text-muted mb-2" style="font-size:12px;">{{ course.mentor.get_display_name }}</div>
                 {% endif %}
@@ -74,17 +175,77 @@
                 </div>
             </div>
         </div>
+        {% if course.pk %}
+        </a>
+        {% endif %}
     </div>
     {% endfor %}
 </div>
 {% endfor %}
 
-{% if not my_courses %}
+{% if not my_courses and not substitute_courses %}
 <div class="empty-state">
     <i class="bi bi-book"></i>
     <h6>Нет активных курсов</h6>
     <p>Вам ещё не назначены курсы</p>
 </div>
 {% endif %}
+
+<style>
+.substitute-course-card {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.substitute-course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.substitute-course-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ffc107, #ff8c00);
+    border-radius: 3px 3px 0 0;
+}
+
+.substitute-course-card .badge.bg-warning {
+    animation: pulse 2s infinite;
+}
+
+.stat-card-warning {
+    border: 2px solid #ffc107 !important;
+    background: #fffbf0 !important;
+}
+
+.stat-card-warning .stat-icon-box.warning {
+    background: linear-gradient(135deg, #ffc107, #ff8c00) !important;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.clickable-course-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.clickable-course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: var(--primary) !important;
+}
+
+.clickable-course-card:hover .card-body {
+    background: rgba(115, 103, 240, 0.02);
+}
+</style>
 
 {% endblock %}

@@ -1,9 +1,10 @@
 from django.db import models
 from django.conf import settings
-from apps.core.models import TimeStampedModel
+from apps.core.models import TimeStampedModel, OrganizationMixin
+from .models_substitute import MentorSubstitution, SubstituteAccess
 
 
-class Lesson(TimeStampedModel):
+class Lesson(OrganizationMixin, TimeStampedModel):
     TYPE_CHOICES = [
         ('regular', 'Обычное'),
         ('exam', 'Экзамен'),
@@ -34,6 +35,11 @@ class Lesson(TimeStampedModel):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
         related_name='created_lessons', verbose_name='Создал'
     )
+    temporary_mentor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='temporarily_mentoring_lessons', verbose_name='Временный ментор (замена)',
+        limit_choices_to={'role': 'mentor'}
+    )
 
     class Meta:
         verbose_name = 'Занятие'
@@ -49,3 +55,31 @@ class Lesson(TimeStampedModel):
         start = datetime.combine(date.today(), self.start_time)
         end = datetime.combine(date.today(), self.end_time)
         return int((end - start).total_seconds() / 60)
+    
+    @property
+    def current_mentor(self):
+        """Возвращает актуального ментора урока (основной или временный)"""
+        return self.temporary_mentor or self.course.mentor
+    
+    @property
+    def is_substituted(self):
+        """Проверяет, есть ли замена на урок"""
+        return bool(self.temporary_mentor)
+    
+    @property
+    def mentor_display(self):
+        """Отображение имени ментора с учетом замены"""
+        if self.temporary_mentor:
+            return f"{self.temporary_mentor.get_full_name()} (замена)"
+        return self.course.mentor.get_full_name()
+    
+    @property
+    def status_color(self):
+        """Возвращает цвет для статуса урока"""
+        colors = {
+            'scheduled': 'primary',
+            'completed': 'success', 
+            'cancelled': 'danger',
+            'postponed': 'warning'
+        }
+        return colors.get(self.status, 'secondary')

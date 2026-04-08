@@ -1,0 +1,27 @@
+<form method="post" action="/lms/mentor/courses/{{ course.pk }}/lectures/section/{{ section.pk }}/add-assignment/">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label class="form-label fw-medium">Название задания</label>
+        <input type="text" name="title" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label fw-medium">Описание</label>
+        <textarea name="description" class="form-control" rows="4" placeholder="Введите описание задания..."></textarea>
+    </div>
+    <div class="mb-3">
+        <label class="form-label fw-medium">Макс. балл</label>
+        <input type="number" name="max_score" class="form-control" value="100" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label fw-medium">Дедлайн</label>
+        <input type="date" name="due_date" class="form-control">
+    </div>
+    <!-- <div class="mb-3">
+        <div class="form-check">
+            <input type="checkbox" name="block_after_deadline" class="form-check-input" id="blockAfterDeadline">
+            <label class="form-check-label" for="blockAfterDeadline">
+                Не принимать работы после дедлайна
+            </label>
+        </div>
+    </div> -->
+</form>

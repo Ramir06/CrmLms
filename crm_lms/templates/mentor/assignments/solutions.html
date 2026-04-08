@@ -1,0 +1,100 @@
+{% extends "base/course_base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="content-header content-header-left row mb-2">
+    <div class="col-12">
+        <h2 class="content-header-title float-start mb-0">
+            {{ assignment.title }}
+        </h2>
+        <div class="breadcrumb-wrapper">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/lms/common/home/">Главная</a></li>
+                <li class="breadcrumb-item"><a href="/lms/mentor/courses/{{ course.pk }}/lectures/">{{ course.title }}</a></li>
+                <li class="breadcrumb-item"><a href="/lms/mentor/courses/{{ course.pk }}/lectures/assignment/{{ assignment.pk }}/">{{ assignment.title }}</a></li>
+                <li class="breadcrumb-item">Решения</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Решения для задачи: {{ assignment.title }}</h5>
+
+        <div><b>Создан:</b> {{ assignment.created_at|date:"d.m.Y H:i" }}</div>
+        {% if assignment.due_date %}
+            <div><b>Крайний срок сдачи:</b> {{ assignment.due_date|date:"d.m.Y" }}</div>
+        {% endif %}
+        <div><b>Макс. оценка:</b> {{ assignment.max_score|default:"100" }}</div>
+    </div>
+</div>
+
+<div class="card mt-2">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Дата</th>
+                    <th>Студент</th>
+                    <th>Комментарии</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                <tr class="clickable link">
+                    <td>{{ forloop.counter }}.</td>
+                    <td>{{ submission.submitted_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'assignments:submission_review' submission_id=submission.pk %}">
+                            от {{ submission.student.full_name }}
+                        </a>
+                    </td>
+                    <td>
+                        {% if submission.comments.count %}
+                            <span class="badge bg-light-primary rounded-pill">
+                                {{ submission.comments.count }} комментариев
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if submission.status == 'submitted' %}
+                            <span class="badge bg-warning rounded-pill">На проверке</span>
+                        {% elif submission.status == 'checked' %}
+                            <span class="badge bg-success rounded-pill">Принято</span>
+                        {% elif submission.status == 'revision' %}
+                            <span class="badge bg-danger rounded-pill">Не принято</span>
+                        {% else %}
+                            <span class="badge bg-secondary rounded-pill">{{ submission.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'assignments:submission_review' submission_id=submission.pk %}" 
+                           class="btn btn-sm btn-outline-primary" 
+                           title="Просмотреть решение и выставить оценку">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Пока нет решений</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    Analytics.logEvent("View_LMS_Task_Solutions", {
+        "id": "{{ assignment.pk }}",
+        "title": "{{ assignment.title }}"
+    })
+</script>
+{% endblock %}

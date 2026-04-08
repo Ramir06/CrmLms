@@ -1,7 +1,7 @@
 {% extends "base/admin_base.html" %}
 {% load static humanize %}
 
-{% block title %}Дашборд{% endblock %}
+{% block page_title %}Дашборд{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -11,13 +11,49 @@
     </div>
 </div>
 
+<!-- Фильтры организаций -->
+{% if request.user.role in 'admin' or request.user.role == 'superadmin' %}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <label class="form-label mb-0 fw-semibold">Фильтр по организациям:</label>
+            </div>
+            <div class="col-auto">
+                <div class="btn-group" role="group">
+                    <a href="?org=current" class="btn btn-outline-primary {% if selected_org == user_current_organization or not selected_org and user_current_organization %}active{% endif %}">
+                        <i class="bi bi-building me-1"></i>
+                        Текущая организация
+                        {% if user_current_organization %}
+                        <small class="text-muted">({{ user_current_organization.name }})</small>
+                        {% endif %}
+                    </a>
+                    <a href="?org=all" class="btn btn-outline-primary {% if selected_org is None and not user_current_organization or request.GET.org == 'all' %}active{% endif %}">
+                        <i class="bi bi-globe me-1"></i>
+                        Все организации
+                    </a>
+                </div>
+            </div>
+            {% if user_current_organization %}
+            <div class="col-auto">
+                <span class="badge bg-success">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Текущая: {{ user_current_organization.name }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Stats cards -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-xl-3">
         <div class="stat-card">
             <div class="stat-icon-box purple"><i class="bi bi-people-fill"></i></div>
             <div class="stat-info">
-                <div class="stat-value">{{ total_students|intcomma }}</div>
+                <div class="stat-value">{{ students_count|default:0|intcomma }}</div>
                 <div class="stat-label">Студентов</div>
             </div>
         </div>
@@ -26,7 +62,7 @@
         <div class="stat-card">
             <div class="stat-icon-box blue"><i class="bi bi-person-badge-fill"></i></div>
             <div class="stat-info">
-                <div class="stat-value">{{ total_mentors|intcomma }}</div>
+                <div class="stat-value">{{ mentors_count|default:0|intcomma }}</div>
                 <div class="stat-label">Менторов</div>
             </div>
         </div>
@@ -35,7 +71,7 @@
         <div class="stat-card">
             <div class="stat-icon-box orange"><i class="bi bi-funnel-fill"></i></div>
             <div class="stat-info">
-                <div class="stat-value">{{ total_leads|intcomma }}</div>
+                <div class="stat-value">{{ leads_count|default:0|intcomma }}</div>
                 <div class="stat-label">Лидов</div>
             </div>
         </div>
@@ -44,7 +80,7 @@
         <div class="stat-card">
             <div class="stat-icon-box green"><i class="bi bi-book-fill"></i></div>
             <div class="stat-info">
-                <div class="stat-value">{{ total_courses|intcomma }}</div>
+                <div class="stat-value">{{ courses_count|default:0|intcomma }}</div>
                 <div class="stat-label">Активных курсов</div>
             </div>
         </div>
@@ -52,28 +88,19 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <!-- Students chart -->
-    <div class="col-lg-8">
-        <div class="card h-100">
-            <div class="card-header">
-                <h6 class="card-title mb-0">Новые студенты по месяцам</h6>
-            </div>
-            <div class="card-body">
-                <canvas id="studentsChart" height="90"></canvas>
-            </div>
-        </div>
-    </div>
     <!-- Income card -->
-    <div class="col-lg-4">
+    <div class="col-lg-12">
         <div class="card h-100 income-card">
             <div class="card-body d-flex flex-column justify-content-center text-center">
                 <div class="income-icon mb-3"><i class="bi bi-cash-coin"></i></div>
                 <div class="income-label text-muted small">Доход в этом месяце</div>
-                <div class="income-value">{{ month_income|floatformat:0|intcomma }} сум</div>
+                <div class="income-value">{{ monthly_income|default:0|floatformat:0|intcomma }} сом</div>
             </div>
         </div>
     </div>
 </div>
+
+{% include "admin/dashboard/_analytics_widgets.html" %}
 
 <div class="row g-3 mb-4">
     <!-- Finance chart -->
@@ -129,6 +156,55 @@
     </div>
 </div>
 
+<!-- Today's lessons -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="card-title mb-0">Расписание на сегодня</h6>
+                <span class="badge bg-primary">{{ today_lessons.count|default:0 }} уроков</span>
+            </div>
+            <div class="card-body">
+                {% if today_lessons %}
+                    <div class="row g-3">
+                        {% for lesson in today_lessons %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="lesson-card">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-{{ lesson.status_color|default:'secondary' }}">{{ lesson.get_status_display }}</span>
+                                    <span class="text-muted small">{{ lesson.start_time }} - {{ lesson.end_time }}</span>
+                                </div>
+                                <h6 class="lesson-title">{{ lesson.course.title }}</h6>
+                                <div class="lesson-mentor">
+                                    {% if lesson.temporary_mentor %}
+                                        <span class="text-warning">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                            {{ lesson.temporary_mentor.get_full_name }} (замена)
+                                        </span>
+                                    {% else %}
+                                        {{ lesson.course.mentor.get_full_name }}
+                                    {% endif %}
+                                </div>
+                                {% if lesson.room %}
+                                <div class="lesson-room">
+                                    <i class="bi bi-geo-alt"></i> {{ lesson.room }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-calendar-x fs-1 mb-3 d-block"></i>
+                        <p>На сегодня нет запланированных уроков</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if recent_news %}
 <div class="row g-3">
     <div class="col-12">
@@ -158,11 +234,87 @@
 
 {% block extra_js %}
 <script src="{% static 'js/dashboard.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const studentsLabels = {{ months_labels|safe }};
-const studentsData = {{ months_data|safe }};
-const incomeData = {{ income_data|safe }};
-const expenseData = {{ expense_data|safe }};
-initDashboardCharts(studentsLabels, studentsData, incomeData, expenseData);
+const incomeData = {{ finance_income_data|default:"[]"|safe }};
+const expenseData = {{ finance_expense_data|default:"[]"|safe }};
+const financeLabels = {{ finance_labels|default:"[]"|safe }};
+
+// Инициализация финансового графика
+const ctx = document.getElementById('financeChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: financeLabels,
+        datasets: [{
+            label: 'Приход',
+            data: incomeData,
+            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+            borderColor: '#28a745',
+            borderWidth: 1
+        }, {
+            label: 'Расход',
+            data: expenseData,
+            backgroundColor: 'rgba(220, 53, 69, 0.7)',
+            borderColor: '#dc3545',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
 </script>
+
+<style>
+.lesson-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.lesson-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.lesson-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.lesson-mentor {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.lesson-room {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.lesson-room i {
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+</style>
 {% endblock %}

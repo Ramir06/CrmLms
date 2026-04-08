@@ -3,13 +3,11 @@
 {% block title %}{{ material.title }}{% endblock %}
 
 {% block breadcrumb %}
-<div class="st-breadcrumb">
-    <a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a>
-    <span class="sep">/</span>
-    <a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a>
-    <span class="sep">/</span>
-    <span class="current">{{ material.title|truncatechars:30 }}</span>
-</div>
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">{{ material.title }}</li>
+    <li class="breadcrumb-item"><a href="{% url 'students:course_detail' course.pk %}">{{ course.title }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'students:dashboard' %}">{% trans "Главная" %}</a></li>
+</ol>
 {% endblock %}
 
 {% block content %}
@@ -31,7 +29,6 @@
                     <h3 class="fw-bold mb-2" style="color:#111827">{{ material.title }}</h3>
                     <div class="d-flex gap-3" style="font-size:.8rem;color:#6b7280">
                         <span><i class="bi bi-folder me-1"></i>{{ material.section.title }}</span>
-                        <span><i class="bi bi-calendar me-1"></i>{{ material.created_at|date:"d.m.Y" }}</span>
                     </div>
                 </div>
             </div>

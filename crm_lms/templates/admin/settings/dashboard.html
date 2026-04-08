@@ -1,27 +1,185 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% block title %}Настройки системы{% endblock %}
+{% block title %}Настройки{% endblock %}
 
 {% block extra_css %}
 <style>
-.settings-card{border:1px solid #ebe9f1;border-radius:.428rem;background:#fff;margin-bottom:1.5rem}
-.settings-card .card-header{background:#fafafc;border-bottom:1px solid #ebe9f1}
-.settings-card .card-title{color:#5e5873;font-weight:600;font-size:1rem;margin:0}
-.settings-card .card-body{padding:1.5rem}
-.toggle-switch{position:relative;width:48px;height:24px}
-.toggle-switch input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;transition:.4s;border-radius:24px}
-.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;transition:.4s;border-radius:50%}
-input:checked + .toggle-slider{background:#7367f0}
-input:checked + .toggle-slider:before{transform:translateX(24px)}
-.section-list{list-style:none;padding:0;margin:0}
-.section-item{display:flex;align-items:center;padding:.5rem 0;border-bottom:1px solid #f3f2f7}
-.section-item:last-child{border-bottom:none}
-.section-item .drag-handle{cursor:move;margin-right:10px;color:#b9b9c3}
-.section-item .section-title{flex:1}
-.invitation-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem;border:1px solid #ebe9f1;border-radius:.428rem;margin-bottom:.5rem}
-.invitation-item:hover{background:#fafafc}
-.invitation-meta{font-size:.8rem;color:#6e6b7b}
+.settings-container {
+    padding: 2rem;
+    max-width: 800px;
+}
+
+.settings-section {
+    margin-bottom: 3rem;
+}
+
+.settings-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #5e5873;
+    margin-bottom: 2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #7367f0;
+}
+
+.settings-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.settings-link-item {
+    margin-bottom: 1rem;
+}
+
+.settings-link {
+    color: #7367f0;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: inline-block;
+    padding: 0.5rem 0;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.settings-link:hover {
+    color: #5e5873;
+    border-bottom-color: #7367f0;
+}
+
+.settings-link i {
+    margin-right: 0.5rem;
+}
+
+.system-settings-form {
+    background: #f8f8f8;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    border: 1px solid #ebe9f1;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #5e5873;
+    margin-bottom: 1rem;
+}
+
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #7367f0;
+}
+
+.checkbox-item label {
+    color: #6e6b7b;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.radio-group {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.radio-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.radio-item input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #7367f0;
+}
+
+.radio-item label {
+    color: #6e6b7b;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.save-btn {
+    background: #7367f0;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-btn:hover {
+    background: #5e5873;
+}
+
+.current-settings {
+    background: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #0066cc;
+}
+
+.payment-setting {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.payment-setting .h5 {
+    color: #5e5873;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.payment-setting .form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.payment-setting .form-check-input {
+    width: 20px;
+    height: 20px;
+    accent-color: #7367f0;
+}
+
+.payment-setting .form-check-label {
+    color: #6e6b7b;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.payment-setting .badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
 </style>
 {% endblock %}
 
@@ -33,69 +191,335 @@ input:checked + .toggle-slider:before{transform:translateX(24px)}
 
 <div class="app-content content">
     <div class="content-wrapper">
-        <div class="page-header d-flex align-items-center justify-content-between mb-3">
-            <h4 class="page-title mb-0">Настройки системы</h4>
-        </div>
-
-        <div class="row">
-            <!-- Staff Management -->
-            <div class="col-lg-6">
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h5 class="card-title"><i class="bi bi-people me-2"></i>Управление персоналом</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" action="{% url 'settings:create_staff_user' %}" class="mb-3">
-                            {% csrf_token %}
-                            <div class="row g-2">
-                                <div class="col">
-                                    <input type="email" name="email" class="form-control" placeholder="Email" required>
-                                </div>
-                                <div class="col">
-                                    <select name="role" class="form-select" required>
-                                        <option value="">Роль</option>
-                                        <option value="admin">Администратор</option>
-                                        <option value="mentor">Ментор</option>
-                                        <option value="staff">Персонал</option>
-                                    </select>
-                                </div>
-                                <div class="col-auto">
-                                    <button type="submit" class="btn btn-primary btn-sm">
-                                        <i class="bi bi-person-plus me-1"></i>Создать
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+        <div class="settings-container">
+            
+            <!-- Персонал -->
+            <div class="settings-section">
+                <h2 class="settings-title">Персонал</h2>
+                <ul class="settings-links">
+                    <li class="settings-link-item">
+                        <a href="{% url 'organizations:staff_create' %}" class="settings-link">
+                            <i class="bi bi-people"></i>
+                            Создание персонала
+                        </a>
+                    </li>
+                    <li class="settings-link-item">
+                        <a href="{% url 'organizations:staff_list' %}" class="settings-link">
+                            <i class="bi bi-people-list"></i>
+                            Управление персоналом
+                        </a>
+                    </li>
+                </ul>
             </div>
 
-            <!-- Section Ordering -->
-            <div class="col-lg-6">
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h5 class="card-title"><i class="bi bi-list-ul me-2"></i>Порядок разделов</h5>
+            <!-- Настройки лидов -->
+            <div class="settings-section">
+                <h2 class="settings-title">Настройки лидов</h2>
+                <ul class="settings-links">
+                    <li class="settings-link-item">
+                        <a href="/admin/leads/settings/" class="settings-link">
+                            <i class="bi bi-person-plus"></i>
+                            Настройки лидов
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Финансовые настройки -->
+            <div class="settings-section">
+                <h2 class="settings-title">Финансовые настройки</h2>
+                
+                <!-- Настройка оплаты по занятиям -->
+                <div class="payment-setting mb-4">
+                    <h3 class="h5 mb-3">Оплата по занятиям</h3>
+                    <div class="current-settings mb-3">
+                        <p class="mb-2">
+                            <strong>Текущая организация:</strong> 
+                            {% if current_organization %}
+                                {{ current_organization.name }}
+                            {% else %}
+                                Не назначена
+                            {% endif %}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Статус оплаты:</strong>
+                            {% if current_organization %}
+                                {% if current_organization.payment_per_lesson %}
+                                    <span class="badge bg-success">Оплата по занятиям включена</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Оплата за учебу</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">Нет организации</span>
+                            {% endif %}
+                        </p>
                     </div>
-                    <div class="card-body">
-                        {% for course in courses %}
-                        <div class="mb-4">
-                            <h6 class="mb-3">{{ course.title }}</h6>
-                            <ul class="section-list" data-course-id="{{ course.pk }}">
-                                {% for section in course.sections.all %}
-                                <li class="section-item" data-section-id="{{ section.pk }}">
-                                    <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
-                                    <span class="section-title">{{ section.title }}</span>
-                                </li>
-                                {% empty %}
-                                <p class="text-muted small mb-0">Нет разделов</p>
-                                {% endfor %}
-                            </ul>
+                    
+                    {% if current_organization %}
+                    <form method="post" action="#" class="mb-3">
+                        {% csrf_token %}
+                        <div class="form-check">
+                            <input type="checkbox" 
+                                   class="form-check-input" 
+                                   id="payment_per_lesson" 
+                                   name="payment_per_lesson"
+                                   {% if current_organization.payment_per_lesson %}checked{% endif %}
+                                   onchange="this.form.submit()">
+                            <label class="form-check-label" for="payment_per_lesson">
+                                Переход на оплату по занятиям
+                            </label>
                         </div>
-                        {% empty %}
-                        <p class="text-muted text-center mb-0">Нет курсов</p>
-                        {% endfor %}
-                    </div>
+                        <small class="text-muted d-block mt-2">
+                            Если включено, то оплата за учебу отключается и все курсы становятся бесконечными
+                        </small>
+                    </form>
+                    {% endif %}
                 </div>
+                
+                <ul class="settings-links">
+                    <li class="settings-link-item">
+                        <a href="{% url 'settings:payment_methods_list' %}" class="settings-link">
+                            <i class="bi bi-credit-card"></i>
+                            Способы оплаты
+                        </a>
+                    </li>
+                    <li class="settings-link-item">
+                        <a href="{% url 'organizations:edit_current' %}" class="settings-link">
+                            <i class="bi bi-building"></i>
+                            Настройки организации
+                        </a>
+                    </li>
+                    <li class="settings-link-item">
+                        <a href="/admin/courses/tariffs/" class="settings-link">
+                            <i class="bi bi-ticket-perforated"></i>
+                            Тарифы
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Настройки системы -->
+            <div class="settings-section">
+                <h2 class="settings-title">Управление доступом</h2>
+                <ul class="settings-links">
+                    {% if request.user.is_superuser %}
+                    <li class="settings-link-item">
+                        <a href="{% url 'accounts:roles_list' %}" class="settings-link">
+                            <i class="bi bi-shield-check"></i>
+                            Управление ролями
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="settings-link-item">
+                        <a href="#" class="settings-link" onclick="showSystemSettings(); return false;">
+                            <i class="bi bi-gear"></i>
+                            Настройки системы
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Организации -->
+            <div class="settings-section">
+                <h2 class="settings-title">Организации</h2>
+                <ul class="settings-links">
+                    {% if user.is_superuser %}
+                    <li class="settings-link-item">
+                        <a href="{% url 'organizations:list' %}" class="settings-link">
+                            <i class="bi bi-building"></i>
+                            Управление организациями
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="settings-link-item">
+                        <a href="{% url 'organizations:my_organizations' %}" class="settings-link">
+                            <i class="bi bi-diagram-3"></i>
+                            Мои организации
+                        </a>
+                    </li>
+                    {% if user.is_superuser %}
+                    <li class="settings-link-item">
+                        <a href="{% url 'organizations:create' %}" class="settings-link">
+                            <i class="bi bi-plus-circle"></i>
+                            Создать организацию
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Другие настройки -->
+            <div class="settings-section">
+                <h2 class="settings-title">Другие...</h2>
+                <ul class="settings-links">
+                    <li class="settings-link-item">
+                        <a href="#" class="settings-link" onclick="showFooterPasswordModal(); return false;">
+                            <i class="bi bi-layout-text-window-reverse"></i>
+                            Редактор футера
+                        </a>
+                    </li>
+                    <li class="settings-link-item">
+                        <a href="/admin/" class="settings-link" target="_blank">
+                            <i class="bi bi-gear-fill"></i>
+                            Django Admin
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Форма настроек системы (изначально скрыта) -->
+            <div id="systemSettingsForm" class="system-settings-form" style="display: none;">
+                <h3 class="form-section-title">Настройки системы</h3>
+                
+                <!-- Текущие настройки -->
+                <div class="current-settings">
+                    <strong>Текущие настройки:</strong><br>
+                    Меню: <span id="currentMenu">{{ current_menu_position|default:"слева" }}</span><br>
+                    Поля формы: <span id="currentFields">{{ current_fields_count|default:"3" }}</span> полей включено
+                </div>
+                
+                <form method="post" action="{% url 'settings:update_system' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Положение меню -->
+                    <div class="form-section">
+                        <h4 class="form-section-title">Меню</h4>
+                        <div class="radio-group">
+                            <div class="radio-item">
+                                <input type="radio" id="menu_left" name="menu_position" value="left" {% if current_menu_position == 'left' %}checked{% endif %}>
+                                <label for="menu_left">Слева</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" id="menu_right" name="menu_position" value="right" {% if current_menu_position == 'right' %}checked{% endif %}>
+                                <label for="menu_right">Справа</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Поля для создания студентов -->
+                    <div class="form-section">
+                        <h4 class="form-section-title">Формы для создания студентов</h4>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_login" name="student_fields" value="login" {% if 'login' in current_student_fields %}checked{% endif %}>
+                                <label for="field_login">Логин</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_password" name="student_fields" value="password" {% if 'password' in current_student_fields %}checked{% endif %}>
+                                <label for="field_password">Пароль</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_email" name="student_fields" value="email" {% if 'email' in current_student_fields %}checked{% endif %}>
+                                <label for="field_email">Email</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_firstname" name="student_fields" value="firstname" {% if 'firstname' in current_student_fields %}checked{% endif %}>
+                                <label for="field_firstname">Имя</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_lastname" name="student_fields" value="lastname" {% if 'lastname' in current_student_fields %}checked{% endif %}>
+                                <label for="field_lastname">Фамилия</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_phone" name="student_fields" value="phone" {% if 'phone' in current_student_fields %}checked{% endif %}>
+                                <label for="field_phone">Телефон</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_birthdate" name="student_fields" value="birthdate" {% if 'birthdate' in current_student_fields %}checked{% endif %}>
+                                <label for="field_birthdate">Дата рождения</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_address" name="student_fields" value="address" {% if 'address' in current_student_fields %}checked{% endif %}>
+                                <label for="field_address">Адрес</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_source" name="student_fields" value="source" {% if 'source' in current_student_fields %}checked{% endif %}>
+                                <label for="field_source">Источник</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="field_status" name="student_fields" value="status" {% if 'status' in current_student_fields %}checked{% endif %}>
+                                <label for="field_status">Статус</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="save-btn">
+                        <i class="bi bi-check-lg me-2"></i>
+                        Сохранить настройки
+                    </button>
+                </form>
+            </div>
+
+            <!-- Форма управления персоналом (изначально скрыта) -->
+            <div id="staffManagementForm" class="system-settings-form" style="display: none;">
+                <h3 class="form-section-title">Управление персоналом</h3>
+                
+                <form method="post" action="{% url 'settings:create_staff_user' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="staff_email" class="form-label">Email</label>
+                        <input type="email" id="staff_email" name="email" class="form-control" placeholder="Введите email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="staff_role" class="form-label">Роль</label>
+                        <select id="staff_role" name="role" class="form-select" required>
+                            <option value="">Выберите роль</option>
+                            <option value="admin">Администратор</option>
+                            <option value="mentor">Ментор</option>
+                            <option value="staff">Персонал</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="save-btn">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Создать пользователя
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Скрытая секция для доступа к футеру -->
+<div class="position-fixed" style="bottom: 20px; right: 20px; z-index: 1000;">
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-gear"></i>
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item" href="#" onclick="showFooterPasswordModal(); return false;">
+                    <i class="bi bi-layout-text-window-reverse"></i>
+                    Редактор футера
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Модальное окно для ввода пароля футера -->
+<div class="modal fade" id="footerPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Доступ к редактору футера</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="footerPasswordForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="footerPassword" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="footerPassword" required>
+                    </div>
+                    <div id="footerPasswordError" class="alert alert-danger d-none"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" onclick="checkFooterPassword()">Войти</button>
             </div>
         </div>
     </div>
@@ -104,37 +528,73 @@ input:checked + .toggle-slider:before{transform:translateX(24px)}
 <footer class="footer footer-static footer-light">
     <p class="clearfix mb-0">
         <span class="float-md-end d-none d-md-block" style="font-size:12px;">
-            Made with <i class="bi bi-heart-fill text-danger" style="font-size:10px;"></i> by IT Academy
+            Made with <i class="bi bi-heart-fill text-danger" style="font-size:10px;"></i> by ОкууTrack
         </span>
     </p>
 </footer>
 
-{% block extra_js_base %}
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script>
-document.querySelectorAll('.section-list').forEach(list => {
-    new Sortable(list, {
-        animation: 150,
-        handle: '.drag-handle',
-        onEnd: function(evt) {
-            const courseId = list.dataset.courseId;
-            const sectionIds = Array.from(list.querySelectorAll('.section-item')).map(item => item.dataset.sectionId);
-            
-            fetch('{% url "settings:update_section_order" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: `course_id=${courseId}&${sectionIds.map((id, i) => `orders[]=${id}`).join('&')}`
-            }).then(r => r.json()).then(data => {
-                if (data.ok) {
-                    console.log('Order updated');
-                }
-            });
+function showSystemSettings() {
+    // Скрываем все формы
+    document.getElementById('systemSettingsForm').style.display = 'none';
+    document.getElementById('staffManagementForm').style.display = 'none';
+    
+    // Показываем форму настроек системы
+    document.getElementById('systemSettingsForm').style.display = 'block';
+    
+    // Прокручиваем к форме
+    document.getElementById('systemSettingsForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showStaffManagement() {
+    // Скрываем все формы
+    document.getElementById('systemSettingsForm').style.display = 'none';
+    document.getElementById('staffManagementForm').style.display = 'none';
+    
+    // Показываем форму управления персоналом
+    document.getElementById('staffManagementForm').style.display = 'block';
+    
+    // Прокручиваем к форме
+    document.getElementById('staffManagementForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showFooterPasswordModal() {
+    var modal = new bootstrap.Modal(document.getElementById('footerPasswordModal'));
+    modal.show();
+}
+
+function checkFooterPassword() {
+    const password = document.getElementById('footerPassword').value;
+    const errorDiv = document.getElementById('footerPasswordError');
+    
+    fetch('{% url "settings:footer_password_check" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: 'password=' + encodeURIComponent(password)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '{% url "settings:footer_editor" %}';
+        } else {
+            errorDiv.textContent = data.error || 'Неверный пароль';
+            errorDiv.classList.remove('d-none');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorDiv.textContent = 'Произошла ошибка';
+        errorDiv.classList.remove('d-none');
     });
+}
+
+// Очистка ошибки при изменении пароля
+document.getElementById('footerPassword').addEventListener('input', function() {
+    document.getElementById('footerPasswordError').classList.add('d-none');
 });
 </script>
-{% endblock %}
+
 {% endblock %}

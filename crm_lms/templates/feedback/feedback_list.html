@@ -1,0 +1,101 @@
+{% extends 'base/base.html' %}
+{% load static i18n %}
+
+{% block title %}Обратная связь{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Обратная связь</h2>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-star-fill text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title">Оставить отзыв</h5>
+                            <p class="card-text text-muted">
+                                Поделитесь вашим мнением о нашей платформе
+                            </p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                <i class="bi bi-star me-2"></i>Оставить отзыв
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-lightbulb-fill text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title">Предложить идею</h5>
+                            <p class="card-text text-muted">
+                                Помогите нам стать лучше, предложив новые функции
+                            </p>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                <i class="bi bi-lightbulb me-2"></i>Предложить идею
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-bug-fill text-danger" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title">Сообщить о баге</h5>
+                            <p class="card-text text-muted">
+                                Помогите нам найти и исправить проблемы
+                            </p>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                <i class="bi bi-bug me-2"></i>Сообщить о баге
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title">Подать жалобу</h5>
+                            <p class="card-text text-muted">
+                                Расскажите о проблемах, которые требуют внимания
+                            </p>
+                            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Подать жалобу
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-chat-square-text-fill text-info" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="card-title">Предложить улучшение</h5>
+                            <p class="card-text text-muted">
+                                Поделитесь идеями по улучшению сервиса
+                            </p>
+                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                <i class="bi bi-chat-square-text me-2"></i>Предложить улучшение
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

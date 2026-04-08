@@ -1,0 +1,263 @@
+{% extends "base/student_base.html" %}
+
+{% block extra_css %}
+<style>
+/* Кодкойны стили для студента */
+.codecoins-balance-card {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    color: white;
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(115, 103, 240, 0.3);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.codecoins-balance-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+.codecoins-balance-amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin: 1rem 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.codecoins-balance-label {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.withdrawal-status {
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.withdrawal-open {
+    border-left: 4px solid #28C76F;
+}
+
+.withdrawal-closed {
+    border-left: 4px solid #FFC107;
+}
+
+.transaction-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.transaction-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.transaction-income {
+    border-left-color: #28C76F;
+}
+
+.transaction-expense {
+    border-left-color: #EA5455;
+}
+
+.transaction-amount {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.transaction-amount.positive {
+    color: #28C76F;
+}
+
+.transaction-amount.negative {
+    color: #EA5455;
+}
+
+.transaction-description {
+    color: #6E6B7B;
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+}
+
+.transaction-meta {
+    color: #B9B9C3;
+    font-size: 0.8rem;
+}
+
+.withdrawal-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid #7367F0;
+    transition: all 0.3s ease;
+}
+
+.withdrawal-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.withdrawal-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #EA5455;
+}
+
+.withdrawal-meta {
+    color: #6E6B7B;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.badge-pending {
+    background-color: #FFC107;
+    color: #000;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.badge-approved {
+    background-color: #28C76F;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.badge-rejected {
+    background-color: #EA5455;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.btn-withdraw {
+    background: linear-gradient(135deg, #28C76F, #20C997);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40, 199, 111, 0.3);
+}
+
+.btn-withdraw:hover {
+    background: linear-gradient(135deg, #26B675, #1EB898);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 199, 111, 0.4);
+}
+
+.btn-withdraw:disabled {
+    background: #B9B9C3;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #B9B9C3;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.section-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #F6F6F6;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2C2C2C;
+    margin: 0;
+}
+
+.section-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+    font-size: 1.2rem;
+}
+
+.form-control:focus {
+    border-color: #7367F0;
+    box-shadow: 0 0 0 0.2rem rgba(115, 103, 240, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #6458f0, #8e7be8);
+    border: none;
+}
+
+@media (max-width: 768px) {
+    .codecoins-balance-amount {
+        font-size: 2.5rem;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .section-icon {
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

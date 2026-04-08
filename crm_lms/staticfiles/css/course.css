@@ -1,0 +1,64 @@
+/* ===== Course (LMS) specific styles ===== */
+
+/* ===== Course header info bar ===== */
+.course-header-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 20px;
+  box-shadow: 0 1px 0 rgba(34,41,47,.04);
+}
+
+/* ===== Lecture sections ===== */
+.lecture-section {
+  margin-bottom: 16px;
+}
+
+.lecture-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background .1s;
+}
+.lecture-item:last-child { border-bottom: none; }
+.lecture-item:hover { background: var(--bg-body); }
+
+/* ===== Assignment status badges ===== */
+.assign-done   { background: rgba(40,199,111,.15);  color: var(--success); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 500; }
+.assign-late   { background: rgba(234,84,85,.15);   color: var(--danger);  border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 500; }
+.assign-review { background: rgba(255,159,67,.15);  color: var(--warning); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 500; }
+.assign-empty  { background: rgba(130,134,139,.15); color: #82868b;        border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 500; }
+
+/* ===== Attendance status cells ===== */
+.att-cell-present { background: rgba(40,199,111,.15);  color: var(--success); }
+.att-cell-absent  { background: rgba(234,84,85,.15);   color: var(--danger);  }
+.att-cell-late    { background: rgba(255,159,67,.15);  color: var(--warning); }
+.att-cell-excused { background: rgba(0,207,232,.15);   color: var(--info);    }
+
+/* ===== Rating progress ===== */
+.rating-progress { height: 6px; border-radius: 3px; background: var(--border-color); overflow: hidden; }
+.rating-progress-inner { height: 100%; border-radius: 3px; background: var(--primary); }
+
+/* ===== Review card ===== */
+.review-card {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 14px 16px;
+  box-shadow: var(--card-shadow);
+}
+.review-text { font-size: 13px; color: var(--text-body); line-height: 1.55; }
+
+/* ===== Smart report ===== */
+.report-metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+}
+.report-metric:last-child { border-bottom: none; }
+.report-metric-label { color: var(--text-muted); }
+.report-metric-value { font-weight: 600; color: var(--text-dark); }

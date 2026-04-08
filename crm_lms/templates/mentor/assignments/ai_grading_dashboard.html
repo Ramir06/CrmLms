@@ -1,0 +1,358 @@
+{% extends 'base/mentor_base.html' %}
+{% load static %}
+
+{% block title %}AI-оценка заданий{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-brain me-2"></i>AI-оценка заданий
+        </h1>
+        <div class="d-flex gap-2">
+            <select id="courseFilter" class="form-select" style="width: 200px;">
+                <option value="">Все курсы</option>
+                {% for course in courses %}
+                <option value="{{ course.id }}">{{ course.title }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-success" onclick="batchAIGrade()">
+                <i class="fas fa-magic me-1"></i>Массовая AI-оценка
+            </button>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ pending_submissions|length }}</h3>
+                            <div class="small">Ожидают проверки</div>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ ai_graded_count }}</h3>
+                            <div class="small">AI проверено</div>
+                        </div>
+                        <i class="fas fa-robot fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ total_graded }}</h3>
+                            <div class="small">Всего проверено</div>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ ai_percentage|floatformat:0 }}%</h3>
+                            <div class="small">AI автоматизация</div>
+                        </div>
+                        <i class="fas fa-chart-pie fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список заданий для проверки -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>Задания для AI-оценки
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if pending_submissions %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Найдено {{ pending_submissions|length }} заданий для проверки.
+                    {% for submission in pending_submissions|slice:":3" %}
+                        {{ submission.student.full_name }} - {{ submission.assignment.title }}
+                        {% if not submission.answer_text and not submission.file %}
+                            <span class="badge bg-warning">Нет ответа</span>
+                        {% endif %}
+                        {% if not forloop.last %} | {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Студент</th>
+                                <th>Задание</th>
+                                <th>Курс</th>
+                                <th>Дата сдачи</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in pending_submissions %}
+                            <tr data-course-id="{{ submission.assignment.course.id }}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                            {{ submission.student.first_name.0 }}{{ submission.student.last_name.0 }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ submission.student.full_name }}</div>
+                                            <small class="text-muted">{{ submission.student.email }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-semibold">{{ submission.assignment.title }}</div>
+                                        <small class="text-muted">Макс. балл: {{ submission.assignment.max_score }}</small>
+                                        <div>
+                                            {% if submission.answer_text %}
+                                                <span class="badge bg-success" style="font-size: 0.65rem;">Есть текст</span>
+                                            {% endif %}
+                                            {% if submission.file %}
+                                                <span class="badge bg-info" style="font-size: 0.65rem;">Есть файл</span>
+                                            {% endif %}
+                                            {% if not submission.answer_text and not submission.file %}
+                                                <span class="badge bg-warning" style="font-size: 0.65rem;">Нет ответа</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ submission.assignment.course.title }}</td>
+                                <td>
+                                    <div>{{ submission.submitted_at|date:"d.m.Y H:i" }}</div>
+                                    <small class="text-muted">{{ submission.submitted_at|timesince }} назад</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-primary" onclick="aiGradeSubmission({{ submission.id }})">
+                                            <i class="fas fa-brain me-1"></i>AI-оценить
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewSubmission({{ submission.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5>Все задания проверены!</h5>
+                    <p class="text-muted">Нет заданий, ожидающих AI-оценки.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно AI-оценки -->
+<div class="modal fade" id="aiGradingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-brain me-2"></i>AI-оценка задания
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="aiGradingContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">AI анализирует...</span>
+                        </div>
+                        <div class="mt-2">AI анализирует задание...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary" id="acceptGradeBtn" style="display: none;">
+                    <i class="fas fa-check me-1"></i>Принять оценку
+                </button>
+                <button type="button" class="btn btn-warning" id="editGradeBtn" style="display: none;">
+                    <i class="fas fa-edit me-1"></i>Редактировать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function aiGradeSubmission(submissionId) {
+    const modal = new bootstrap.Modal(document.getElementById('aiGradingModal'));
+    modal.show();
+    
+    fetch(`/mentor/assignments/ai-grade/${submissionId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayAIGrade(data.grade);
+            document.getElementById('acceptGradeBtn').style.display = 'inline-block';
+            document.getElementById('editGradeBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('aiGradingContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Ошибка AI-оценки:</strong> ${data.error}
+                    ${data.raw_response ? `<hr><small><strong>Ответ API:</strong><br>${data.raw_response}</small>` : ''}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        document.getElementById('aiGradingContent').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Ошибка подключения: ${error.message}
+            </div>
+        `;
+    });
+}
+
+function displayAIGrade(grade) {
+    const content = `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">Результат оценки</h6>
+                        <div class="h3 text-primary">${grade.score} из ${grade.max_score || 100}</div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Уверенность AI</span>
+                                <span>${grade.confidence}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" style="width: ${grade.confidence}%"></div>
+                            </div>
+                        </div>
+                        ${grade.plagiarism_suspicious ? '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Подозрение на плагиат</div>' : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Комментарий AI</h6>
+                        <p class="small">${grade.comment}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        ${grade.strengths ? `
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title text-success">
+                    <i class="fas fa-thumbs-up me-2"></i>Сильные стороны
+                </h6>
+                <p class="small">${grade.strengths}</p>
+            </div>
+        </div>
+        ` : ''}
+        ${grade.weaknesses ? `
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title text-warning">
+                    <i class="fas fa-thumbs-down me-2"></i>Зоны роста
+                </h6>
+                <p class="small">${grade.weaknesses}</p>
+            </div>
+        </div>
+        ` : ''}
+        ${grade.suggestions ? `
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title text-info">
+                    <i class="fas fa-lightbulb me-2"></i>Рекомендации
+                </h6>
+                <p class="small">${grade.suggestions}</p>
+            </div>
+        </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('aiGradingContent').innerHTML = content;
+}
+
+function batchAIGrade() {
+    if (!confirm('Начать массовую AI-оценку всех заданий? Это может занять несколько минут.')) {
+        return;
+    }
+    
+    const courseId = document.getElementById('courseFilter').value;
+    
+    fetch('/mentor/assignments/batch-ai-grade/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            course_id: courseId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Обработка завершена: ${data.successful} успешно, ${data.failed} с ошибками`);
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    });
+}
+
+function viewSubmission(submissionId) {
+    window.open(`/mentor/assignments/submissions/${submissionId}/`, '_blank');
+}
+
+// Фильтрация по курсу
+document.getElementById('courseFilter').addEventListener('change', function() {
+    const courseId = this.value;
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        if (!courseId || row.dataset.courseId === courseId) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

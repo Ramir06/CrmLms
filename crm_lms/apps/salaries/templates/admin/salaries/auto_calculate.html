@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">{{ page_title }}</h4>
+                    <a href="{% url 'salaries:list' %}" class="btn btn-outline-secondary float-end">
+                        <i class="bi bi-arrow-left"></i> Назад к списку
+                    </a>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="alert alert-info">
+                        <h5><i class="bi bi-info-circle me-2"></i>Как работает авторасчет</h5>
+                        <ul class="mb-0">
+                            <li><strong>Почасовая оплата:</strong> Учитываются только проведенные уроки. Если ментор был заменен, час засчитывается заменяющему.</li>
+                            <li><strong>Фиксированная оплата:</strong> Делится на количество месяцев курса.</li>
+                            <li><strong>Оплата за курс:</strong> Сумма курса делится на количество уроков и умножается на проведенные уроки.</li>
+                            <li><strong>Отмененные уроки:</strong> Не учитываются в расчете зарплаты.</li>
+                        </ul>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="month" class="form-label">Месяц для расчета</label>
+                                    <input type="month" id="month" name="month" class="form-control" 
+                                           value="{{ current_month }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Внимание!</strong> Автоматический расчет обновит существующие начисления за выбранный месяц.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-calculator me-2"></i>Рассчитать зарплаты
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

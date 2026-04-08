@@ -1,0 +1,92 @@
+{% extends 'admin/base.html' %}
+{% load i18n static %}
+{% include 'admin/ckeditor.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>{{ page_title }}</h2>
+                <a href="{% url 'settings:footer_navigation_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    {% trans "Назад к списку" %}
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">{% trans "Название ссылки" %} *</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="slug" class="form-label">{% trans "URL идентификатор (Slug)" %} *</label>
+                                    <input type="text" class="form-control" id="slug" name="slug" required 
+                                           pattern="^[a-z0-9_-]+$" 
+                                           title="Только латинские буквы в нижнем регистре, цифры, дефис и подчеркивание">
+                                    <small class="text-muted">Пример: usloviya-ispolzovaniya</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="order" class="form-label">{% trans "Порядок отображения" %}</label>
+                                    <input type="number" class="form-control" id="order" name="order" value="0" min="0">
+                                    <small class="text-muted">Чем меньше число, тем выше будет ссылка в списке</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                        <label class="form-check-label" for="is_active">
+                                            {% trans "Активна" %}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="content" class="form-label">{% trans "Содержимое" %}</label>
+                                    <textarea class="form-control ckeditor" id="content" name="content" rows="10"></textarea>
+                                    <small class="text-muted">Здесь можно использовать HTML-теги для форматирования текста</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i>
+                                {% trans "Сохранить" %}
+                            </button>
+                            <a href="{% url 'settings:footer_navigation_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                {% trans "Отмена" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Инициализация CKEditor
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof CKEDITOR !== 'undefined') {
+            CKEDITOR.replace('content', {
+                height: 300,
+                language: 'ru'
+            });
+        }
+    });
+</script>
+{% endblock %}

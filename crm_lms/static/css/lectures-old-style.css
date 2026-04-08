@@ -1,0 +1,379 @@
+/* Старый стиль лекций как в примере */
+
+/* Основная структура */
+body .lessons-container {
+    min-height: 600px;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+body .lessons-container > div {
+    min-height: 600px;
+}
+
+body .lessons-container > div:first-child {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+body .lessons-container > div:last-child {
+    flex: 0 0 33.333% !important;
+    max-width: 33.333% !important;
+    width: 33.333% !important;
+    min-width: 0 !important;
+}
+
+#contents-column {
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+}
+
+/* Карточка курса */
+.course-lectures {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+}
+
+/* Заголовок раздела */
+.lesson-section-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+}
+
+.lesson-section-header:hover {
+    background: #f0f1f3;
+}
+
+.section-id {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #6e6b7b;
+    font-size: 14px;
+}
+
+.section-id .id {
+    background: #7367f0;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.section-title {
+    flex: 1;
+    font-weight: 600;
+    color: #5e5873;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.spoiler-caret {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.2s;
+}
+
+.lesson-section.collapsed .spoiler-caret {
+    transform: rotate(180deg);
+}
+
+/* Иконки */
+.icons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.icons i {
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.icons i:hover {
+    background: rgba(115, 103, 240, 0.1);
+}
+
+.fa-eye.is-blue {
+    color: #7367f0;
+}
+
+.fa-eye.is-red {
+    color: #ea5455;
+}
+
+/* Список уроков */
+.lessons-list {
+    background: white;
+}
+
+.lesson-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.lesson-item:hover {
+    background: #f8f9fa;
+}
+
+.lesson-item.selected {
+    background: rgba(115, 103, 240, 0.1);
+    border-left: 3px solid #7367f0;
+}
+
+.lecture-id {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #6e6b7b;
+    font-size: 12px;
+    min-width: 80px;
+}
+
+.lecture-id .id {
+    background: #e7e7e7;
+    color: #6e6b7b;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.lecture-title {
+    flex: 1;
+    font-size: 13px;
+    color: #5e5873;
+    font-weight: 500;
+}
+
+/* Drag and drop */
+.draggable-item {
+    position: relative;
+}
+
+.drag-and-dropper {
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+    cursor: grab;
+}
+
+.draggable-item:hover .drag-and-dropper {
+    opacity: 1;
+}
+
+.drag-and-dropper img {
+    width: 16px;
+    height: 16px;
+}
+
+/* Dropdown меню */
+.dropdown-menu {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+    font-size: 13px;
+    padding: 8px 16px;
+    color: #6e6b7b;
+    transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f8f9fa;
+    color: #5e5873;
+}
+
+.dropdown-item i {
+    width: 16px;
+    margin-right: 8px;
+}
+
+/* Кнопка добавления */
+.btn-group .btn {
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+/* Спойлеры */
+.spoiler-content {
+    display: none;
+}
+
+.spoiler.is-expanded .spoiler-content {
+    display: block;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .lecture-id {
+        min-width: 60px;
+        font-size: 11px;
+    }
+    
+    .lecture-title {
+        font-size: 12px;
+    }
+    
+    .section-title {
+        font-size: 13px;
+    }
+    
+    .lesson-section-header {
+        padding: 10px 12px;
+    }
+    
+    .lesson-item {
+        padding: 8px 12px;
+    }
+    
+    /* На мобильных устройствах контент занимает всю ширину */
+    #contents-column {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 80%;
+        max-width: 300px;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease;
+    }
+    
+    #contents-column.show {
+        left: 0;
+    }
+}
+
+/* Корректировка для десктопа */
+@media (min-width: 769px) {
+    body .lessons-container {
+        display: flex !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        flex-direction: row !important;
+    }
+    
+    body .lessons-container > div:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+    
+    body .lessons-container > div:last-child {
+        flex: 0 0 33.333% !important;
+        max-width: 33.333% !important;
+        width: 33.333% !important;
+        min-width: 0 !important;
+    }
+    
+    /* Отключаем Bootstrap grid классы */
+    body .lessons-container .col-10,
+    body .lessons-container .col-md-4,
+    body .lessons-container .col-lg-3 {
+        flex: 0 0 33.333% !important;
+        max-width: 33.333% !important;
+        width: 33.333% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    body .lessons-container .flex-grow-1 {
+        flex: 1 1 auto !important;
+        max-width: none !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Гарантируем правильные стили для контейнера */
+    body #contents-column {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+/* Цветовая схема для темной темы */
+.dark-layout .course-lectures {
+    background: #283046;
+    border-color: #3a4252;
+}
+
+.dark-layout .lesson-section-header {
+    background: #3a4252;
+    border-color: #4a5568;
+}
+
+.dark-layout .lesson-section-header:hover {
+    background: #4a5568;
+}
+
+.dark-layout .section-id,
+.dark-layout .section-title {
+    color: #d0d2d6;
+}
+
+.dark-layout .lessons-list {
+    background: #283046;
+}
+
+.dark-layout .lesson-item {
+    border-color: #3a4252;
+}
+
+.dark-layout .lesson-item:hover {
+    background: #3a4252;
+}
+
+.dark-layout .lecture-id,
+.dark-layout .lecture-title {
+    color: #d0d2d6;
+}
+
+.dark-layout .dropdown-menu {
+    background: #3a4252;
+    border-color: #4a5568;
+}
+
+.dark-layout .dropdown-item {
+    color: #d0d2d6;
+}
+
+.dark-layout .dropdown-item:hover {
+    background: #4a5568;
+}

@@ -1,0 +1,126 @@
+{% extends "base/mentor_base.html" %}
+{% load static %}
+
+{% block title %}{{ course.title }} - Курс ментора{% endblock %}
+
+{% block content %}
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12">
+        <div class="breadcrumbs-top">
+            <h5 class="content-header-title float-start mb-0">{{ course.title }}</h5>
+            <div class="breadcrumb-wrapper">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="/lms/mentor/courses/">Курсы</a></li>
+                    <li class="breadcrumb-item active">{{ course.title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" id="table-hover-row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Информация о курсе</h4>
+            </div>
+            <div class="card-content">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Название:</strong> {{ course.title }}</p>
+                            <p><strong>Предмет:</strong> {{ course.subject|default:"Не указано" }}</p>
+                            <p><strong>Статус:</strong> 
+                                <span class="badge badge-{% if course.status == 'active' %}success{% elif course.status == 'planned' %}warning{% elif course.status == 'completed' %}primary{% else %}danger{% endif %}">
+                                    {{ course.get_status_display }}
+                                </span>
+                            </p>
+                            <p><strong>Формат:</strong> {{ course.get_format_display }}</p>
+                            <p><strong>Длительность:</strong> {{ course.duration_months }} мес.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Дата начала:</strong> {{ course.start_date|default:"Не указана" }}</p>
+                            <p><strong>Дата окончания:</strong> {{ course.end_date|default:"Не указана" }}</p>
+                            <p><strong>Вместимость:</strong> {{ course.capacity }} человек</p>
+                            <p><strong>Текущих студентов:</strong> {{ course.current_students_count }}</p>
+                            <p><strong>Стоимость:</strong> {{ course.price }} сом</p>
+                        </div>
+                    </div>
+                    
+                    {% if course.description %}
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <p><strong>Описание:</strong></p>
+                            <p>{{ course.description }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Ссылки для доступа:</h6>
+                            {% if course.online_lesson_link %}
+                                <p><strong>Онлайн урок:</strong> <a href="{{ course.online_lesson_link }}" target="_blank">{{ course.online_lesson_link }}</a></p>
+                            {% else %}
+                                <p><strong>Онлайн урок:</strong> <span class="text-muted">Не указана</span></p>
+                            {% endif %}
+                            
+                            {% if course.chat_link %}
+                                <p><strong>Чат:</strong> <a href="{{ course.chat_link }}" target="_blank">{{ course.chat_link }}</a></p>
+                            {% else %}
+                                <p><strong>Чат:</strong> <span class="text-muted">Не указана</span></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-2">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">Студенты курса</h4>
+                <a href="{% url 'mentors:course_students' course.id %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-people me-1"></i>Управление студентами
+                </a>
+            </div>
+            <div class="card-content">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Студент</th>
+                                <th>Статус</th>
+                                <th>Дата зачисления</th>
+                                <th>Прогресс</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in course.course_students.all %}
+                            <tr>
+                                <td>{{ student.student }}</td>
+                                <td>
+                                    <span class="badge badge-{% if student.status == 'active' %}success{% elif student.status == 'left' %}danger{% elif student.status == 'frozen' %}warning{% else %}primary{% endif %}">
+                                        {{ student.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ student.joined_at|default:"—" }}</td>
+                                <td>{{ student.progress_percent }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">На курсе пока нет студентов</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

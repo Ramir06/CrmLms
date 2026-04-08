@@ -1,0 +1,247 @@
+{% load static i18n %}
+{% url 'admin_students:list' as url_students %}
+{% url 'courses:list' as url_courses %}
+{% url 'leads:kanban' as url_leads %}
+{% url 'mentors:list' as url_mentors %}
+
+<link rel="stylesheet" href="{% static 'css/modern-navigation.css' %}">
+
+<style>
+/* Стили для подменю организаций */
+.nav-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: #2c3e50;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+    display: none;
+    max-height: 0;
+    transition: all 0.3s ease;
+}
+
+.nav-submenu.show {
+    display: block;
+    max-height: 500px;
+}
+
+.nav-submenu li {
+    margin: 0;
+}
+
+.nav-submenu .nav-link {
+    padding: 10px 20px 10px 40px;
+    font-size: 14px;
+    border-bottom: 1px solid #34495e;
+    color: #bdc3c7;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.nav-submenu .nav-link:hover {
+    background: #34495e;
+    color: white;
+}
+
+.nav-submenu .nav-link.active {
+    background: #3498db;
+    color: white;
+}
+
+.chevron-icon {
+    transition: transform 0.3s ease;
+}
+
+.chevron-icon.rotate {
+    transform: rotate(180deg);
+}
+
+/* Анимация для подменю */
+.nav-item[data-id="organizations"] {
+    position: relative;
+}
+</style>
+
+<div class="main-menu menu-fixed menu-light menu-accordion menu-shadow" id="appSidebar">
+    <div class="navbar-header">
+        <ul class="nav navbar-nav flex-row">
+            <li class="nav-item me-auto">
+                <a class="navbar-brand" href="{% url 'manager:dashboard' %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7367f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-aperture" style="width: 2rem; height: 2rem"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>
+                    <h2 class="brand-text" style="color: #7367f0;">ОкууTrack</h2>
+                </a>
+            </li>
+            <li class="nav-item nav-toggle">
+                <button class="modern-nav-toggle" id="sidebarCollapseBtn" type="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="d-none d-xl-block">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="d-block d-xl-none">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="shadow-bottom"></div>
+
+    <div class="main-menu-content">
+        <ul class="navigation navigation-main">
+            
+            {% if current_organization %}
+            <li class="nav-item" data-id="organizations">
+                <a class="d-flex align-items-center" href="#" onclick="toggleOrgSubmenu(this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19h-2v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 19px;">{{ current_organization.name }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-auto chevron-icon">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </a>
+                <ul class="nav-submenu" id="orgSubmenu">
+                    <li>
+                        <a class="d-flex align-items-center" href="{% url 'organizations:my_organizations' %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                            <span class="menu-title" style="font-size: 19px;">Мои организации</span>
+                        </a>
+                    </li>
+                    {% for org in request.user.staff_member.organizations %}
+                    <li>
+                        <a class="d-flex align-items-center" href="{% url 'organizations:switch' org.pk %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19h-2v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <span class="menu-title" style="font-size: 19px;">{{ org.name }}</span>
+                            {% if current_organization.id == org.id %}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-auto text-success">
+                                <polyline points="20 6 9 17 4"></polyline>
+                            </svg>
+                            {% endif %}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
+
+            <li class="nav-item {% if 'students' in request.path %}active{% endif %}" data-id="students">
+                <a class="d-flex align-items-center" href="{{ url_students }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 19px;">Студенты</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if 'courses' in request.path %}active{% endif %}" data-id="courses">
+                <a class="d-flex align-items-center" href="{{ url_courses }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 19px;">Курсы</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if 'leads' in request.path %}active{% endif %}" data-id="leads">
+                <a class="d-flex align-items-center" href="{{ url_leads }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 19px;">Лиды</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if 'mentors' in request.path %}active{% endif %}" data-id="mentors">
+                <a class="d-flex align-items-center" href="{{ url_mentors }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 19px;">Менторы</span>
+                </a>
+            </li>
+
+            <!-- Mobile logout -->
+            <li class="navigation-header d-md-none">
+                <span>Профиль</span>
+            </li>
+
+            <li class="nav-item d-md-none" data-id="logout">
+                <a class="d-flex align-items-center" href="{% url 'accounts:logout' %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span class="menu-title text-truncate" style="font-size: 19px;">Выйти</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('appSidebar');
+    const toggleBtn = document.getElementById('sidebarCollapseBtn');
+    
+    // Toggle sidebar collapse
+    toggleBtn.addEventListener('click', function() {
+        sidebar.classList.toggle('menu-collapsed');
+    });
+    
+    // Toggle organization submenu
+    window.toggleOrgSubmenu = function(element) {
+        const submenu = element.nextElementSibling;
+        const chevron = element.querySelector('.chevron-icon');
+        
+        if (submenu && chevron) {
+            if (submenu.classList.contains('show')) {
+                submenu.classList.remove('show');
+                chevron.classList.remove('rotate');
+            } else {
+                // Закрываем другие подменю
+                document.querySelectorAll('.nav-submenu.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+                document.querySelectorAll('.chevron-icon.rotate').forEach(icon => {
+                    icon.classList.remove('rotate');
+                });
+                
+                // Открываем текущее подменю
+                submenu.classList.add('show');
+                chevron.classList.add('rotate');
+            }
+        }
+    };
+    
+    // Mobile menu toggle
+    if (window.innerWidth <= 991) {
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 991) {
+            sidebar.classList.remove('open');
+        }
+    });
+});
+</script>

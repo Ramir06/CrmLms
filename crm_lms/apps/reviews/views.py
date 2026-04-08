@@ -4,10 +4,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.db.models import Avg
 from django.views.decorators.http import require_POST
+from django.core.exceptions import PermissionDenied
 
 from apps.core.mixins import mentor_required
+from apps.core.mixins_substitute import check_substitute_access
 from apps.courses.models import Course
 from apps.lessons.models import Lesson
+from apps.lessons.models_substitute import MentorSubstitution
 from .models import Review, LessonFeedbackLink, LessonFeedback
 
 
@@ -34,6 +37,25 @@ class ReviewForm(forms.ModelForm):
             self.fields['student'].queryset = Student.objects.filter(pk__in=student_ids)
 
 
+def get_mentor_course_with_substitute_access(user, course_id):
+    """
+    Получение курса с проверкой прав доступа для заменяющего ментора
+    """
+    if user.role in ('admin', 'superadmin'):
+        return get_object_or_404(Course, pk=course_id)
+    
+    # Проверяем, является ли пользователем основным ментором
+    course = get_object_or_404(Course, pk=course_id)
+    if course.mentor == user:
+        return course
+    
+    # Проверяем, является ли пользователем заменяющим ментором
+    if check_substitute_access(user, course_id):
+        return course
+    
+    raise PermissionDenied("У вас нет прав доступа к этому курсу")
+
+
 def get_mentor_course(user, course_id):
     if user.role in ('admin', 'superadmin'):
         return get_object_or_404(Course, pk=course_id)
@@ -44,9 +66,19 @@ def get_mentor_course(user, course_id):
 @mentor_required
 def reviews_list(request, course_id):
     """Mentor feedback dashboard: shows aggregated stats + list of lessons with feedback links."""
-    course = get_mentor_course(request.user, course_id)
+    course = get_mentor_course_with_substitute_access(request.user, course_id)
 
     lessons = Lesson.objects.filter(course=course).exclude(status='cancelled').order_by('lesson_date', 'start_time')
+    
+    # Для заменяющего ментора показываем только уроки, на которые он назначен
+    if course.mentor != request.user and request.user.role == 'mentor':
+        from datetime import datetime
+        substitute_lesson_ids = MentorSubstitution.objects.filter(
+            substitute_mentor=request.user,
+            status='confirmed',
+            lesson__course=course
+        ).values_list('lesson_id', flat=True)
+        lessons = lessons.filter(id__in=substitute_lesson_ids)
 
     # Preload feedback links
     links = LessonFeedbackLink.objects.filter(lesson__in=lessons).select_related('lesson')
@@ -74,13 +106,18 @@ def reviews_list(request, course_id):
     )
     total_responses = all_feedback.count()
 
+    # Определяем, является ли пользователь заменяющим ментором
+    is_substitute_mentor = course.mentor != request.user and request.user.role == 'mentor'
+
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'lesson_rows': lesson_rows,
         'avg_mentor': round(agg['avg_mentor'], 1) if agg['avg_mentor'] else None,
         'avg_activity': round(agg['avg_activity'], 1) if agg['avg_activity'] else None,
         'avg_mood': round(agg['avg_mood'], 1) if agg['avg_mood'] else None,
         'total_responses': total_responses,
+        'is_substitute_mentor': is_substitute_mentor,
         'page_title': 'Отзывы',
         'active_menu': 'reviews',
     }
@@ -92,8 +129,14 @@ def reviews_list(request, course_id):
 @require_POST
 def generate_feedback_link(request, course_id, lesson_id):
     """Generate (or return existing) feedback link for a lesson."""
-    course = get_mentor_course(request.user, course_id)
+    course = get_mentor_course_with_substitute_access(request.user, course_id)
     lesson = get_object_or_404(Lesson, pk=lesson_id, course=course)
+    
+    # Для заменяющего ментора проверяем, что он назначен на этот урок
+    if course.mentor != request.user and request.user.role == 'mentor':
+        from apps.core.mixins_substitute import can_mark_attendance
+        if not can_mark_attendance(request.user, lesson_id):
+            return JsonResponse({'error': 'Вы можете генерировать ссылки только для уроков, на которые назначены'}, status=403)
 
     link, created = LessonFeedbackLink.objects.get_or_create(lesson=lesson)
     return JsonResponse({
@@ -107,7 +150,7 @@ def generate_feedback_link(request, course_id, lesson_id):
 @mentor_required
 def feedback_detail(request, course_id, lesson_id):
     """Mentor view: details of feedback for a specific lesson."""
-    course = get_mentor_course(request.user, course_id)
+    course = get_mentor_course_with_substitute_access(request.user, course_id)
     lesson = get_object_or_404(Lesson, pk=lesson_id, course=course)
     link = get_object_or_404(LessonFeedbackLink, lesson=lesson)
     responses = link.responses.all().order_by('-created_at')
@@ -118,6 +161,7 @@ def feedback_detail(request, course_id, lesson_id):
     )
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'lesson': lesson,
         'link': link,
         'responses': responses,

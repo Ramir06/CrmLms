@@ -81,16 +81,103 @@ def smart_report(request, course_id):
 def admin_reports(request):
     from apps.students.models import Student
     from apps.payments.models import Payment
+    from apps.salaries.models import SalaryAccrual
+    from apps.core.mixins_organization import get_current_organization, filter_by_organization
     from django.utils import timezone
 
-    total_students = Student.objects.filter(status='active').count()
-    total_income = Payment.objects.aggregate(s=Sum('amount'))['s'] or 0
-    total_courses = Course.objects.filter(is_archived=False).count()
+    # Получаем текущую организацию
+    current_org = get_current_organization(request.user)
+    
+    # Фильтруем студентов по организации
+    students_qs = Student.objects.filter(status='active')
+    students_qs = filter_by_organization(students_qs, current_org)
+    total_students = students_qs.count()
+    
+    # Фильтруем курсы по организации
+    courses_qs = Course.objects.filter(is_archived=False)
+    courses_qs = filter_by_organization(courses_qs, current_org)
+    total_courses = courses_qs.count()
+    
+    # Фильтруем оплаты по организации (через студентов)
+    if current_org:
+        total_income = Payment.objects.filter(
+            student__organization=current_org,
+            paid_at__isnull=False
+        ).aggregate(s=Sum('amount'))['s'] or 0
+    else:
+        total_income = Payment.objects.filter(paid_at__isnull=False).aggregate(s=Sum('amount'))['s'] or 0
+    
+    # Расчет зарплат за текущий месяц
+    current_month = timezone.now().date().replace(day=1)
+    if current_org:
+        total_salaries = SalaryAccrual.objects.filter(
+            month=current_month,
+            mentor__mentor_profile__organization=current_org
+        ).aggregate(s=Sum('amount'))['s'] or 0
+    else:
+        total_salaries = SalaryAccrual.objects.filter(
+            month=current_month
+        ).aggregate(s=Sum('amount'))['s'] or 0
+    
+    # Расчет прибыли
+    profit = total_income - total_salaries
+    
+    # Данные для сводной таблицы по курсам
+    courses_report = []
+    for course in courses_qs.select_related('mentor').prefetch_related('course_students'):
+        # Студенты на курсе
+        students_count = course.course_students.filter(status='active').count()
+        
+        # Доход по курсу
+        if current_org:
+            course_income = Payment.objects.filter(
+                student__organization=current_org,
+                course=course,
+                paid_at__isnull=False
+            ).aggregate(s=Sum('amount'))['s'] or 0
+        else:
+            course_income = Payment.objects.filter(
+                course=course,
+                paid_at__isnull=False
+            ).aggregate(s=Sum('amount'))['s'] or 0
+        
+        # Зарплата по курсу за текущий месяц
+        if current_org:
+            course_salary = SalaryAccrual.objects.filter(
+                course=course,
+                month=current_month,
+                mentor__mentor_profile__organization=current_org
+            ).aggregate(s=Sum('amount'))['s'] or 0
+        else:
+            course_salary = SalaryAccrual.objects.filter(
+                course=course,
+                month=current_month
+            ).aggregate(s=Sum('amount'))['s'] or 0
+        
+        # Посещаемость
+        total_records = AttendanceRecord.objects.filter(lesson__course=course).count()
+        present_records = AttendanceRecord.objects.filter(
+            lesson__course=course, 
+            attendance_status='present'
+        ).count()
+        attendance_pct = round(present_records / total_records * 100, 1) if total_records > 0 else 0
+        
+        courses_report.append({
+            'course': course,
+            'students': students_count,
+            'income': course_income,
+            'salary': course_salary,
+            'profit': course_income - course_salary,
+            'attendance_pct': attendance_pct
+        })
 
     context = {
         'total_students': total_students,
         'total_income': total_income,
         'total_courses': total_courses,
+        'total_salaries': total_salaries,
+        'profit': profit,
+        'courses_report': courses_report,
         'page_title': 'Отчёты',
     }
     return render(request, 'admin/reports/index.html', context)

@@ -1,5 +1,19 @@
 {% extends "base/course_base.html" %}
+{% load static %}
 {% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+{{ form.media.css }}
+<style>
+.django-ckeditor-widget {
+    width: 100% !important;
+}
+.cke {
+    width: 100% !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <div class="d-flex align-items-center gap-2">
@@ -8,7 +22,7 @@
     </div>
 </div>
 <div class="row justify-content-center">
-    <div class="col-lg-6">
+    <div class="col-lg-10">
         <div class="card"><div class="card-body">
             <form method="post">
                 {% csrf_token %}
@@ -27,4 +41,34 @@
         </div></div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script>
+// Инициализация CKEditor вручную
+document.addEventListener('DOMContentLoaded', function() {
+    // Проверяем, что CKEditor загружен
+    if (typeof CKEDITOR !== 'undefined') {
+        // Находим все textarea для поля description
+        const textareas = document.querySelectorAll('textarea[name="description"]');
+        textareas.forEach(function(textarea) {
+            if (!CKEDITOR.instances[textarea.id]) {
+                CKEDITOR.replace(textarea, {
+                    toolbar: [
+                        { name: 'document', items: ['Undo', 'Redo'] },
+                        { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline'] },
+                        { name: 'links', items: ['Link', 'Unlink'] },
+                        { name: 'insert', items: ['Image', 'Table', 'Smiley'] }
+                    ],
+                    height: 300,
+                    width: '100%'
+                });
+            }
+        });
+    } else {
+        console.error('CKEditor не загружен');
+    }
+});
+</script>
 {% endblock %}

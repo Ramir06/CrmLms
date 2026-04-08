@@ -22,6 +22,7 @@ def quiz_list(request, course_id):
     quizzes = Quiz.objects.filter(course=course).prefetch_related('questions', 'attempts')
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'quizzes': quizzes,
         'page_title': 'Тесты',
         'active_menu': 'quizzes',
@@ -38,15 +39,36 @@ def quiz_create(request, course_id):
         description = request.POST.get('description', '').strip()
         time_limit = int(request.POST.get('time_limit', 0) or 0)
         pass_score = int(request.POST.get('pass_score', 60) or 60)
+        create_assignment = request.POST.get('create_assignment') == 'on'
+        
         if title:
             quiz = Quiz.objects.create(
                 course=course, title=title, description=description,
                 time_limit=time_limit, pass_score=pass_score,
             )
-            messages.success(request, f'Тест «{quiz.title}» создан.')
+            
+            # Create linked assignment if requested
+            if create_assignment:
+                from apps.assignments.models import Assignment
+                assignment = Assignment.objects.create(
+                    course=course,
+                    quiz=quiz,
+                    title=title,
+                    description=description,
+                    max_score=100,  # Default max score for quiz
+                    is_required=True,
+                    is_visible=True,
+                    order=Assignment.objects.filter(course=course).count()
+                )
+                messages.success(request, f'Тест «{quiz.title}» и связанное задание созданы.')
+            else:
+                messages.success(request, f'Тест «{quiz.title}» создан.')
+            
             return redirect('quizzes:detail', course_id=course_id, quiz_id=quiz.pk)
+    
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'page_title': 'Создать тест',
         'active_menu': 'quizzes',
     }
@@ -59,13 +81,33 @@ def quiz_detail(request, course_id, quiz_id):
     course = get_mentor_course(request.user, course_id)
     quiz = get_object_or_404(Quiz, pk=quiz_id, course=course)
     questions = quiz.questions.prefetch_related('choices').all()
-    attempts = quiz.attempts.select_related('course_student__student').order_by('-created_at')
+    attempts = quiz.attempts.select_related('course_student__student').prefetch_related('answers').order_by('-created_at')
     course_students = CourseStudent.objects.filter(course=course, status='active').select_related('student')
+    
+    # Calculate statistics and correct answers count for each attempt
+    passed_attempts = []
+    failed_attempts = []
+    attempts_with_stats = []
+    
+    for att in attempts:
+        correct_count = sum(1 for answer in att.answers.all() if answer.is_correct)
+        att.correct_answers_count = correct_count
+        
+        if att.passed:
+            passed_attempts.append(att)
+        elif att.is_submitted:
+            failed_attempts.append(att)
+        
+        attempts_with_stats.append(att)
+    
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'quiz': quiz,
         'questions': questions,
-        'attempts': attempts,
+        'attempts': attempts_with_stats,
+        'passed_attempts': passed_attempts,
+        'failed_attempts': failed_attempts,
         'course_students': course_students,
         'page_title': quiz.title,
         'active_menu': 'quizzes',
@@ -89,6 +131,7 @@ def quiz_edit(request, course_id, quiz_id):
         return redirect('quizzes:detail', course_id=course_id, quiz_id=quiz.pk)
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'quiz': quiz,
         'page_title': 'Редактировать тест',
         'active_menu': 'quizzes',
@@ -138,6 +181,7 @@ def question_create(request, course_id, quiz_id):
             return redirect('quizzes:detail', course_id=course_id, quiz_id=quiz_id)
     context = {
         'course': course,
+        'current_course': course,  # Добавляем для навбара
         'quiz': quiz,
         'page_title': 'Добавить вопрос',
         'active_menu': 'quizzes',

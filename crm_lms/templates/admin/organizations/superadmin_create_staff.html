@@ -1,0 +1,230 @@
+{% extends "base/admin_base_role_based.html" %}
+{% load static %}
+
+{% block title %}Создание персонала{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header row">
+        <div class="content-header-left col-md-7 col-12">
+            <div class="breadcrumbs-top">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/">Админка</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'organizations:superadmin_organizations' %}">Организации</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'organizations:superadmin_organization_detail' organization.pk %}">{{ organization.name }}</a></li>
+                        <li class="breadcrumb-item active">Создание персонала</li>
+                    </ol>
+                </nav>
+            </div>
+            <h2 class="content-header-title mb-0">Создание персонала</h2>
+            <p class="text-muted">Организация: {{ organization.name }}</p>
+        </div>
+        <div class="content-header-right col-md-5 col-12">
+            <div class="btn-group float-md-right">
+                <a href="{% url 'organizations:superadmin_organization_detail' organization.pk %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Назад
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сообщения -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="content-body">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Данные персонала</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.first_name.id_for_label }}" class="form-label">{{ form.first_name.label }} *</label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }} *</label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.birth_date.id_for_label }}" class="form-label">{{ form.birth_date.label }} *</label>
+                                    {{ form.birth_date }}
+                                    {% if form.birth_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.birth_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.pin_fl.id_for_label }}" class="form-label">{{ form.pin_fl.label }} *</label>
+                                    {{ form.pin_fl }}
+                                    {% if form.pin_fl.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.pin_fl.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.passport_photo.id_for_label }}" class="form-label">{{ form.passport_photo.label }}</label>
+                                {{ form.passport_photo }}
+                                {% if form.passport_photo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.passport_photo.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-muted">Загрузите фото паспорта (необязательно)</small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }} *</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }} *</label>
+                                    {{ form.username }}
+                                    {% if form.username.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }} *</label>
+                                    {{ form.password }}
+                                    {% if form.password.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.role.id_for_label }}" class="form-label">{{ form.role.label }} *</label>
+                                    {{ form.role }}
+                                    {% if form.role.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.role.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.custom_role.label }}</label>
+                                    {{ form.custom_role }}
+                                    {% if form.custom_role.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.custom_role.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="text-muted">Выберите кастомную роль с дополнительными правами доступа</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.is_active.label }}</label>
+                                    <div class="form-check mt-2">
+                                        {{ form.is_active }}
+                                        <label class="form-check-label">{{ form.is_active.label }}</label>
+                                    </div>
+                                    {% if form.is_active.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.is_active.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.organizations.label }}</label>
+                                <div class="border rounded p-3 bg-light">
+                                    {% for org in form.organizations %}
+                                    <div class="form-check mb-2">
+                                        {{ org.tag }}
+                                        <label class="form-check-label" for="{{ org.id_for_label }}">
+                                            {{ org.choice_label }}
+                                            {% if org.choice_label == organization.name %}
+                                            <span class="text-success">(текущая организация)</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                    {% if form.organizations.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.organizations.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">Выберите организации, к которым у пользователя будет доступ. Текущая организация выбрана по умолчанию.</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        {{ form.is_active.label }}
+                                    </label>
+                                </div>
+                                {% if form.is_active.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.is_active.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'organizations:superadmin_organization_detail' organization.pk %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Отмена
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-person-plus me-2"></i>Создать персонал
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

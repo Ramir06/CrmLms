@@ -28,3 +28,81 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'{self.recipient} - {self.title}'
+
+    @classmethod
+    def create_notification(cls, recipient, title, message, type='info', link=''):
+        """Создать уведомление"""
+        return cls.objects.create(
+            recipient=recipient,
+            title=title,
+            message=message,
+            type=type,
+            link=link
+        )
+
+    @classmethod
+    def homework_accepted(cls, student, homework_title, link=''):
+        """Уведомление о принятии домашки"""
+        title = "Решение принято"
+        message = f'Ваше решение задания "{homework_title}" было принято'
+        return cls.create_notification(
+            recipient=student,
+            title=title,
+            message=message,
+            type='success',
+            link=link
+        )
+
+    @classmethod
+    def homework_rejected(cls, student, homework_title, reason='', link=''):
+        """Уведомление об отклонении домашки"""
+        title = "Решение отклонено"
+        message = f'Ваше решение задания "{homework_title}" было отклонено'
+        if reason:
+            message += f'. Причина: {reason}'
+        return cls.create_notification(
+            recipient=student,
+            title=title,
+            message=message,
+            type='warning',
+            link=link
+        )
+
+    @classmethod
+    def payment_reminder(cls, student, course_title, due_date, link=''):
+        """Уведомление о необходимости оплаты"""
+        title = "Пора оплатить курс"
+        message = f'Необходимо оплатить курс "{course_title}" до {due_date}'
+        return cls.create_notification(
+            recipient=student,
+            title=title,
+            message=message,
+            type='warning',
+            link=link
+        )
+
+    @classmethod
+    def new_homework(cls, mentor, course_title, homework_title, link=''):
+        """Уведомление ментору о новой домашке"""
+        title = "Новое задание на проверку"
+        message = f'Новое задание "{homework_title}" от студента курса "{course_title}"'
+        return cls.create_notification(
+            recipient=mentor,
+            title=title,
+            message=message,
+            type='info',
+            link=link
+        )
+
+    @classmethod
+    def course_completed(cls, student, course_title, link=''):
+        """Уведомление о завершении курса"""
+        title = "Курс завершен"
+        message = f'Поздравляем! Вы завершили курс "{course_title}"'
+        return cls.create_notification(
+            recipient=student,
+            title=title,
+            message=message,
+            type='success',
+            link=link
+        )

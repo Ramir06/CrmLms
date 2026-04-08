@@ -3,33 +3,278 @@
 {% block title %}Должники{% endblock %}
 {% block content %}
 <div class="page-header">
-    <h4 class="page-title">Должники</h4>
-    <a href="{% url 'debts:export' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Excel</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="page-title mb-0">Должники</h4>
+        <div class="d-flex gap-2">
+            <a href="{% url 'debts:export' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-download me-1"></i>Excel
+            </a>
+            <button onclick="updateDebtors()" class="btn btn-sm btn-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i>Обновить должников
+            </button>
+        </div>
+    </div>
 </div>
+
 <div class="row g-3 mb-3">
-    <div class="col-md-4"><div class="stat-card stat-orange"><div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div><div class="stat-value">{{ total_debt|floatformat:0|intcomma }}</div><div class="stat-label">Всего долгов</div></div></div>
-    <div class="col-md-4"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-cash"></i></div><div class="stat-value">{{ total_paid|floatformat:0|intcomma }}</div><div class="stat-label">Оплачено</div></div></div>
-    <div class="col-md-4"><div class="stat-card stat-red"><div class="stat-icon"><i class="bi bi-x-circle"></i></div><div class="stat-value">{{ total_remaining|floatformat:0|intcomma }}</div><div class="stat-label">Остаток</div></div></div>
+    <div class="col-md-3">
+        <div class="stat-card stat-orange">
+            <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="stat-value">{{ debts.count|add:ticket_debts|length }}</div>
+            <div class="stat-label">Активных должников</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-red">
+            <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-value">{{ total_debt|floatformat:0|intcomma }}</div>
+            <div class="stat-label">Денежные долги</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-danger">
+            <div class="stat-icon"><i class="bi bi-ticket-perforated"></i></div>
+            <div class="stat-value">{{ ticket_debts|length }}</div>
+            <div class="stat-label">Красные занятия</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon"><i class="bi bi-calendar3"></i></div>
+            <div class="stat-value">{{ current_month }}.{{ current_year }}</div>
+            <div class="stat-label">Текущий период</div>
+        </div>
+    </div>
 </div>
+
 <div class="card">
     <div class="card-body p-0">
+        <!-- Отладочная информация -->
+        <div class="alert alert-info m-3">
+            <small>
+                <strong>DEBUG:</strong> 
+                Бесконечных курсов: {{ debug_info.unlimited_enrollments_count }},
+                Красных занятий: {{ debug_info.ticket_debts_count }},
+                Всего ticket_debts: {{ ticket_debts|length }}
+            </small>
+        </div>
+        
         <table class="table table-hover mb-0">
-            <thead class="table-light"><tr><th>Студент</th><th>Курс</th><th>Всего</th><th>Оплачено</th><th class="text-danger">Долг</th><th>Статус</th></tr></thead>
-            <tbody>
-                {% for d in debts %}
+            <thead class="table-light">
                 <tr>
-                    <td><a href="{% url 'admin_students:detail' pk=d.student.pk %}" class="fw-medium text-decoration-none">{{ d.student.full_name }}</a></td>
-                    <td class="text-muted">{{ d.course.title }}</td>
-                    <td>{{ d.total_amount|floatformat:0|intcomma }}</td>
-                    <td class="text-success">{{ d.paid_amount|floatformat:0|intcomma }}</td>
-                    <td class="text-danger fw-bold">{{ d.debt_amount|floatformat:0|intcomma }}</td>
-                    <td><span class="badge {% if d.status == 'active' %}bg-danger{% else %}bg-success{% endif %}">{{ d.get_status_display }}</span></td>
+                    <th>ФИО</th>
+                    <th>Курс</th>
+                    <th>Тип долга</th>
+                    <th>Сумма/Количество</th>
+                    <th>Период</th>
+                    <th>Действия</th>
                 </tr>
-                {% empty %}
-                <tr><td colspan="6" class="text-center text-muted py-4">Должников нет</td></tr>
+            </thead>
+            <tbody>
+                <!-- Денежные долги -->
+                {% for debt in debts %}
+                <tr>
+                    <td>
+                        <a href="{% url 'admin_students:detail' pk=debt.student.pk %}" 
+                           class="fw-medium text-decoration-none">
+                           {{ debt.student.full_name }}
+                        </a>
+                    </td>
+                    <td class="text-muted">{{ debt.course.title }}</td>
+                    <td>
+                        {% if debt.debt_type == 'lesson' %}
+                            <span class="badge bg-warning text-dark">Занятие</span>
+                        {% else %}
+                            <span class="badge bg-danger">Денежный долг</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-danger fw-bold">
+                        {{ debt.total_amount|floatformat:0|intcomma }} сум
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark">
+                            {{ debt.month }} месяц {{ debt.year }} года
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" 
+                                    class="btn btn-outline-danger" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#blockModal{{ debt.pk }}">
+                                <i class="bi bi-lock"></i> Заблокировать
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-success" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#payModal{{ debt.pk }}">
+                                <i class="bi bi-cash"></i> Погасить
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                
+                <!-- Модальное окно блокировки -->
+                <div class="modal fade" id="blockModal{{ debt.pk }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Блокировка аккаунта</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Вы уверены, что хотите заблокировать аккаунт студента 
+                                   <strong>{{ debt.student.full_name }}</strong>?</p>
+                                <p class="text-muted">Студент не сможет войти в систему до погашения долга.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                <form action="{% url 'debts:block_student' debt.pk %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-lock me-1"></i>Заблокировать
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Модальное окно погашения -->
+                <div class="modal fade" id="payModal{{ debt.pk }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Погашение долга</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form action="{% url 'debts:pay_debt' debt.pk %}" method="post">
+                                {% csrf_token %}
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Студент</label>
+                                        <input type="text" class="form-control" value="{{ debt.student.full_name }}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Курс</label>
+                                        <input type="text" class="form-control" value="{{ debt.course.title }}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Сумма к погашению</label>
+                                        <input type="text" class="form-control fw-bold text-danger" 
+                                               value="{{ debt.total_amount|floatformat:0|intcomma }} сум" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Способ оплаты *</label>
+                                        <select name="payment_method" class="form-select" required>
+                                            <option value="">Выберите способ оплаты...</option>
+                                            {% for method in payment_methods %}
+                                            <option value="{{ method.pk }}">{{ method.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-cash me-1"></i>Погасить долг
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
+                
+                <!-- Красные занятия (долги по талонам) -->
+                {% for ticket_debt in ticket_debts %}
+                <tr>
+                    <td>
+                        <a href="{% url 'admin_students:detail' pk=ticket_debt.student.pk %}" 
+                           class="fw-medium text-decoration-none">
+                           {{ ticket_debt.student.full_name }}
+                        </a>
+                    </td>
+                    <td class="text-muted">{{ ticket_debt.course.title }}</td>
+                    <td>
+                        <span class="badge bg-warning text-dark">Красные занятия</span>
+                    </td>
+                    <td class="text-warning fw-bold">
+                        {{ ticket_debt.overdue_lessons }} занятий
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark">
+                            Бесконечный курс
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" 
+                                    class="btn btn-outline-warning" 
+                                    onclick="window.location.href='/courses/tickets/adjust/{{ ticket_debt.enrollment_pk }}/'">
+                                <i class="bi bi-ticket-perforated"></i> Погасить
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                
+                {% if not debts and not ticket_debts %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                        <div class="mt-2">Должников нет</div>
+                        <small class="text-muted">Все студенты оплатили текущий месяц и не имеют красных занятий</small>
+                    </td>
+                </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+function updateDebtors() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i>Обновление...';
+    
+    fetch('/admin/debts/update/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ошибка при обновлении: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при обновлении должников');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Обновить должников';
+    });
+}
+
+// Добавляем анимацию для кнопки обновления
+const style = document.createElement('style');
+style.textContent = `
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}

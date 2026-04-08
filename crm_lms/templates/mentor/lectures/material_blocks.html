@@ -1,0 +1,135 @@
+<div class="card border-0 shadow-sm lecture-editor-card">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+                <h4 id="lecture-title" class="card-title mb-1">{{ material.title }}</h4>
+                <div class="text-muted small">Редактор блоков лекции</div>
+            </div>
+            <button class="btn btn-sm btn-outline-warning" onclick="clearAllContent({{ material.pk }})">
+                <i class="bi bi-trash me-1"></i>Очистить контент
+            </button>
+        </div>
+
+        <div id="lecture-content" class="is-editing lecture-content-modern">
+            {% if material.body_html %}
+                <div class="lecture-content-view">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            {{ material.body_html|safe }}
+                        </div>
+                        <div class="d-flex gap-2 ms-3 flex-shrink-0">
+                            <a href="{% url 'lectures:material_edit' course_id=course.pk material_id=material.pk %}" 
+                               class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center" 
+                               style="width:32px;height:32px;" title="Редактировать материал">
+                                <i class="bi bi-pencil fs-6"></i>
+                            </a>
+                            <form method="post" action="{% url 'lectures:material_delete' course_id=course.pk material_id=material.pk %}" 
+                                  onsubmit="return confirm('Удалить материал?')" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center" 
+                                        style="width:32px;height:32px;" title="Удалить материал">
+                                    <i class="bi bi-trash fs-6"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="lecture-content-placeholder modern-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="bi bi-plus-circle"></i>
+                    </div>
+                    <h6 class="mb-2">Лекция пока пустая</h6>
+                    <p class="mb-0 text-muted">Начните добавлять блоки с помощью кнопок ниже</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div id="lecture-editor-new-blocks" class="mt-4">
+            <form method="post" id="lecture-editor" action="/lms/mentor/lectures/submit-block/" style="display: none;" class="lecture-add-form">
+                <input type="hidden" id="form-block-type" name="type" value="">
+                <input type="hidden" id="lecture-id" name="lecture_id" value="{{ material.pk }}">
+
+                <div class="form-content mt-2 mb-3"></div>
+
+                <progress id="progress" class="w-100 mb-3" style="display: none;"></progress>
+
+                <button type="submit" id="submit-block-form" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-plus-lg me-1"></i>Добавить блок
+                </button>
+            </form>
+
+            <div id="add-block-buttons" class="mt-2">
+                <a href="#" class="btn btn-primary rounded-circle d-inline-flex align-items-center justify-content-center" id="block-buttons-toggle" style="width:44px;height:44px;">
+                    <i class="bi bi-plus fs-5"></i>
+                </a>
+
+                <div id="block-type-buttons" class="mt-3 d-flex flex-wrap gap-2">
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="heading">
+                        <i class="bi bi-type-h1 me-1"></i>Заголовок
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="richtext">
+                        <i class="bi bi-file-text me-1"></i>Текст
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="divider">
+                        <i class="bi bi-dash-lg me-1"></i>Разделитель
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="file">
+                        <i class="bi bi-file-earmark me-1"></i>Файл
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="image">
+                        <i class="bi bi-image me-1"></i>Изображение
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="audio">
+                        <i class="bi bi-volume-up me-1"></i>Звук
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="video">
+                        <i class="bi bi-play-circle me-1"></i>Видео
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="link">
+                        <i class="bi bi-link-45deg me-1"></i>Ссылка
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="google_drive">
+                        <i class="bi bi-google me-1"></i>Google Drive
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="youtube">
+                        <i class="bi bi-youtube me-1"></i>YouTube
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="code_snippet">
+                        <i class="bi bi-code-slash me-1"></i>Код
+                    </a>
+                    <a href="#" class="btn btn-light border rounded-pill px-3 py-2" data-type="math_formula">
+                        <i class="bi bi-calculator me-1"></i>Формула
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function clearAllContent(materialId) {
+    if (confirm('Очистить весь контент материала?')) {
+        fetch(`/lms/mentor/courses/{{ course.pk }}/lectures/material/${materialId}/clear-content/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                              document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при очистке контента');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка');
+        });
+    }
+}
+</script>

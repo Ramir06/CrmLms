@@ -30,7 +30,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="text-center mb-3">
-                    <div class="mentor-avatar-lg mx-auto">{{ profile.user.get_display_name|first|upper }}</div>
+                    <img src="{{ profile.user.avatar_url }}" alt="{{ profile.get_display_name }}" class="mentor-avatar-lg mx-auto rounded-circle">
                     <h5 class="mt-2 mb-0">{{ profile.get_display_name }}</h5>
                     <small class="text-muted">{{ profile.specialization|default:"" }}</small>
                 </div>

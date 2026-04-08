@@ -1,0 +1,194 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Создание персонала{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header row">
+        <div class="content-header-left col-md-7 col-12">
+            <div class="breadcrumbs-top">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/organizations/">Организации</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'organizations:staff_list' %}">Персонал</a></li>
+                        <li class="breadcrumb-item active">Создание персонала</li>
+                    </ol>
+                </nav>
+            </div>
+            <h2 class="content-header-title mb-0">Создание персонала</h2>
+        </div>
+        <div class="content-header-right col-md-5 col-12">
+            <div class="btn-group float-md-right">
+                <a href="{% url 'organizations:staff_list' %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Назад к списку
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-body">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Данные персонала</h4>
+                        <p class="text-muted">Заполните информацию о новом сотруднике и выберите организации, к которым у него будет доступ</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-body">
+                            <form method="post" id="staffCreateForm">
+                                {% csrf_token %}
+                                
+                                <div class="row">
+                                    <!-- Левая колонка - Основные данные -->
+                                    <div class="col-md-6">
+                                        <h5 class="mb-3">Основные данные</h5>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="{{ form.first_name.id_for_label }}" class="form-label">{{ form.first_name.label }} *</label>
+                                                {{ form.first_name }}
+                                                {% if form.first_name.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }} *</label>
+                                                {{ form.last_name }}
+                                                {% if form.last_name.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }} *</label>
+                                            {{ form.username }}
+                                            {% if form.username.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }} *</label>
+                                            {{ form.email }}
+                                            {% if form.email.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="{{ form.role.id_for_label }}" class="form-label">{{ form.role.label }} *</label>
+                                            {{ form.role }}
+                                            {% if form.role.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.role.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">
+                                                <strong>Администратор:</strong> полный доступ к организации<br>
+                                                <strong>Менеджер:</strong> ограниченный доступ<br>
+                                                <strong>Супер администратор:</strong> полный доступ ко всему
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Правая колонка - Пароль и организации -->
+                                    <div class="col-md-6">
+                                        <h5 class="mb-3">Безопасность</h5>
+                                        
+                                        <div class="mb-3">
+                                            <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }} *</label>
+                                            {{ form.password }}
+                                            {% if form.password.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">{{ form.password.help_text }}</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="{{ form.password_confirm.id_for_label }}" class="form-label">{{ form.password_confirm.label }} *</label>
+                                            {{ form.password_confirm }}
+                                            {% if form.password_confirm.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.password_confirm.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <hr>
+
+                                        <h5 class="mb-3">Доступные организации</h5>
+                                        <div class="mb-3">
+                                            {{ form.organizations }}
+                                            {% if form.organizations.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.organizations.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">{{ form.organizations.help_text }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <a href="{% url 'organizations:staff_list' %}" class="btn btn-light">
+                                                <i class="bi bi-x-lg me-1"></i>
+                                                Отмена
+                                            </a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-person-plus me-1"></i>
+                                                Создать персонал
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('staffCreateForm').addEventListener('submit', function(e) {
+    const password = document.getElementById('{{ form.password.id_for_label }}').value;
+    const passwordConfirm = document.getElementById('{{ form.password_confirm.id_for_label }}').value;
+    const organizations = document.querySelectorAll('input[name="organizations"]:checked');
+    
+    if (password.length < 8) {
+        e.preventDefault();
+        alert('Пароль должен содержать минимум 8 символов');
+        return;
+    }
+    
+    if (password !== passwordConfirm) {
+        e.preventDefault();
+        alert('Пароли не совпадают');
+        return;
+    }
+    
+    if (organizations.length === 0) {
+        e.preventDefault();
+        alert('Выберите хотя бы одну организацию');
+        return;
+    }
+});
+</script>
+{% endblock %}

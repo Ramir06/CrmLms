@@ -1,0 +1,78 @@
+{% extends "base/admin_base.html" %}
+{% load static %}
+
+{% block title %}Менторы{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Менторы</h1>
+                <div>
+                    <a href="{% url 'mentors:create' %}" class="btn btn-primary">Добавить ментора</a>
+                    <a href="{% url 'mentors:export' %}" class="btn btn-secondary">Экспорт</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if mentors %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ментор</th>
+                                    <th>Специализация</th>
+                                    <th>Тип зарплаты</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mentor in mentors %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ mentor.get_display_name }}</strong><br>
+                                            <small class="text-muted">{{ mentor.user.email }}</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ mentor.specialization|default:"-" }}</td>
+                                    <td>{{ mentor.get_salary_type_display }}</td>
+                                    <td>
+                                        {% if mentor.is_active %}
+                                            <span class="badge bg-success">Активен</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Неактивен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'mentors:detail' mentor.pk %}" class="btn btn-outline-primary">Детали</a>
+                                            <a href="{% url 'mentors:block' mentor.pk %}" class="btn btn-outline-warning">
+                                                {% if mentor.is_active %}Блок{% else %}Разблок{% endif %}
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <h5>Менторы не найдены</h5>
+                        <p class="text-muted">Попробуйте изменить параметры поиска.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

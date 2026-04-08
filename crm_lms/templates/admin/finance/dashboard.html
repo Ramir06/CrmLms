@@ -1,0 +1,394 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.finance-dashboard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    color: white;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.income { color: #10b981; }
+.expense { color: #ef4444; }
+.profit { color: #3b82f6; }
+
+.month-navigator {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.month-nav-btn {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.month-nav-btn:hover {
+    background: #e2e8f0;
+}
+
+.account-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-bottom: 1rem;
+}
+
+.account-name {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.account-balance {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.transaction-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid;
+    transition: transform 0.2s;
+}
+
+.transaction-item:hover {
+    transform: translateX(4px);
+}
+
+.transaction-income { border-left-color: #10b981; }
+.transaction-expense { border-left-color: #ef4444; }
+.transaction-transfer { border-left-color: #3b82f6; }
+
+.chart-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    height: 400px;
+}
+
+.floating-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 1000;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .finance-dashboard {
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .month-navigator {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Главный дашборд -->
+    <div class="finance-dashboard">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="mb-3">💰 Бухгалтерия</h1>
+                <p class="mb-0 opacity-90">Управление финансами вашей организации</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="d-flex gap-3 justify-content-md-end">
+                    <a href="{% url 'finance:transactions' %}" class="btn btn-light">
+                        📋 Транзакции
+                    </a>
+                    <a href="{% url 'finance:accounts' %}" class="btn btn-light">
+                        🏦 Счета
+                    </a>
+                    <a href="{% url 'finance:categories' %}" class="btn btn-light">
+                        📁 Категории
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Навигатор по месяцам -->
+    <div class="month-navigator">
+        <div class="d-flex align-items-center gap-3">
+            <a href="?month={{ prev_month }}&year={{ prev_year }}" class="month-nav-btn">
+                ← {{ prev_month|month_name }}
+            </a>
+            <h4 class="mb-0">{{ month_name }} {{ current_year }}</h4>
+            <a href="?month={{ next_month }}&year={{ next_year }}" class="month-nav-btn">
+                {{ next_month|month_name }} →
+            </a>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-success" onclick="addTransaction('income')">
+                ➕ Приход
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="addTransaction('expense')">
+                ➖ Расход
+            </button>
+            <button class="btn btn-sm btn-primary" onclick="addTransaction('transfer')">
+                🔄 Перевод
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportData()">
+                📊 Экспорт
+            </button>
+        </div>
+    </div>
+
+    <!-- Статистика за месяц -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-value income">+{{ total_income|floatformat:0 }} сом</div>
+                <div class="stat-label">Доходы</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-value expense">-{{ total_expense|floatformat:0 }} сом</div>
+                <div class="stat-label">Расходы</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-value profit {% if profit < 0 %}expense{% endif %}">
+                    {% if profit >= 0 %}+{% endif %}{{ profit|floatformat:0 }} Com
+                </div>
+                <div class="stat-label">Прибыль</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-value">{{ account_balances|length }}</div>
+                <div class="stat-label">Активных счетов</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- График -->
+        <div class="col-lg-8 mb-4">
+            <div class="chart-container">
+                <h5 class="mb-3">📈 Динамика доходов/расходов (30 дней)</h5>
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Балансы счетов -->
+        <div class="col-lg-4 mb-4">
+            <div class="chart-container" style="height: auto;">
+                <h5 class="mb-3">🏦 Балансы счетов</h5>
+                {% for account_data in account_balances %}
+                <div class="account-card">
+                    <div class="account-name">{{ account_data.account.name }}</div>
+                    <div class="account-balance {% if account_data.balance >= 0 %}income{% else %}expense{% endif %}">
+                        {% if account_data.balance >= 0 %}+{% endif %}{{ account_data.balance|floatformat:0 }} Com
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Доход: +{{ account_data.income|floatformat:0 }}</span>
+                        <span>Расход: -{{ account_data.expense|floatformat:0 }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-4">
+                    <p>📭 Нет счетов</p>
+                    <a href="{% url 'finance:account_create' %}" class="btn btn-primary btn-sm">
+                        Создать счёт
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Последние транзакции -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-container" style="height: auto;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">📋 Последние транзакции</h5>
+                    <a href="{% url 'finance:transactions' %}" class="btn btn-sm btn-outline-primary">
+                        Все транзакции →
+                    </a>
+                </div>
+                
+                {% for transaction in recent_transactions %}
+                <div class="transaction-item transaction-{{ transaction.type }}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-semibold">
+                                {% if transaction.type == 'income' %}📈{% elif transaction.type == 'expense' %}📉{% else %}🔄{% endif %}
+                                {{ transaction.get_type_display }}
+                            </div>
+                            <div class="text-muted small">
+                                {{ transaction.category.name|default:"Без категории" }} • 
+                                {{ transaction.account.name|default:"Без счёта" }}
+                            </div>
+                            {% if transaction.description %}
+                            <div class="mt-1">{{ transaction.description|truncatechars:50 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold {% if transaction.type == 'income' %}income{% elif transaction.type == 'expense' %}expense{% else %}text-info{% endif %}">
+                                {% if transaction.type == 'income' %}+{% elif transaction.type == 'expense' %}-{% endif %}
+                                {{ transaction.amount|floatformat:0 }} Com
+                            </div>
+                            <div class="text-muted small">
+                                {{ transaction.transaction_date|date:"d.m.Y" }}
+                            </div>
+                            {% if transaction.auto_generated %}
+                            <div class="badge bg-secondary">Авто</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-5">
+                    <p>📭 Нет транзакций</p>
+                    <a href="{% url 'finance:create' %}" class="btn btn-primary">
+                        Добавить транзакцию
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Плавающая кнопка добавления -->
+<a href="{% url 'finance:create' %}" class="floating-btn" title="Добавить транзакцию">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('financeChart').getContext('2d');
+    const daysData = {{ days_data|safe }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: daysData.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+            }),
+            datasets: [{
+                label: 'Доходы',
+                data: daysData.map(d => d.income),
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Расходы',
+                data: daysData.map(d => d.expense),
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('ru-RU') + ' ₽';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+function exportData() {
+    window.location.href = "{% url 'finance:export' %}";
+}
+
+function addTransaction(type) {
+    window.location.href = "{% url 'finance:transaction_create' %}?type=" + type;
+}
+</script>
+{% endblock %}

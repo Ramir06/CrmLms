@@ -1,0 +1,85 @@
+{% extends "manager/base.html" %}
+{% load static %}
+
+{% block title %}Тестовый дашборд менеджера{% endblock %}
+
+{% block manager_content %}
+<div class="content-wrapper">
+    <div class="content-header row">
+        <div class="content-header-left col-md-7 col-12">
+            <div class="breadcrumbs-top">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'manager:dashboard' %}">Главная</a></li>
+                        <li class="breadcrumb-item active">Тестовый дашборд</li>
+                    </ol>
+                </nav>
+            </div>
+            <h2 class="content-header-title mb-0">Тестовый дашборд менеджера</h2>
+            <div class="content-header-search d-lg-inline-block">
+                <p class="text-muted mb-0">Добро пожаловать, {{ request.user.get_display_name }}!</p>
+                <p class="text-muted">Роль: {{ request.user.role }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-body">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Тестовая страница</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>Если вы видите эту страницу, то менеджерская панель работает!</p>
+                        
+                        <div class="alert alert-success">
+                            <h5>✅ Успешно!</h5>
+                            <p>Менеджерская панель загружена корректно.</p>
+                        </div>
+                        
+                        <h5>Информация о пользователе:</h5>
+                        <ul>
+                            <li>Имя: {{ request.user.get_display_name }}</li>
+                            <li>Email: {{ request.user.email }}</li>
+                            <li>Роль: {{ request.user.role }}</li>
+                            <li>ID: {{ request.user.id }}</li>
+                        </ul>
+                        
+                        <h5>Доступные разделы:</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-people fs-1 text-primary"></i>
+                                        <h6>Студенты</h6>
+                                        <a href="/admin/students/" class="btn btn-primary btn-sm">Перейти</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-funnel fs-1 text-warning"></i>
+                                        <h6>Лиды</h6>
+                                        <a href="/admin/leads/" class="btn btn-primary btn-sm">Перейти</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-book fs-1 text-success"></i>
+                                        <h6>Курсы</h6>
+                                        <a href="/admin/courses/" class="btn btn-primary btn-sm">Перейти</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

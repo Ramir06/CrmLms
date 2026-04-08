@@ -1,0 +1,234 @@
+{% extends "base/mentor_base.html" %}
+
+{% block extra_css %}
+<style>
+/* Кодкойны стили для ментора */
+.mentor-codecoins-header {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.batch-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    border-left: 4px solid #7367F0;
+    transition: all 0.3s ease;
+}
+
+.batch-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.batch-date {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #7367F0;
+}
+
+.batch-meta {
+    color: #6E6B7B;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.scale-item {
+    background: #F8F8F8;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.scale-item:hover {
+    background: #F0F0F0;
+    border-left-color: #7367F0;
+}
+
+.scale-positive {
+    border-left-color: #28C76F;
+}
+
+.scale-negative {
+    border-left-color: #EA5455;
+}
+
+.scale-title {
+    font-weight: 500;
+    color: #2C2C2C;
+}
+
+.scale-value {
+    float: right;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.scale-value.positive {
+    color: #28C76F;
+}
+
+.scale-value.negative {
+    color: #EA5455;
+}
+
+.mass-accrual-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.mass-accrual-table th,
+.mass-accrual-table td {
+    border: 1px solid #e0e0e0;
+    padding: 0.75rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.mass-accrual-table th {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.mass-accrual-table .student-name {
+    text-align: left;
+    font-weight: 500;
+    color: #2C2C2C;
+    background: #F8F8F8;
+}
+
+.mass-accrual-table .scale-header {
+    min-width: 120px;
+}
+
+.mass-accrual-table input[type="checkbox"] {
+    transform: scale(1.3);
+    cursor: pointer;
+}
+
+.mass-accrual-table input[type="checkbox"]:checked {
+    background-color: #7367F0;
+    border-color: #7367F0;
+}
+
+.mass-accrual-table tr:hover {
+    background-color: #F8F8F8;
+}
+
+.btn-create-batch {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(115, 103, 240, 0.3);
+}
+
+.btn-create-batch:hover {
+    background: linear-gradient(135deg, #6458f0, #8e7be8);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(115, 103, 240, 0.4);
+}
+
+.btn-apply-batch {
+    background: linear-gradient(135deg, #28C76F, #20C997);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40, 199, 111, 0.3);
+}
+
+.btn-apply-batch:hover {
+    background: linear-gradient(135deg, #26B675, #1EB898);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 199, 111, 0.4);
+}
+
+.stats-info {
+    background: #F8F8F8;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.stats-label {
+    color: #6E6B7B;
+    font-size: 0.9rem;
+}
+
+.stats-value {
+    font-weight: 600;
+    color: #2C2C2C;
+}
+
+.empty-scales {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #B9B9C3;
+}
+
+.empty-scales i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.form-control:focus {
+    border-color: #7367F0;
+    box-shadow: 0 0 0 0.2rem rgba(115, 103, 240, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #7367F0, #9f7aea);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #6458f0, #8e7be8);
+    border: none;
+}
+
+@media (max-width: 768px) {
+    .mass-accrual-table {
+        font-size: 0.85rem;
+    }
+    
+    .mass-accrual-table th,
+    .mass-accrual-table td {
+        padding: 0.5rem;
+    }
+    
+    .scale-header {
+        min-width: 80px;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,792 @@
+{% load static %}
+<!-- Блок 1: Шапка -->
+<div class="student-drawer-header">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <!-- Аватар -->
+            <div class="student-avatar">
+                {% if student.user_account %}
+                    <img src="{{ student.user_account.avatar_url }}" alt="{{ student.full_name }}" class="avatar-img">
+                {% else %}
+                    <div class="avatar-placeholder">
+                        {% if student.first_name %}
+                            {{ student.first_name.0 }}{% if student.last_name %}{{ student.last_name.0 }}{% endif %}
+                        {% else %}
+                            {% for word in student.full_name.split %}{% if forloop.counter0 < 2 %}{{ word.0 }}{% endif %}{% endfor %}
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Основная информация -->
+            <div>
+                <h5 class="mb-1 fw-semibold">{{ student.full_name }}</h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    <!-- Статус студента -->
+                    <span class="badge student-status-badge status-{{ student.status }}">
+                        {{ student.get_status_display }}
+                    </span>
+                    
+                    <!-- Статус аккаунта -->
+                    {% if student.user_account %}
+                        {% if student.user_account.is_active %}
+                            <span class="badge account-status-badge account-active">
+                                <i class="bi bi-unlock-fill me-1"></i>Аккаунт активен
+                            </span>
+                        {% else %}
+                            <span class="badge account-status-badge account-blocked">
+                                <i class="bi bi-lock-fill me-1"></i>Аккаунт заблокирован
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge account-status-badge account-none">Нет аккаунта</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Кнопка закрытия -->
+        <button type="button" class="btn-close btn-close-lg" onclick="closeStudentDrawer()"></button>
+    </div>
+    
+    <!-- Контактная информация и быстрые действия -->
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="contact-info">
+            {% if student.phone %}
+            <div class="contact-item">
+                <i class="bi bi-telephone-fill text-muted me-2"></i>
+                <a href="tel:{{ student.phone }}" class="text-decoration-none">{{ student.phone }}</a>
+            </div>
+            {% endif %}
+            {% if student.parent_phone %}
+            <div class="contact-item">
+                <i class="bi bi-telephone-fill text-muted me-2"></i>
+                <span class="text-muted small">Родитель:</span>
+                <a href="tel:{{ student.parent_phone }}" class="text-decoration-none ms-1">{{ student.parent_phone }}</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Блок 2: Быстрые действия -->
+<div class="quick-actions mb-4">
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'admin_students:edit' pk=student.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil me-1"></i>Редактировать
+        </a>
+        {% if student.phone %}
+        <a href="tel:{{ student.phone }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-telephone me-1"></i>Позвонить
+        </a>
+        {% endif %}
+        {% if not organization.payment_per_lesson %}
+        <button class="btn btn-sm btn-outline-success" onclick="addPayment('{{ student.pk }}')">
+            <i class="bi bi-plus-circle me-1"></i>Добавить оплату
+        </button>
+        {% endif %}
+                <a href="{% url 'admin_students:detail' pk=student.pk %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-eye me-1"></i>Полная информация
+        </a>
+        {% if student.user_account %}
+        <form method="post" action="{% url 'admin_students:block' pk=student.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm {% if student.user_account.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+                    onclick="return confirm('Вы уверены, что хотите {% if student.user_account.is_active %}заблокировать{% else %}разблокировать{% endif %} этого студента?')">
+                <i class="bi bi-{% if student.user_account.is_active %}lock{% else %}unlock{% endif %} me-1"></i>
+                {% if student.user_account.is_active %}Блокировать{% else %}Разблокировать{% endif %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Блок 3: Курсы -->
+<div class="courses-section mb-4">
+    <div class="section-header">
+        <h6 class="section-title">
+            <i class="bi bi-book me-2"></i>Курсы
+            {% if enrollments %}
+                <span class="badge bg-secondary ms-2">{{ enrollments|length }}</span>
+            {% endif %}
+        </h6>
+    </div>
+    {% if enrollments %}
+        <div class="course-grid">
+            {% for enrollment in enrollments %}
+            <div class="course-card">
+                <div class="course-header">
+                    <div class="course-color-indicator" style="background-color: {% if enrollment.course.color %}{{ enrollment.course.color }}{% else %}#7c3aed{% endif %}"></div>
+                    <div class="course-info">
+                        <div class="course-title">{{ enrollment.course.title }}</div>
+                        <div class="course-subject">{% if enrollment.course.subject %}{{ enrollment.course.subject }}{% else %}—{% endif %}</div>
+                    </div>
+                </div>
+                <div class="course-body">
+                    <div class="course-status">
+                        <span class="badge enrollment-status status-{{ enrollment.status }}">
+                            {{ enrollment.get_status_display }}
+                        </span>
+                        {% if enrollment.progress_percent %}
+                        <div class="progress-info">
+                            <small class="text-muted">Прогресс: {{ enrollment.progress_percent }}%</small>
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar" style="width: {{ enrollment.progress_percent }}%;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="course-meta">
+                        {% if enrollment.course.mentor %}
+                        <div class="mentor-info">
+                            <i class="bi bi-person-badge text-muted me-1"></i>
+                            <small>{% if enrollment.course.mentor.get_full_name %}{{ enrollment.course.mentor.get_full_name }}{% else %}{{ enrollment.course.mentor.username }}{% endif %}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-book text-muted"></i>
+            <p class="mb-0 text-muted">Студент не записан на курсы</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Блок 4: Финансы -->
+<div class="finances-section mb-4">
+    <div class="section-header">
+        <h6 class="section-title">
+            <i class="bi bi-credit-card me-2"></i>Финансы
+            {% if debts %}
+                <span class="badge bg-danger ms-2">Есть долг</span>
+            {% endif %}
+        </h6>
+    </div>
+    
+    {% if payments or debts %}
+        <div class="finances-summary">
+            {% if total_paid > 0 %}
+            <div class="summary-item">
+                <div class="summary-label">Всего оплачено</div>
+                <div class="summary-value text-success">{{ total_paid }} сом</div>
+            </div>
+            {% endif %}
+            
+            {% if total_debt > 0 %}
+            <div class="summary-item">
+                <div class="summary-label">Текущий долг</div>
+                <div class="summary-value text-danger">{{ total_debt }} сом</div>
+            </div>
+            {% endif %}
+            
+            {% if total_paid == 0 and total_debt == 0 %}
+            <div class="summary-item">
+                <div class="summary-label">Финансовая активность</div>
+                <div class="summary-value text-muted">Нет данных</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if payments %}
+        <div class="recent-payments">
+            <div class="subsection-title">Последние оплаты</div>
+            <div class="payment-list">
+                {% for payment in payments|slice:":3" %}
+                <div class="payment-item">
+                    <div class="payment-info">
+                        <div class="payment-course">{{ payment.course.title }}</div>
+                        <div class="payment-date">{{ payment.paid_at|date:"d.m.Y" }}</div>
+                    </div>
+                    <div class="payment-amount">
+                        <span class="amount-positive">+{{ payment.amount }} сом</span>
+                        <div class="payment-method">{{ payment.get_method_display }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if debts %}
+        <div class="debts-list">
+            <div class="subsection-title text-danger">Задолженности</div>
+            {% for debt in debts %}
+            <div class="debt-item">
+                <div class="debt-info">
+                    <div class="debt-course">{{ debt.course.title }}</div>
+                    <div class="debt-date">{{ debt.created_at|date:"d.m.Y" }}</div>
+                </div>
+                <div class="debt-amount">
+                    <span class="amount-negative">{{ debt.debt_amount }} сом</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if not organization.payment_per_lesson %}
+        <div class="finance-actions">
+            <button class="btn btn-sm btn-success" onclick="addPayment('{{ student.pk }}')">
+                <i class="bi bi-plus-circle me-1"></i>Добавить оплату
+            </button>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-credit-card text-muted"></i>
+            <p class="mb-0 text-muted">Нет финансовой информации</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Блок 5: Активность -->
+<div class="activity-section mb-4">
+    <div class="section-header">
+        <h6 class="section-title">
+            <i class="bi bi-clock-history me-2"></i>Активность
+        </h6>
+    </div>
+    
+    <div class="activity-info">
+        <div class="activity-row">
+            <div class="activity-label">Дата регистрации</div>
+            <div class="activity-value">{{ student.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        
+        {% if student.user_account and student.user_account.last_login %}
+        <div class="activity-row">
+            <div class="activity-label">Последний вход</div>
+            <div class="activity-value">{{ student.user_account.last_login|date:"d.m.Y H:i" }}</div>
+        </div>
+        {% endif %}
+        
+        {% if student.source %}
+        <div class="activity-row">
+            <div class="activity-label">Источник</div>
+            <div class="activity-value">{{ student.get_source_display }}</div>
+        </div>
+        {% endif %}
+        
+        {% if student.birth_date %}
+        <div class="activity-row">
+            <div class="activity-label">Дата рождения</div>
+            <div class="activity-value">{{ student.birth_date|date:"d.m.Y" }}</div>
+        </div>
+        {% endif %}
+        
+        {% if student.gender %}
+        <div class="activity-row">
+            <div class="activity-label">Пол</div>
+            <div class="activity-value">{{ student.get_gender_display }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Блок 6: Заметки -->
+<div class="notes-section mb-4">
+    <div class="section-header">
+        <h6 class="section-title">
+            <i class="bi bi-journal-text me-2"></i>Заметки
+        </h6>
+    </div>
+    
+    {% if student.note %}
+        <div class="note-content">
+            {{ student.note|linebreaks }}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-journal text-muted"></i>
+            <p class="mb-0 text-muted">Нет заметок</p>
+            <button class="btn btn-sm btn-outline-primary mt-2" onclick="addNote('{{ student.pk }}')">
+                <i class="bi bi-plus me-1"></i>Добавить заметку
+            </button>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+/* ===== Базовые стили ===== */
+.student-drawer-header {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ===== Аватар ===== */
+.student-avatar {
+    flex-shrink: 0;
+}
+
+.avatar-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 3px solid #f8f9fa;
+}
+
+.avatar-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.2rem;
+    border: 3px solid #f8f9fa;
+}
+
+/* ===== Бейджи статусов ===== */
+.student-status-badge {
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.status-active {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.status-graduated {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.status-left {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.status-inactive {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.status-expelled {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.account-status-badge {
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+}
+
+.account-active {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.account-blocked {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.account-none {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+/* ===== Контактная информация ===== */
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.contact-item a {
+    color: #374151;
+    transition: color 0.2s;
+}
+
+.contact-item a:hover {
+    color: #2563eb;
+}
+
+/* ===== Быстрые действия ===== */
+.quick-actions {
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+/* ===== Секции ===== */
+.section-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.subsection-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+/* ===== Курсы ===== */
+.course-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.course-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.course-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.course-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.course-color-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.course-info {
+    flex: 1;
+}
+
+.course-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.course-subject {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.course-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.course-status {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.enrollment-status {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.status-left {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.status-frozen {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.progress-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.course-meta {
+    text-align: right;
+}
+
+.mentor-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+}
+
+/* ===== Финансы ===== */
+.finances-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-item {
+    text-align: center;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.summary-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.payment-list, .debts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.payment-item, .debt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.payment-info, .debt-info {
+    flex: 1;
+}
+
+.payment-course, .debt-course {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.payment-date, .debt-date {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.payment-amount, .debt-amount {
+    text-align: right;
+}
+
+.amount-positive {
+    color: #059669;
+    font-weight: 600;
+}
+
+.amount-negative {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.payment-method {
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.finance-actions {
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* ===== Активность ===== */
+.activity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.activity-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.activity-row:last-child {
+    border-bottom: none;
+}
+
+.activity-label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.activity-value {
+    font-size: 0.9rem;
+    color: #111827;
+    font-weight: 500;
+}
+
+/* ===== Заметки ===== */
+.note-content {
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #374151;
+}
+
+/* ===== Empty states ===== */
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* ===== Мобильная адаптация ===== */
+@media (max-width: 768px) {
+    .student-drawer-header {
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .avatar-img, .avatar-placeholder {
+        width: 48px;
+        height: 48px;
+        font-size: 1rem;
+    }
+    
+    .course-body {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .course-meta {
+        text-align: left;
+    }
+    
+    .mentor-info {
+        justify-content: flex-start;
+    }
+    
+    .finances-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .payment-item, .debt-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .payment-amount, .debt-amount {
+        text-align: left;
+    }
+    
+    .activity-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+}
+</style>
+
+<script>
+// JavaScript функции для взаимодействия
+function addPayment(studentId) {
+    // Перенаправляем на страницу создания оплаты с предустановленным студентом
+    if (studentId && studentId !== 'null' && studentId !== 'None') {
+        window.location.href = `/admin/payments/create/?student=${studentId}`;
+    } else {
+        window.location.href = `/admin/payments/create/`;
+    }
+}
+
+function addNote(studentId) {
+    // Перенаправляем на страницу деталей студента для добавления заметки
+    window.location.href = `/admin/students/${studentId}/`;
+}
+
+// Закрытие drawer при нажатии Escape
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const drawer = bootstrap.Offcanvas.getInstance(document.getElementById('studentDrawer'));
+        if (drawer) {
+            drawer.hide();
+        }
+    }
+});
+</script>

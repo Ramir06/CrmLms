@@ -1,17 +1,47 @@
 {% extends "base/admin_base.html" %}
 {% load static %}
+{% load leads_extras %}
 {% block title %}CRM Лиды{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<link href="{% static 'css/leads.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h4 class="page-title">CRM — Лиды</h4>
-    <div class="page-actions">
+    <div class="page-actions d-flex flex-wrap gap-2">
+        <div class="dropdown">
+            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-plus-lg me-1"></i>Добавить
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'leads:create' %}"><i class="bi bi-person-plus me-2"></i>Новый лид</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-people me-2"></i>Массовое добавление</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-upload me-2"></i>Импорт из Excel</a></li>
+            </ul>
+        </div>
         <a href="{% url 'leads:archive' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-archive me-1"></i>Архив</a>
-        <a href="{% url 'leads:create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Добавить лид</a>
+        <a href="{% url 'leads:form_create' %}" class="btn btn-sm btn-success"><i class="bi bi-ui-checks me-1"></i>Создать форму</a>
+        <a href="#" class="btn btn-sm btn-outline-info"><i class="bi bi-list-task me-1"></i>Мои задачи</a>
+        <a href="{% url 'leads:action_logs' %}" class="btn btn-sm btn-outline-warning"><i class="bi bi-clock-history me-1"></i>История действий</a>
+        <a href="{% url 'leads:duplicates' %}" class="btn btn-sm btn-outline-success"><i class="bi bi-files me-1"></i>Дубли</a>
+        <a href="{% url 'leads:form_list' %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-ui-checks me-1"></i>Формы</a>
+        <a href="{% url 'leads:form_list' %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-list-ul me-1"></i>Таблица форм</a>
+        <a href="{% url 'leads:reports' %}" class="btn btn-sm btn-outline-dark"><i class="bi bi-graph-up me-1"></i>Отчёты</a>
+        <a href="{% url 'leads:sales_reports' %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-cash-stack me-1"></i>Отчёты по продажам</a>
+        <a href="{% url 'leads:settings_dashboard' %}" class="btn btn-sm btn-outline-dark"><i class="bi bi-gear me-1"></i>Настройки</a>
+        
+        <!-- Кнопка действий для выбранных лидов -->
+        <div class="dropdown" id="bulk-actions" style="display: none;">
+            <button class="btn btn-sm btn-warning" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-check2-square me-1"></i>Действия
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item text-danger" href="#" id="bulk-delete"><i class="bi bi-trash me-2"></i>Удалить выбранных</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -19,36 +49,94 @@
     {% for status, data in leads_by_status.items %}
     <div class="kanban-col">
         <div class="kanban-col-header">
-            <span class="kanban-col-title">{{ data.label }}</span>
-            <span class="badge bg-light text-dark border">{{ data.leads|length }}</span>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="form-check">
+                        <input class="form-check-input status-checkbox" type="checkbox" id="status-{{ status }}" data-status="{{ status }}">
+                        <label class="form-check-label" for="status-{{ status }}"></label>
+                    </div>
+                    <span class="kanban-col-title">{{ data.label }}</span>
+                    <span class="badge bg-light text-dark border">{{ data.leads|length }}</span>
+                </div>
+                <div class="status-actions" id="status-actions-{{ status }}" style="display: none;">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-warning" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear me-1"></i>Действия
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item text-danger" href="#" 
+                               onclick="deleteStatusLeads('{{ status }}', '{{ data.label }}')" 
+                               data-status="{{ status }}">
+                                <i class="bi bi-trash me-2"></i>Удалить всех
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="kanban-cards" id="col-{{ status }}" data-status="{{ status }}">
             {% for lead in data.leads %}
             <div class="kanban-card" data-lead-id="{{ lead.pk }}">
+                <div class="kanban-card-header">
+                    <div class="form-check">
+                        <input class="form-check-input lead-checkbox" type="checkbox" id="lead-{{ lead.pk }}" value="{{ lead.pk }}">
+                        <label class="form-check-label" for="lead-{{ lead.pk }}"></label>
+                    </div>
+                </div>
                 <div class="kanban-card-body">
                     <div class="fw-semibold mb-1">{{ lead.full_name }}</div>
                     <div class="text-muted small mb-2">{{ lead.phone }}</div>
                     {% if lead.interested_course %}
                     <span class="badge bg-light text-dark border small">{{ lead.interested_course.title }}</span>
                     {% endif %}
-                    {% if lead.source %}
-                    <span class="badge bg-light text-muted border small">{{ lead.get_source_display }}</span>
+                    {% if lead.current_source %}
+                    <span class="badge bg-light text-muted border small d-flex align-items-center">
+                        {% if lead.current_source.icon %}
+                            <img src="{{ lead.current_source.icon.url }}" alt="{{ lead.current_source.name }}" style="max-width: 16px; max-height: 16px;" class="me-1">
+                        {% endif %}
+                        {{ lead.current_source.name }}
+                    </span>
                     {% endif %}
                 </div>
                 <div class="kanban-card-footer">
-                    <small class="text-muted">{{ lead.created_at|date:"d.m" }}</small>
-                    <a href="{% url 'leads:detail' pk=lead.pk %}" class="btn btn-sm btn-link text-muted p-0">
-                        <i class="bi bi-arrow-right-circle"></i>
-                    </a>
+                    <div class="w-100">
+                        {% if lead.assigned_to %}
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-success">
+                                <i class="bi bi-person-check me-1"></i>Назначен на: {{ lead.assigned_to|get_full_name_safe }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ lead.created_at|date:"d.m" }}</small>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'leads:convert_to_student' pk=lead.pk %}" 
+                                   class="btn btn-sm btn-link text-success p-0" 
+                                   title="Конвертировать в студента"
+                                   onclick="return confirm('Конвертировать лида в студента? Лид будет архивирован.')">
+                                    <i class="bi bi-person-plus"></i>
+                                </a>
+                                <form method="post" action="{% url 'leads:delete' pk=lead.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0" onclick="return confirm('Вы уверены, что хотите удалить этого лида?')" title="Удалить лида">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                <a href="{% url 'leads:detail' pk=lead.pk %}" class="btn btn-sm btn-link text-muted p-0" title="Открыть лида">
+                                    <i class="bi bi-arrow-right-circle"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <!-- Quick move buttons -->
                 <div class="kanban-move-bar">
-                    {% for s, label, color in kanban_columns %}
-                    {% if s != status %}
+                    {% for target_status, target_data in leads_by_status.items %}
+                    {% if target_status != status %}
                     <form method="post" action="{% url 'leads:move' pk=lead.pk %}" class="d-inline">
                         {% csrf_token %}
-                        <input type="hidden" name="status" value="{{ s }}">
-                        <button type="submit" class="btn btn-xs btn-outline-secondary" title="{{ label }}">{{ label|truncatechars:5 }}</button>
+                        <input type="hidden" name="status" value="{{ target_status }}">
+                        <button type="submit" class="btn btn-xs btn-outline-secondary" title="{{ target_data.label }}">{{ target_data.label|truncatechars:5 }}</button>
                     </form>
                     {% endif %}
                     {% endfor %}
