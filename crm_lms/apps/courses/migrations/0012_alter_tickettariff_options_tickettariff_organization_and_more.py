@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='tickettariff',
             options={'ordering': ['lessons_count'], 'verbose_name': 'Тариф талонов', 'verbose_name_plural': 'Тарифы талонов'},
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='tickettariff',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='organizations.organization', verbose_name='Организация'),
