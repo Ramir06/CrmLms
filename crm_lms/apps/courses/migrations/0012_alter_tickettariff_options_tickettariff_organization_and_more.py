@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('courses', '0011_tickettariff_table'),
+        ('courses', '0010_tickettariff'),
         ('organizations', '0005_remove_organization_payment_per_lesson_and_more'),
     ]
 
