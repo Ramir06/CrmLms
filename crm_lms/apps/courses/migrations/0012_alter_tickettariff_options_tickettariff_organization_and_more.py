@@ -21,11 +21,6 @@ class Migration(migrations.Migration):
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='organizations.organization', verbose_name='Организация'),
         ),
-        migrations.AddField(
-            model_name='tickettariff',
-            name='total_price',
-            field=models.DecimalField(decimal_places=2, default=0, editable=False, max_digits=12, verbose_name='Общая стоимость'),
-        ),
         migrations.AlterField(
             model_name='tickettariff',
             name='created_at',
