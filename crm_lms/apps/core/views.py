@@ -224,3 +224,32 @@ def action_history_export(request):
         ])
     
     return response
+
+from django.contrib.auth import get_user_model
+from django.http import HttpResponse
+
+
+def create_admin_once(request):
+    User = get_user_model()
+
+    username = "Ramir"
+    password = "codify123"
+
+    if User.objects.filter(username=username).exists():
+        return HttpResponse("Admin already exists")
+
+    user = User(
+        username=username,
+        is_staff=True,
+        is_superuser=True,
+        is_active=True
+    )
+
+    # если есть email — ставим пустой
+    if hasattr(user, "email"):
+        user.email = ""
+
+    user.set_password(password)
+    user.save()
+
+    return HttpResponse("Superuser created")
