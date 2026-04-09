@@ -62,14 +62,18 @@ def super_admin_required(view_func):
 
 
 def admin_required(view_func):
-    """Decorator for admin-only views."""
+    """Decorator for admin-only views. Admins and superusers see all sections."""
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('accounts:login')
         
-        # Проверяем права доступа через кастомные роли или стандартные роли
+        # Admins and superusers have access to all sections
+        if request.user.is_superuser or request.user.role == 'admin':
+            return view_func(request, *args, **kwargs)
+        
+        # Check permissions for other roles
         if not request.user.has_permission('view_mentors'):
-            raise PermissionDenied("У вас нет прав для просмотра менторов")
+            raise PermissionDenied("You don't have permission to view mentors")
         
         return view_func(request, *args, **kwargs)
     return wrapper
