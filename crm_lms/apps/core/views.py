@@ -1,3 +1,4 @@
+
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -174,7 +175,7 @@ def action_history_export(request):
     organization_id = request.GET.get('organization_id', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
-    search = self.request.GET.get('search', '')
+    search = request.GET.get('search', '')
     
     if action_type:
         queryset = queryset.filter(action_type=action_type)
@@ -232,30 +233,25 @@ from django.http import HttpResponse
 def create_admin_once(request):
     User = get_user_model()
 
-    username = "admin"
+    username = "Ramir"
     password = "codify123"
-    full_name = "Карим Гораевич"
 
     if User.objects.filter(username=username).exists():
-        return HttpResponse("Суперадминистратор уже существует")
+        return HttpResponse("Admin already exists")
 
     user = User(
         username=username,
-        full_name=full_name,
         is_staff=True,
-        is_superuser=True,  # Это делает его СУПЕР администратором
+        is_superuser=True,
         is_active=True
     )
 
-    # Устанавливаем роль суперадминистратора, если есть поле role
-    if hasattr(user, 'role'):
-        user.role = 'superadmin'  # Меняем на 'superadmin'
-
-    # Устанавливаем email, если есть поле email
-    if hasattr(user, 'email'):
-        user.email = "admin@example.com"
+    # если есть email — ставим пустой
+    if hasattr(user, "email"):
+        user.email = ""
 
     user.set_password(password)
     user.save()
 
-    return HttpResponse(f"СУПЕРадминистратор '{full_name}' успешно создан с логином '{username}'")
+    return HttpResponse("Superuser created")
+
