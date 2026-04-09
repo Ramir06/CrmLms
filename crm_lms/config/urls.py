@@ -13,20 +13,21 @@ from apps.core.views import custom_404, custom_500, custom_403
 from apps.leads import views as leads_views
 from apps.students.views import student_info_page
 
-# ✅ HEALTH CHECK (самое важное)
+
 def health(request):
     return HttpResponse("ok")
 
-# Временный тестовый URL
+
 def test_attendance_view(request):
     return JsonResponse({'success': True, 'message': 'Direct URL works!'})
+
 
 @csrf_exempt
 @require_POST
 @login_required
 def temp_save_attendance(request, course_id):
     from apps.attendance.models import AttendanceRecord
-    from apps.courses.models import Course, CourseStudent
+    from apps.courses.models import Course
     from apps.courses.services import TicketService
     from apps.lessons.models import Lesson
 
@@ -60,8 +61,10 @@ def temp_save_attendance(request, course_id):
 
 
 urlpatterns = [
-    # ✅ САМЫЙ ВАЖНЫЙ
     path('health/', health),
+
+    # вот этого у тебя не хватало
+    path('i18n/', include('django.conf.urls.i18n')),
 
     path('mentor/courses/<int:course_id>/attendance/save/', temp_save_attendance),
     path('mentor/attendance-direct-test/', test_attendance_view),
@@ -93,14 +96,12 @@ urlpatterns = [
 
     path('calendar/', include('apps.calendar_app.urls', namespace='calendar_app')),
 
-    # формы
     path('form/<uuid:unique_id>/', leads_views.public_form, name='public_form'),
     path('form/<uuid:unique_id>/submit/', leads_views.form_submit, name='form_submit'),
     path('form/<uuid:unique_id>/success/', leads_views.form_success, name='form_success'),
 
     path('admin/', include('apps.lessons.urls_admin', namespace='admin_lessons')),
 
-    # mentor
     path('mentor/', include('apps.attendance.urls', namespace='attendance')),
     path('lms/mentor/', include('apps.attendance.urls', namespace='attendance')),
 
@@ -136,7 +137,6 @@ urlpatterns = [
 
     path('api/v1/', include('apps.core.api_urls', namespace='api')),
 
-    # ❗ ГЛАВНАЯ (подозреваемая проблема)
     path('', include('apps.core.urls', namespace='core')),
 ]
 
