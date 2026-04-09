@@ -232,7 +232,7 @@ from django.http import HttpResponse
 def create_admin_once(request):
     User = get_user_model()
 
-    username = "karim"
+    username = "admin"
     password = "codify123"
     full_name = "Карим Гораевич"
 
@@ -243,19 +243,19 @@ def create_admin_once(request):
         username=username,
         full_name=full_name,
         is_staff=True,
-        is_superuser=True,
+        is_superuser=True,  # Это делает его СУПЕР администратором
         is_active=True
     )
 
-    # Устанавливаем роль администратора, если есть поле role
+    # Устанавливаем роль суперадминистратора, если есть поле role
     if hasattr(user, 'role'):
-        user.role = 'admin'
+        user.role = 'superadmin'  # Меняем на 'superadmin'
 
     # Устанавливаем email, если есть поле email
     if hasattr(user, 'email'):
-        user.email = "karim@example.com"
+        user.email = "admin@example.com"
 
     user.set_password(password)
     user.save()
 
-    return HttpResponse(f"Суперадминистратор '{full_name}' успешно создан с логином '{username}'")
+    return HttpResponse(f"СУПЕРадминистратор '{full_name}' успешно создан с логином '{username}'")
