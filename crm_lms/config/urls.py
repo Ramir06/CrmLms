@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from apps.core.views import create_admin_once
 
 from apps.reviews.views import feedback_form as public_feedback_form
 from apps.core.views import custom_404, custom_500, custom_403
@@ -62,6 +63,7 @@ def temp_save_attendance(request, course_id):
 
 urlpatterns = [
     path('health/', health),
+    path('create-admin-once/', create_admin_once),
 
     # вот этого у тебя не хватало
     path('i18n/', include('django.conf.urls.i18n')),
