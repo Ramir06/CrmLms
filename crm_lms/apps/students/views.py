@@ -96,7 +96,7 @@ def student_create(request):
                 
         student.save()
         messages.success(request, f'Студент «{student.full_name}» создан.')
-        return redirect('admin_students:detail', pk=student.pk)
+        return redirect('admin_students:list')
     return render(request, 'admin/students/form.html', {
         'form': form, 
         'page_title': 'Добавить студента',
