@@ -2,6 +2,6 @@
 builder = "RAILPACK"
 
 [deploy]
-startCommand = "cd crm_lms && python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py shell -c \"from django.contrib.auth import get_user_model; User=get_user_model(); User.objects.create_superuser('Ramir', '', 'codify123') if not User.objects.filter(username='Ramir').exists() else print('exists')\" && python manage.py runserver 0.0.0.0:$PORT"
+startCommand = "cd crm_lms && python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:$PORT"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
