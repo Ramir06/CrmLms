@@ -15,7 +15,7 @@ from apps.lessons.models import Lesson
 import datetime
 import json
 from .services import TicketService
-from .tickets import TicketBalance, TicketTransaction, TicketAttendance
+from .tickets import TicketBalance, TicketTransaction, TicketAttendance, TicketTariff
 
 
 @login_required
@@ -1289,7 +1289,7 @@ def unlimited_course_excel_export(request, pk):
         adjusted_width = min(max_length + 2, 15)
         ws.column_dimensions[column_letter].width = adjusted_width
     
-    # Отправляем файл
+    # Send file
     from django.http import HttpResponse
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -1297,3 +1297,60 @@ def unlimited_course_excel_export(request, pk):
     )
     wb.save(response)
     return response
+
+
+@login_required
+@role_required(['admin', 'superadmin'])
+def add_payment_lessons(request, course_pk):
+    """API for processing tariff payments and adding lessons"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    try:
+        import json
+        from django.http import JsonResponse
+        
+        # Parse JSON data
+        data = json.loads(request.body)
+        enrollment_id = data.get('enrollment_id')
+        tariff_id = data.get('tariff_id')
+        
+        if not enrollment_id or not tariff_id:
+            return JsonResponse({'error': 'Missing enrollment_id or tariff_id'}, status=400)
+        
+        # Get objects
+        enrollment = get_object_or_404(CourseStudent, id=enrollment_id)
+        course = get_object_or_404(Course, pk=course_pk)
+        tariff = get_object_or_404(TicketTariff, id=tariff_id, is_active=True)
+        
+        # Verify enrollment belongs to this course
+        if enrollment.course != course:
+            return JsonResponse({'error': 'Enrollment does not belong to this course'}, status=400)
+        
+        # Verify course is unlimited
+        if not course.is_unlimited:
+            return JsonResponse({'error': 'This function is only available for unlimited courses'}, status=400)
+        
+        # Add tickets using TicketService
+        transaction_obj = TicketService.add_tickets(
+            enrollment=enrollment,
+            lessons_count=tariff.lessons_count,
+            marked_by=request.user,
+            comment=f'Payment for tariff "{tariff.title}"'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully added {tariff.lessons_count} lessons for {enrollment.student.full_name}',
+            'transaction_id': transaction_obj.id,
+            'lessons_added': tariff.lessons_count,
+            'total_price': float(tariff.total_price)
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        print(f"Error in add_payment_lessons: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
