@@ -39,6 +39,7 @@ urlpatterns = [
     path('tariff/<int:tariff_id>/', views_admin.tariff_detail_api, name='tariff_detail_api'),
     path('add-tickets/', views_admin.add_tickets_api, name='add_tickets_api'),
     path('ticket-history/<int:cs_id>/', views_admin.ticket_history_api, name='ticket_history_api'),
+    path('<int:course_pk>/add-payment-lessons/', views.add_payment_lessons, name='add_payment_lessons'),
     
     # Tariffs Management URLs
     path('tariffs/create/', views_tariffs.create_tariff, name='create_tariff'),
