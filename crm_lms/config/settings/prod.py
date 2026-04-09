@@ -3,7 +3,7 @@ import dj_database_url
 from .base import *  # noqa
 
 # =========================
-# BASIC SETTINGS
+# BASIC
 # =========================
 
 DEBUG = False
@@ -13,36 +13,30 @@ if not SECRET_KEY:
     raise ValueError("No SECRET_KEY set for production")
 
 # =========================
-# HOSTS / SECURITY
+# 🔥 ВРЕМЕННЫЙ ФИКС (чтобы сайт точно заработал)
 # =========================
 
-ALLOWED_HOSTS = [
-    h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()
-]
+ALLOWED_HOSTS = ["*"]
 
 CSRF_TRUSTED_ORIGINS = [
-    h.strip() for h in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if h.strip()
+    "https://crmlms-production.up.railway.app",
+    "https://*.railway.app",
 ]
 
 # =========================
 # DATABASE
 # =========================
 
-database_url = os.getenv('DATABASE_URL')
-
-if database_url:
-    DATABASES = {
-        'default': dj_database_url.parse(
-            database_url,
-            conn_max_age=600,
-            ssl_require=True,
-        )
-    }
-else:
-    raise ValueError("DATABASE_URL is not set")
+DATABASES = {
+    'default': dj_database_url.parse(
+        os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True,
+    )
+}
 
 # =========================
-# SECURITY HEADERS
+# SECURITY
 # =========================
 
 SECURE_SSL_REDIRECT = False  # Railway уже работает через HTTPS
@@ -70,15 +64,10 @@ SESSION_COOKIE_SAMESITE = 'Strict'
 # CORS
 # =========================
 
-CORS_ALLOWED_ORIGINS = [
-    h.strip() for h in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if h.strip()
-]
-
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
 
 # =========================
-# STATIC FILES
+# STATIC
 # =========================
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
