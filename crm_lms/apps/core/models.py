@@ -22,7 +22,11 @@ class OrganizationQuerySet(models.QuerySet):
         return self.filter(organization=organization)
     
     def for_current_user(self, user):
-        """Фильтрует данные по текущей организации пользователя."""
+        """Filter data by current user's organization. Admins see all organizations."""
+        # Admins see all organizations
+        if user.is_superuser:
+            return self.all()
+        
         try:
             from apps.organizations.models import UserCurrentOrganization
             current_org = UserCurrentOrganization.objects.filter(user=user).first()
