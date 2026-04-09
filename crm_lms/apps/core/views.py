@@ -174,7 +174,7 @@ def action_history_export(request):
     organization_id = request.GET.get('organization_id', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
-    search = request.GET.get('search', '')
+    search = self.request.GET.get('search', '')
     
     if action_type:
         queryset = queryset.filter(action_type=action_type)
@@ -232,24 +232,30 @@ from django.http import HttpResponse
 def create_admin_once(request):
     User = get_user_model()
 
-    username = "Ramir"
+    username = "karim"
     password = "codify123"
+    full_name = "Карим Гораевич"
 
     if User.objects.filter(username=username).exists():
-        return HttpResponse("Admin already exists")
+        return HttpResponse("Суперадминистратор уже существует")
 
     user = User(
         username=username,
+        full_name=full_name,
         is_staff=True,
         is_superuser=True,
         is_active=True
     )
 
-    # если есть email — ставим пустой
-    if hasattr(user, "email"):
-        user.email = ""
+    # Устанавливаем роль администратора, если есть поле role
+    if hasattr(user, 'role'):
+        user.role = 'admin'
+
+    # Устанавливаем email, если есть поле email
+    if hasattr(user, 'email'):
+        user.email = "karim@example.com"
 
     user.set_password(password)
     user.save()
 
-    return HttpResponse("Superuser created")
+    return HttpResponse(f"Суперадминистратор '{full_name}' успешно создан с логином '{username}'")
